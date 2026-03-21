@@ -33,6 +33,7 @@ MY_CHAT_ID=987654321
 ### 4. Install & Run
 
 ```bash
+cd claude-telegram-bridge
 npm install
 node bridge.js
 ```
