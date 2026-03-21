@@ -26,6 +26,12 @@ __pycache__/
 .memory/
 .handoff/
 
+# Telegram bridge user config
+claude-telegram-bridge/projects.json
+
+# Claude local state
+.claude/
+
 # Backups created by setup script
 *.bak
 .backup-*/
