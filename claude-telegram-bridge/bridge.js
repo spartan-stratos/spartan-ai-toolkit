@@ -28,7 +28,7 @@ function loadProjects() {
   if (existsSync(jsonPath)) {
     const raw = readFileSync(jsonPath, "utf-8");
     const projects = JSON.parse(raw);
-    if (Array.isArray(projects) && projects.length > 0) {
+    if (Array.isArray(projects)) {
       return projects.map((p, i) => ({
         name: p.name || `project-${i + 1}`,
         path: p.path,
@@ -45,8 +45,8 @@ function loadProjects() {
     return [{ name, path: legacyPath, model: MODEL, autoStart: true }];
   }
 
-  console.error("No projects configured. Create projects.json or set CLAUDE_PROJECT_PATH in .env");
-  process.exit(1);
+  // No config at all — start empty, user can /add from Telegram
+  return [];
 }
 
 const PROJECTS = loadProjects();
@@ -126,21 +126,24 @@ const splitMessage = (text, maxLen = 4000) => {
 };
 
 function buildKeyboard() {
-  const sessionRow = PROJECTS.map((p, i) => {
-    const s = sessions.get(p.name);
-    const isActive = p.name === activeSessionName;
-    const icon = !s?.alive ? "x" : isActive ? ">" : "";
-    const label = icon ? `${icon} ${i + 1}:${p.name}` : `${i + 1}:${p.name}`;
-    return { text: label };
-  });
+  const rows = [[{ text: "y" }, { text: "n" }, { text: "skip" }]];
+
+  if (PROJECTS.length > 0) {
+    const sessionRow = PROJECTS.map((p, i) => {
+      const s = sessions.get(p.name);
+      const isActive = p.name === activeSessionName;
+      const icon = !s?.alive ? "x" : isActive ? ">" : "";
+      const label = icon ? `${icon} ${i + 1}:${p.name}` : `${i + 1}:${p.name}`;
+      return { text: label };
+    });
+    rows.push(sessionRow);
+  }
+
+  rows.push([{ text: "/status" }, { text: "/sessions" }, { text: "/ping" }]);
 
   return {
     reply_markup: {
-      keyboard: [
-        [{ text: "y" }, { text: "n" }, { text: "skip" }],
-        sessionRow,
-        [{ text: "/status" }, { text: "/sessions" }, { text: "/ping" }],
-      ],
+      keyboard: rows,
       resize_keyboard: true,
       one_time_keyboard: false,
     },
@@ -161,7 +164,7 @@ const sendTg = async (text, extra = {}) => {
 
 // ── Session management ──────────────────────────────────────
 const sessions = new Map(); // name -> session state
-let activeSessionName = PROJECTS[0].name;
+let activeSessionName = PROJECTS[0]?.name || null;
 
 const MAX_HISTORY = 500;
 const FLUSH_DELAY_MS = 1500;
@@ -439,6 +442,7 @@ bot.on("message", (msg) => {
     const project = { name, path, model: model || MODEL, autoStart: true };
     PROJECTS.push(project);
     sessions.set(name, createSession(project));
+    if (!activeSessionName) activeSessionName = name;
     saveProjects();
     sendTg(`Added "${name}" -> ${path}\nStarting session...`);
     startSession(name);
@@ -499,6 +503,10 @@ bot.on("message", (msg) => {
       break;
 
     case "/sessions": {
+      if (PROJECTS.length === 0) {
+        sendTg("No sessions yet. Use /add <name> <path> to add a project.");
+        break;
+      }
       const lines = PROJECTS.map((p, i) => {
         const s = sessions.get(p.name);
         const isActive = p.name === activeSessionName;
@@ -540,13 +548,15 @@ bot.on("message", (msg) => {
     case "/ping": {
       const running = [...sessions.values()].filter((s) => s.alive).length;
       const total = sessions.size;
-      sendTg(`Bridge alive. Sessions: ${running}/${total} running. Active: ${activeSessionName}`);
+      sendTg(`Bridge alive. Sessions: ${running}/${total} running. Active: ${activeSessionName || "none"}`);
       break;
     }
 
     default:
       if (text.startsWith("/")) {
         sendTg(`Unknown command: ${text}\nUse /start for help.`);
+      } else if (!activeSessionName || !sessions.has(activeSessionName)) {
+        sendTg("No sessions yet. Use /add <name> <path> to add a project.");
       } else {
         writeToSession(activeSessionName, text);
       }
@@ -576,7 +586,7 @@ process.on("SIGTERM", () => shutdown("SIGTERM"));
 // ── Start ───────────────────────────────────────────────────
 console.log("[bridge] Claude Code Telegram Bridge (multi-session) starting...");
 console.log(`[bridge] Chat ID: ${CHAT_ID}`);
-console.log(`[bridge] Projects: ${PROJECTS.map((p) => p.name).join(", ")}`);
+console.log(`[bridge] Projects: ${PROJECTS.length === 0 ? "(none — use /add on Telegram)" : PROJECTS.map((p) => p.name).join(", ")}`);
 
 // Initialize all sessions
 for (const project of PROJECTS) {

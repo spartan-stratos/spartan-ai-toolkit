@@ -22,7 +22,6 @@ Open Telegram, find **@userinfobot**, send `/start`, copy your **Id** (number).
 
 ```bash
 cp .env.example .env
-cp projects.json.example projects.json
 ```
 
 Edit `.env`:
@@ -30,33 +29,6 @@ Edit `.env`:
 TELEGRAM_TOKEN=123456:ABC-DEF...
 MY_CHAT_ID=987654321
 ```
-
-Edit `projects.json`:
-```json
-[
-  {
-    "name": "forge",
-    "path": "/Users/you/dev/forge-service",
-    "model": "claude-opus-4-6",
-    "autoStart": true
-  },
-  {
-    "name": "admin",
-    "path": "/Users/you/dev/insight-admin",
-    "model": "claude-sonnet-4-6",
-    "autoStart": false
-  }
-]
-```
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | yes | Short name for the session (used in commands) |
-| `path` | yes | Absolute path to project directory |
-| `model` | no | Claude model (default: `claude-opus-4-6`) |
-| `autoStart` | no | Start session on bridge launch (default: `true`) |
-
-**Legacy mode:** If no `projects.json` exists, falls back to `CLAUDE_PROJECT_PATH` from `.env` (single session).
 
 ### 4. Install & Run
 
@@ -71,6 +43,45 @@ npm install -g pm2
 pm2 start bridge.js --name claude-bridge
 pm2 logs claude-bridge
 ```
+
+### 5. Add Projects from Telegram
+
+Once the bridge is running, open Telegram and add your projects:
+
+```
+/add forge /Users/you/dev/forge-service
+/add admin /Users/you/dev/insight-admin claude-sonnet-4-6
+```
+
+Each project starts a Claude Code session immediately. That's it — no config files to edit.
+
+### Pre-configured projects (optional)
+
+If you prefer to pre-configure projects, create a `projects.json`:
+
+```bash
+cp projects.json.example projects.json
+```
+
+```json
+[
+  {
+    "name": "forge",
+    "path": "/Users/you/dev/forge-service",
+    "model": "claude-opus-4-6",
+    "autoStart": true
+  }
+]
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | yes | Short name for the session (used in commands) |
+| `path` | yes | Absolute path to project directory |
+| `model` | no | Claude model (default: `claude-opus-4-6`) |
+| `autoStart` | no | Start session on bridge launch (default: `true`) |
+
+Projects added via `/add` are automatically saved to `projects.json`.
 
 ## Commands
 
