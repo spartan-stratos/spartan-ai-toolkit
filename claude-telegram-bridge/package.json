@@ -1,0 +1,15 @@
+{
+  "name": "claude-telegram-bridge",
+  "version": "1.0.0",
+  "description": "Remote control Claude Code via Telegram",
+  "type": "module",
+  "main": "bridge.js",
+  "scripts": {
+    "start": "node bridge.js",
+    "dev": "node --watch bridge.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}
