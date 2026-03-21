@@ -243,7 +243,7 @@ function startSession(name) {
     "--print",
     "--output-format", "stream-json",
     "--input-format", "stream-json",
-    "--verbose",
+    "--verbose",  // Required for stream-json output format
   ];
   const proc = spawn("claude", args, {
     cwd: session.path,
@@ -291,8 +291,12 @@ function startSession(name) {
   proc.stderr.on("data", (data) => {
     const text = stripAnsi(data.toString()).trim();
     if (!text) return;
+    console.error(`[${name}:stderr] ${text}`);
     pushHistory(session, `[stderr] ${text}`);
-    sendTg(`[${name}] ${text}`);
+    // Only send errors to Telegram, not debug/info output
+    if (/error|fail|fatal|panic|crash/i.test(text)) {
+      sendTg(`[${name}] ${text}`);
+    }
   });
 
   proc.on("close", (code) => {
