@@ -262,32 +262,28 @@ function startSession(name) {
 
   console.log(`[bridge] "${name}" spawned (PID: ${proc.pid || "pending"})`);
 
+  let lineBuf = "";
   proc.stdout.on("data", (data) => {
-    const raw = data.toString();
-    for (const line of raw.split("\n")) {
+    lineBuf += data.toString();
+    const lines = lineBuf.split("\n");
+    lineBuf = lines.pop(); // keep incomplete last line in buffer
+    for (const line of lines) {
       if (!line.trim()) continue;
       try {
         const msg = JSON.parse(line);
-        // Extract assistant text content
+        // Only extract assistant text content — skip tool_use, system, result
         if (msg.type === "assistant" && msg.message?.content) {
           for (const block of msg.message.content) {
             if (block.type === "text" && block.text) {
-              const text = block.text;
-              pushHistory(session, text);
-              session.outputBuffer += text;
+              pushHistory(session, block.text);
+              session.outputBuffer += block.text;
               scheduleFlush(session);
             }
           }
         }
-        // Skip result messages (already captured from assistant messages)
+        // All other JSON message types (system, tool_use, result) are silently skipped
       } catch {
-        // Non-JSON line, send as-is
-        const text = stripAnsi(line).trim();
-        if (text) {
-          pushHistory(session, text);
-          session.outputBuffer += text;
-          scheduleFlush(session);
-        }
+        // Ignore non-JSON lines
       }
     }
   });
