@@ -1,97 +1,142 @@
 # Claude Code Telegram Bridge
 
-Remote control Claude Code từ Telegram khi không ngồi trước máy tính.
+Remote control Claude Code from Telegram when you're away from your desk.
 
 ```
-Phone (Telegram) ←→ Bridge (local) ←→ Claude Code (local)
+Phone (Telegram) <-> Bridge (local) <-> Claude Code sessions (local)
 ```
 
-Bridge forward output cần attention từ Claude Code → Telegram, và forward Telegram messages → Claude Code stdin.
+Supports **multiple projects** — switch between Claude Code sessions from your phone.
 
-## Setup (5 bước, ~5 phút)
+## Setup
 
-### 1. Tạo Telegram Bot
+### 1. Create Telegram Bot
 
-Mở Telegram → tìm **@BotFather** → gửi `/newbot` → đặt tên → copy **token**.
+Open Telegram, find **@BotFather**, send `/newbot`, name it, copy the **token**.
 
-### 2. Lấy Chat ID
+### 2. Get Your Chat ID
 
-Mở Telegram → tìm **@userinfobot** → gửi `/start` → copy **Id** (số).
+Open Telegram, find **@userinfobot**, send `/start`, copy your **Id** (number).
 
-### 3. Fill `.env`
+### 3. Configure
 
 ```bash
 cp .env.example .env
+cp projects.json.example projects.json
 ```
 
-Mở `.env`, điền:
+Edit `.env`:
 ```
 TELEGRAM_TOKEN=123456:ABC-DEF...
 MY_CHAT_ID=987654321
-CLAUDE_PROJECT_PATH=/Users/you/dev/your-project
 ```
 
-### 4. Install
+Edit `projects.json`:
+```json
+[
+  {
+    "name": "forge",
+    "path": "/Users/you/dev/forge-service",
+    "model": "claude-opus-4-6",
+    "autoStart": true
+  },
+  {
+    "name": "admin",
+    "path": "/Users/you/dev/insight-admin",
+    "model": "claude-sonnet-4-6",
+    "autoStart": false
+  }
+]
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | yes | Short name for the session (used in commands) |
+| `path` | yes | Absolute path to project directory |
+| `model` | no | Claude model (default: `claude-opus-4-6`) |
+| `autoStart` | no | Start session on bridge launch (default: `true`) |
+
+**Legacy mode:** If no `projects.json` exists, falls back to `CLAUDE_PROJECT_PATH` from `.env` (single session).
+
+### 4. Install & Run
 
 ```bash
 npm install
-```
-
-### 5. Run
-
-```bash
 node bridge.js
 ```
 
-Hoặc chạy background với pm2:
+Or run in background:
 ```bash
 npm install -g pm2
 pm2 start bridge.js --name claude-bridge
 pm2 logs claude-bridge
 ```
 
-## Cách dùng
+## Commands
 
-Sau khi bridge chạy, mở Telegram chat với bot:
+### Session Management
 
-| Action | Gõ trên phone |
-|---|---|
-| Gửi text cho Claude | Gõ text bình thường |
-| Confirm (yes) | Tap nút **y** |
-| Reject (no) | Tap nút **n** |
-| Skip | Tap nút **skip** |
-| Xem output gần nhất | `/status` |
-| Kill Claude Code | `/kill` |
-| Restart Claude Code | `/restart` |
-| Check bridge alive | `/ping` |
+| Command | Action |
+|---------|--------|
+| `/sessions` | List all sessions with status |
+| `/switch <name>` | Switch active session by name |
+| `/1` `/2` `/3` | Quick switch by number |
+| `/start <name>` | Start a stopped session |
+| `/stop <name>` | Stop a specific session |
 
-## Cách hoạt động
+### Active Session
 
-- Bridge **không stream toàn bộ output** (quá noisy trên phone)
-- Chỉ gửi khi Claude Code **đang chờ input** (detect patterns: "Do you want", "y/n", "Continue?", v.v.)
-- Hoặc khi buffer > 300 chars + pause 1.5s
-- Output được buffer và gộp để giảm notification spam
-- Quick reply keyboard luôn hiện: `[y] [n] [skip] [/status] [/kill] [/restart]`
+| Command | Action |
+|---------|--------|
+| Type text | Send to active session |
+| `y` / `n` / `skip` | Quick replies (keyboard buttons) |
+| `/status` | Show last output lines |
+| `/kill` | Stop active session |
+| `/restart` | Restart active session |
+| `/ping` | Check bridge and session status |
+
+### Keyboard Layout
+
+The Telegram keyboard updates dynamically:
+
+```
+[  y  ] [  n  ] [ skip ]
+[ > 1:forge ] [ 2:admin ] [ x 3:toolkit ]
+[ /status ] [ /sessions ] [ /ping ]
+```
+
+- `>` = active session
+- `x` = stopped session
+- Tap a session button to switch to it
+
+## How It Works
+
+- Bridge spawns Claude Code as child processes (one per project)
+- Only the **active** session receives your text messages
+- All sessions forward prompts to Telegram (tagged with session name if not active)
+- Output is buffered and sent when Claude waits for input or after 1.5s pause
+- Quick reply keyboard always visible for fast responses
 
 ## Security
 
-- **Hard reject** mọi message không phải từ `MY_CHAT_ID`
-- Không expose Anthropic API key (Claude Code tự handle auth)
-- Bot token + chat ID giữ trong `.env` (gitignore)
+- **Hard reject** all messages not from your `MY_CHAT_ID`
+- No Anthropic API key exposed (Claude Code handles auth)
+- Bot token + chat ID kept in `.env` (gitignored)
 
 ## Auto-restart
 
-Nếu Claude Code crash, bridge tự restart (max 10 lần). Tắt trong `.env`:
+If Claude Code crashes, bridge auto-restarts it (max 10 times per session). Disable in `.env`:
 ```
 AUTO_RESTART=false
 ```
 
 ## Troubleshooting
 
-| Vấn đề | Fix |
-|---|---|
-| Bot không phản hồi | Check `TELEGRAM_TOKEN` đúng chưa |
-| "Unauthorized" | `MY_CHAT_ID` không đúng — lấy lại từ @userinfobot |
-| Claude không start | Check `CLAUDE_PROJECT_PATH` tồn tại, `claude` CLI trong PATH |
-| Output rác ANSI | Bridge tự strip — nếu còn, file issue |
-| Quá nhiều notification | Bình thường cho output dài — dùng `/status` thay vì đợi |
+| Issue | Fix |
+|-------|-----|
+| Bot not responding | Check `TELEGRAM_TOKEN` in `.env` |
+| "Unauthorized" | `MY_CHAT_ID` incorrect — get it from @userinfobot |
+| Claude won't start | Check project `path` exists, `claude` CLI in PATH |
+| Session shows "stopped" | Use `/start <name>` to start it |
+| Too many notifications | Use `/status` instead of waiting for stream |
+| Legacy single-project mode | Remove `projects.json`, set `CLAUDE_PROJECT_PATH` in `.env` |
