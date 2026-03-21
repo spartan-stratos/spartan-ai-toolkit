@@ -237,9 +237,21 @@ function startSession(name) {
   console.log(`[bridge] Starting "${name}" in ${session.path}`);
   sendTg(`Starting "${name}"...\n${session.path}\nModel: ${session.model}`);
 
-  const proc = spawn("claude", ["--dangerously-skip-permissions", "--model", session.model], {
+  const args = [
+    "--dangerously-skip-permissions",
+    "--model", session.model,
+    "--print",
+    "--output-format", "stream-json",
+    "--input-format", "stream-json",
+    "--verbose",
+  ];
+  const proc = spawn("claude", args, {
     cwd: session.path,
-    env: { ...process.env, FORCE_COLOR: "0", NO_COLOR: "1" },
+    env: Object.fromEntries(
+      Object.entries({ ...process.env, FORCE_COLOR: "0", NO_COLOR: "1" }).filter(
+        ([k]) => k !== "CLAUDECODE"
+      )
+    ),
     stdio: ["pipe", "pipe", "pipe"],
     shell: true,
   });
@@ -248,20 +260,35 @@ function startSession(name) {
   session.alive = true;
   session.outputBuffer = "";
 
+  console.log(`[bridge] "${name}" spawned (PID: ${proc.pid || "pending"})`);
+
   proc.stdout.on("data", (data) => {
-    const text = stripAnsi(data.toString());
-    if (!text.trim()) return;
-
-    for (const line of text.split("\n")) {
-      pushHistory(session, line);
-    }
-
-    session.outputBuffer += text;
-
-    if (isPrompt(text)) {
-      flushBuffer(session, true);
-    } else {
-      scheduleFlush(session);
+    const raw = data.toString();
+    for (const line of raw.split("\n")) {
+      if (!line.trim()) continue;
+      try {
+        const msg = JSON.parse(line);
+        // Extract assistant text content
+        if (msg.type === "assistant" && msg.message?.content) {
+          for (const block of msg.message.content) {
+            if (block.type === "text" && block.text) {
+              const text = block.text;
+              pushHistory(session, text);
+              session.outputBuffer += text;
+              scheduleFlush(session);
+            }
+          }
+        }
+        // Skip result messages (already captured from assistant messages)
+      } catch {
+        // Non-JSON line, send as-is
+        const text = stripAnsi(line).trim();
+        if (text) {
+          pushHistory(session, text);
+          session.outputBuffer += text;
+          scheduleFlush(session);
+        }
+      }
     }
   });
 
@@ -324,7 +351,8 @@ function writeToSession(name, text) {
     return false;
   }
   try {
-    session.process.stdin.write(text + "\n");
+    const msg = JSON.stringify({ type: "user", message: { role: "user", content: text } });
+    session.process.stdin.write(msg + "\n");
     return true;
   } catch (err) {
     sendTg(`[${name}] Write error: ${err.message}`);
