@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { config } from "dotenv";
@@ -50,6 +50,17 @@ function loadProjects() {
 }
 
 const PROJECTS = loadProjects();
+const PROJECTS_JSON_PATH = resolve(__dirname, "projects.json");
+
+function saveProjects() {
+  const data = PROJECTS.map((p) => ({
+    name: p.name,
+    path: p.path,
+    model: p.model,
+    autoStart: p.autoStart,
+  }));
+  writeFileSync(PROJECTS_JSON_PATH, JSON.stringify(data, null, 2) + "\n", "utf-8");
+}
 
 // ── Prompt detection patterns ───────────────────────────────
 const PROMPT_PATTERNS = [
@@ -413,6 +424,58 @@ bot.on("message", (msg) => {
     return;
   }
 
+  // Handle /add <name> <path> [model]
+  const addMatch = text.match(/^\/add\s+(\S+)\s+(\S+)(?:\s+(\S+))?$/i);
+  if (addMatch) {
+    const [, name, path, model] = addMatch;
+    if (sessions.has(name)) {
+      sendTg(`Session "${name}" already exists. Use /remove first.`);
+      return;
+    }
+    if (!existsSync(path)) {
+      sendTg(`Path does not exist: ${path}`);
+      return;
+    }
+    const project = { name, path, model: model || MODEL, autoStart: true };
+    PROJECTS.push(project);
+    sessions.set(name, createSession(project));
+    saveProjects();
+    sendTg(`Added "${name}" -> ${path}\nStarting session...`);
+    startSession(name);
+    return;
+  }
+
+  // Handle /remove <name|number>
+  const removeMatch = text.match(/^\/remove\s+(.+)$/i);
+  if (removeMatch) {
+    const name = resolveSessionName(removeMatch[1].trim());
+    if (!name) {
+      sendTg(`Session "${removeMatch[1]}" not found. Use /sessions to list.`);
+      return;
+    }
+    if (PROJECTS.length <= 1) {
+      sendTg("Cannot remove the last session. Add another first.");
+      return;
+    }
+    // Stop if running
+    const session = sessions.get(name);
+    if (session?.alive && session?.process) {
+      session.process.kill("SIGTERM");
+    }
+    // Switch active if removing active session
+    if (activeSessionName === name) {
+      const remaining = PROJECTS.find((p) => p.name !== name);
+      activeSessionName = remaining.name;
+    }
+    // Remove from PROJECTS array and sessions map
+    const idx = PROJECTS.findIndex((p) => p.name === name);
+    PROJECTS.splice(idx, 1);
+    sessions.delete(name);
+    saveProjects();
+    sendTg(`Removed "${name}". Active: ${activeSessionName}`);
+    return;
+  }
+
   switch (text) {
     case "/start":
       sendTg(
@@ -422,7 +485,9 @@ bot.on("message", (msg) => {
           "/switch <name>  - Switch active session\n" +
           "/1 /2 /3  - Quick switch by number\n" +
           "/start <name>  - Start a session\n" +
-          "/stop <name>  - Stop a session\n\n" +
+          "/stop <name>  - Stop a session\n" +
+          "/add <name> <path>  - Add new project\n" +
+          "/remove <name>  - Remove project\n\n" +
           "Active session commands:\n" +
           "/status  - Last output lines\n" +
           "/kill  - Stop active session\n" +

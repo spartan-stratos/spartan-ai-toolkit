@@ -83,6 +83,8 @@ pm2 logs claude-bridge
 | `/1` `/2` `/3` | Quick switch by number |
 | `/start <name>` | Start a stopped session |
 | `/stop <name>` | Stop a specific session |
+| `/add <name> <path>` | Add a new project (starts immediately) |
+| `/remove <name>` | Remove a project (stops session first) |
 
 ### Active Session
 
@@ -108,6 +110,21 @@ The Telegram keyboard updates dynamically:
 - `>` = active session
 - `x` = stopped session
 - Tap a session button to switch to it
+
+### Dynamic Project Management
+
+Add or remove projects without editing `projects.json` or restarting the bridge:
+
+```
+/add forge /Users/you/dev/forge-service
+/add admin /Users/you/dev/insight-admin claude-sonnet-4-6
+/remove admin
+```
+
+- `/add` validates the path exists, saves to `projects.json`, and starts the session
+- `/remove` stops the session, removes it, and updates `projects.json`
+- Optional third argument to `/add` sets the model (default: `claude-opus-4-6`)
+- Cannot remove the last remaining session
 
 ## How It Works
 
