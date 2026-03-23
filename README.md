@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">Spartan AI Toolkit</h1>
   <p align="center">
-    <strong>AI-powered engineering workflow for Claude Code</strong>
+    <strong>Turn Claude Code from a smart assistant into a disciplined engineering team</strong>
     <br />
     26 commands &middot; 9 coding rules &middot; 8 skills &middot; 2 expert agents
   </p>
@@ -15,15 +15,33 @@
 
 ---
 
-## What is Spartan?
+## Why Spartan?
 
-Spartan AI Toolkit turns [Claude Code](https://docs.anthropic.com/en/docs/claude-code) into a structured engineering workflow. It installs **slash commands, coding rules, skills, and expert agents** that make Claude Code reliable for real-world software development.
+Claude Code is powerful. It can write code, debug issues, and answer complex questions. But if you've used it on real projects, you've seen the pattern:
 
-**The problem:** "Create a PR" &rarr; Claude pushes code. Forgets to rebase, skips tests, no PR description.
+**Claude is like a brilliant junior dev who knows everything but follows no process.**
 
-**With Spartan:** `/spartan:pr-ready` &rarr; 6-step checklist: rebase, tests, lint, architecture check, security scan, PR description. Devs typically forget 3 of those 6.
+It writes code without tests. It pushes PRs without rebasing. It "helpfully" edits files you didn't ask it to touch. It forgets decisions from 20 minutes ago. And every developer on your team gets different code style from the same AI.
 
-> Not everything needs a command. Questions, explanations, small code changes (&lt; 30 min) &mdash; just talk to Claude directly. Commands are for **structured workflows where missing steps causes real problems**.
+Spartan fixes this. It's an **engineering discipline layer** &mdash; slash commands, coding rules, and persistent memory that make Claude Code reliable for production work.
+
+### Before & After
+
+| Scenario | Claude Code alone | With Spartan |
+|----------|------------------|-------------|
+| **"Create a PR"** | Pushes code. Forgets to rebase, skips tests, no PR description. | `/spartan:pr-ready` &rarr; 6-step checklist: rebase, tests, lint, architecture check, security scan, auto-generated PR description. |
+| **"Debug this error"** | Guesses a fix, applies it, hopes for the best. | `/spartan:debug` &rarr; 4-phase investigation: reproduce, isolate, root-cause, verify fix. Produces a Debug Report. |
+| **Long coding session** | Loses context after 30 min. Forgets earlier decisions. Repeats questions. | Auto-compacts context. Saves decisions to `.memory/`. Resumes perfectly in new sessions. |
+| **Team of 5 devs using Claude** | Each gets different code style, different patterns, different conventions. | 9 rule files enforce the same standards for everyone. Every Claude session reads the same rules. |
+| **"Fix the login bug"** | Edits the auth module, the user model, the API client, the config file... | `/spartan:freeze auth/` &rarr; Claude can only edit files in that directory. No scope creep. |
+| **3-week feature** | Chaos. No plan, no tracking, context lost between sessions. | `/spartan:project new` &rarr; Roadmap, phases, wave execution across parallel Claude tabs, persistent memory. |
+| **"Add a new API endpoint"** | Writes a controller. No manager layer, no tests, inconsistent naming. | `/api-endpoint-creator` &rarr; Full stack: Controller + Manager + Repository + Tests, following your team's conventions. |
+
+### What Spartan is NOT
+
+Spartan doesn't replace Claude &mdash; it makes Claude **consistent and reliable**.
+
+> Not everything needs a command. Questions, explanations, small code changes (&lt; 30 min) &mdash; just talk to Claude directly. Commands are for **structured workflows where missing steps cause real problems**.
 
 ---
 
@@ -265,11 +283,13 @@ Careful mode overrides auto mode &mdash; destructive operations always require c
 
 ## Bonus: Telegram Bridge
 
-Control Claude Code remotely from your phone when you're away from your desk.
+Control Claude Code remotely from your phone when you're away from your desk. Built on the [Claude Agent SDK](https://docs.anthropic.com/en/docs/claude-code/sdk) &mdash; no CLI spawning, real streaming responses.
 
 ```
-Phone (Telegram) ←→ Bridge (local) ←→ Claude Code (local)
+Phone (Telegram) ←→ Bridge (Node.js) ←→ Claude Agent SDK ←→ Claude API
 ```
+
+Multi-project sessions, cost tracking, secret redaction, `/scan` for project discovery, `/cancel` to abort queries.
 
 See [`claude-telegram-bridge/README.md`](claude-telegram-bridge/README.md) for setup.
 
