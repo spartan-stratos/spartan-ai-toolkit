@@ -81,8 +81,8 @@ The setup script automatically installs 9 rule files + 8 skills + 2 agents into 
 ## 2. Installation
 
 ```bash
-git clone https://github.com/spartan-org/spartan-ai-toolkit.git
-cd spartan-ai-toolkit
+git clone https://github.com/spartan-stratos/spartan-ai-toolkit.git
+cd spartan-ai-toolkit/spartan-ai-toolkit
 chmod +x scripts/setup.sh
 ./scripts/setup.sh --global
 ```
@@ -99,7 +99,26 @@ The script installs in 8 steps:
 
 Then **restart Claude Code** (required for Superpowers).
 
-Verify:
+### Where does everything go?
+
+After setup, everything lives in `~/.claude/` — Claude reads these files automatically in every project:
+
+```
+~/.claude/
+├── CLAUDE.md              ← The "brain" — Claude reads this every session
+│                            All workflow rules, conventions, and routing logic
+├── commands/
+│   ├── spartan.md         ← Smart router (/spartan)
+│   └── spartan/           ← 25 subcommands (/spartan:quickplan, etc.)
+├── rules/project/         ← 9 coding rule files (enforced automatically)
+├── skills/                ← 8 skill sets (/api-endpoint-creator, etc.)
+└── agents/                ← 2 expert agents
+```
+
+**Key file:** `~/.claude/CLAUDE.md` is the instructions file that controls Claude's behavior. To customize Spartan for your team, edit this file.
+
+### Verify
+
 ```bash
 cd ~/any-project && claude
 # Type: /spartan

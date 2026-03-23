@@ -66,7 +66,39 @@ Spartan doesn't replace Claude &mdash; it makes Claude **consistent and reliable
 
 ---
 
-## Quick Start
+## 30-Second Quick Start
+
+```bash
+git clone https://github.com/spartan-stratos/spartan-ai-toolkit.git
+cd spartan-ai-toolkit/spartan-ai-toolkit
+chmod +x scripts/setup.sh && ./scripts/setup.sh --global
+```
+
+Then open any project, run `claude`, and type `/spartan`. That's it.
+
+---
+
+## What Gets Installed Where?
+
+The setup script copies everything into `~/.claude/` — Claude reads these files automatically in every project.
+
+```
+~/.claude/
+├── CLAUDE.md              ← The "brain" — Claude reads this every session
+│                            (workflow rules, conventions, principles)
+├── commands/
+│   ├── spartan.md         ← Smart router entry point (/spartan)
+│   └── spartan/           ← 25 subcommands (/spartan:quickplan, etc.)
+├── rules/project/         ← 9 coding rule files (enforced automatically)
+├── skills/                ← 8 skill sets (slash commands like /api-endpoint-creator)
+└── agents/                ← 2 expert agents (micronaut-backend-expert, etc.)
+```
+
+**Key file:** `~/.claude/CLAUDE.md` is the instructions file. Claude reads it at the start of every session. This is where all workflow rules, conventions, and routing logic live. To customize Spartan for your team, edit this file.
+
+---
+
+## Full Install Details
 
 ### Prerequisites
 

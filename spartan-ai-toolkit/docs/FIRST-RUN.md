@@ -34,13 +34,10 @@ claude login
 ### Step 1 — Clone the toolkit repo
 
 ```bash
-git clone https://github.com/spartan-org/spartan-ai-toolkit.git
-cd spartan-ai-toolkit
+git clone https://github.com/spartan-stratos/spartan-ai-toolkit.git
+cd spartan-ai-toolkit/spartan-ai-toolkit
 chmod +x scripts/setup.sh
 ```
-
-> If not yet pushed to GitHub: copy this folder somewhere stable on your machine.
-> Example: `~/dev/spartan-ai-toolkit`
 
 ### Step 2 — Run setup (global — applies to all projects)
 
@@ -57,6 +54,24 @@ The script will:
 6. ✓ Copy 9 company rule files to `~/.claude/rules/project/` (asks backup if already exists)
 7. ✓ Copy 8 company skills to `~/.claude/skills/` (asks backup if already exists)
 8. ✓ Copy 2 agents to `~/.claude/agents/`
+
+### Where does everything go?
+
+After setup, everything lives in `~/.claude/` — Claude reads these files automatically in every project:
+
+```
+~/.claude/
+├── CLAUDE.md              ← The "brain" — Claude reads this every session
+│                            All workflow rules, conventions, and routing logic
+├── commands/
+│   ├── spartan.md         ← Smart router (/spartan)
+│   └── spartan/           ← 25 subcommands (/spartan:quickplan, etc.)
+├── rules/project/         ← 9 coding rule files (enforced automatically)
+├── skills/                ← 8 skill sets (/api-endpoint-creator, etc.)
+└── agents/                ← 2 expert agents
+```
+
+**Want to customize?** Edit `~/.claude/CLAUDE.md` — that's the single file that controls Claude's behavior across all your projects.
 
 ### Step 3 — Install Superpowers in Claude Code
 
@@ -320,7 +335,7 @@ git pull
 
 ```bash
 # Everyone just needs:
-git clone https://github.com/spartan-org/spartan-ai-toolkit.git
+git clone https://github.com/spartan-stratos/spartan-ai-toolkit.git
 cd spartan-ai-toolkit
 ./scripts/setup.sh --global
 # Follow the prompts — 8 steps, ~15 minutes
