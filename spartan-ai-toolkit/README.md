@@ -1,6 +1,6 @@
 # Spartan AI Toolkit
 
-> AI workflow for Engineering Managers — **Superpowers + GSD v5 + 26 commands**, full-stack Kotlin + Next.js.
+> AI workflow for Engineering Managers — **Superpowers + GSD v5 + 28 commands**, full-stack Kotlin + Next.js.
 
 ---
 
@@ -46,7 +46,7 @@ Example: `/spartan:pr-ready` checks 6 steps (rebase, tests, lint, architecture, 
 │  /spartan            → smart router: asks what you need     │
 │  /spartan:quickplan  → spec+plan+branch in one shot         │
 │  /spartan:pr-ready   → full checklist before creating PR    │
-│  ... 26 commands total                                       │
+│  ... 28 commands total                                       │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 3: GSD v5  (for large multi-session projects)        │
 │  /spartan:project new → decompose → plan → wave-execute     │
@@ -78,19 +78,21 @@ Details: see **[docs/CHEATSHEET.md](docs/CHEATSHEET.md)** — print it and keep 
 
 ---
 
-## 26 Commands
+## 28 Commands
 
 ### Start (project setup)
 | Command | When to use |
 |---|---|
 | `/spartan` | **Not sure which command** → smart router asks + routes |
-| `/spartan:project [action]` | Large project lifecycle: `new`, `status`, `milestone-new`, `milestone-complete` |
+| `/spartan:project [action]` | Large project lifecycle: `new`, `status`, `milestone-new`, `milestone-complete`, `milestone-summary`, `manager` |
 | `/spartan:phase [action] [N]` | Phase lifecycle: `discuss`, `plan`, `execute`, `verify` |
 | `/spartan:init-project [name]` | Auto-generate CLAUDE.md from codebase scan |
 | `/spartan:brownfield [svc]` | Entering unfamiliar codebase — map before touching |
 | `/spartan:kotlin-service [name]` | Scaffold new Micronaut microservice |
 | `/spartan:next-app [name]` | Scaffold new Next.js app |
 | `/spartan:gsd-upgrade [mode]` | Upgrade GSD v5 (memory + waves) |
+| `/spartan:workstreams [action]` | Parallel workstreams: `list`, `create`, `switch`, `progress`, `complete` |
+| `/spartan:forensics "problem"` | Post-mortem investigation for failed workflows |
 
 ### Build (daily task work)
 | Command | When to use |
@@ -170,7 +172,7 @@ spartan-ai-toolkit/
 ├── agents/                        ← Expert agents (2)
 └── .claude/commands/
     ├── spartan.md                 ← Smart router (entry point)
-    └── spartan/                   ← 25 slash commands
+    └── spartan/                   ← 27 slash commands
 ```
 
 ---

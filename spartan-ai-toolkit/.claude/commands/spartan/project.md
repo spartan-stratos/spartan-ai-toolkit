@@ -1,7 +1,7 @@
 ---
 name: spartan:project
 description: Manage large multi-session projects (> 3 days). Handles full lifecycle — create, check status, start new milestones, complete milestones. This is the Spartan wrapper for GSD project commands.
-argument-hint: "[new | status | milestone-new | milestone-complete]"
+argument-hint: "[new | status | milestone-new | milestone-complete | milestone-summary | manager]"
 ---
 
 # Project Management: {{ args[0] | default: "status" }}
@@ -72,6 +72,27 @@ Archiving current milestone and tagging the release.
 After completion, tell the user:
 "Milestone archived and tagged. Next step: `/spartan:project milestone-new` if there's more work, or you're done!"
 
+{% elif args[0] == "milestone-summary" %}
+## Milestone Summary
+
+Generate a comprehensive summary document from completed milestone artifacts. Useful for team onboarding, stakeholder updates, or reviewing what was accomplished.
+
+**Run:** `/gsd:milestone-summary`
+
+After generation, tell the user:
+"Milestone summary generated. Share it with your team for onboarding or review."
+
+{% elif args[0] == "manager" %}
+## Project Manager (Interactive Command Center)
+
+Launch an interactive command center for managing multiple phases from one terminal. Power user tool for overseeing complex projects.
+
+**Run:** `/gsd:manager`
+
+This provides a dashboard view of all phases, their status, and quick actions — all through `/spartan:*` commands.
+
+**Never suggest `/gsd:*` commands to the user.** Always translate to `/spartan:*`.
+
 {% else %}
 ## Unknown argument: {{ args[0] }}
 
@@ -80,4 +101,6 @@ Available options:
 - `/spartan:project status` — Check where you are
 - `/spartan:project milestone-new` — Start next milestone
 - `/spartan:project milestone-complete` — Archive current milestone
+- `/spartan:project milestone-summary` — Generate onboarding doc from milestone
+- `/spartan:project manager` — Interactive command center for power users
 {% endif %}

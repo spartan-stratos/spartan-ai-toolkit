@@ -16,8 +16,8 @@
 7. [Safety Guardrails — Protection from destructive errors](#7-safety-guardrails)
 8. [Context Management — Never lose state](#8-context-management)
 9. [GSD v5 — For large projects](#9-gsd-v5)
-10. [All 26 commands — Quick reference](#10-all-commands)
-11. [Changelog — v1 to v3](#11-changelog)
+10. [All 28 commands — Quick reference](#10-all-commands)
+11. [Changelog — v1 to v4](#11-changelog)
 
 ---
 
@@ -30,7 +30,7 @@ It consists of **3 layers** working together:
 When you say "review this", "debug this", "help me plan" — Claude auto-triggers the right skill.
 No command needed. This is the invisible layer.
 
-**Layer 2: Spartan Commands** (26 commands, type when needed)
+**Layer 2: Spartan Commands** (28 commands, type when needed)
 Pre-built, high-quality prompts for structured workflows: scaffold projects, create PRs, deploy, systematic debugging, Figma design-to-code, etc.
 
 **Layer 3: GSD v5** (for projects > 3 days)
@@ -317,21 +317,43 @@ Each WU can run in a separate Claude Code tab → true parallelism.
 
 Cannot be skipped, even in auto mode. Purpose: prevent building the wrong thing.
 
+**4. Workstreams** — parallel milestone work (new in GSD v1.28):
+- `/spartan:workstreams create <name>` — spin up an independent work track
+- `/spartan:workstreams switch <name>` — change active context
+- `/spartan:workstreams progress` — see all workstreams at a glance
+- Each workstream has its own milestones, phases, and progress
+
+**5. Workspaces** — isolated repo copies:
+- Each workspace gets its own `.planning/` directory
+- No interference between concurrent work tracks
+- Managed via GSD under the hood
+
+**6. Forensics** — post-mortem investigation:
+- `/spartan:forensics "what went wrong"` — diagnose failed workflows
+- Analyzes git history, planning artifacts, and project state
+- Read-only diagnostic — does not modify anything
+
+**7. Milestone Summary & Manager**:
+- `/spartan:project milestone-summary` — generate onboarding doc from completed milestone
+- `/spartan:project manager` — interactive command center for overseeing all phases
+
 ---
 
-## 10. All 26 Commands
+## 10. All 28 Commands
 
 ### Start (project setup, one-time)
 | Command | Description |
 |---|---|
 | `/spartan` | Smart router — asks what you need, routes to right command |
-| `/spartan:project [action]` | Large project lifecycle: `new`, `status`, `milestone-new`, `milestone-complete` |
+| `/spartan:project [action]` | Large project lifecycle: `new`, `status`, `milestone-new`, `milestone-complete`, `milestone-summary`, `manager` |
 | `/spartan:phase [action] [N]` | Phase lifecycle: `discuss`, `plan`, `execute`, `verify` |
 | `/spartan:init-project [name]` | Scan code → auto-generate CLAUDE.md |
 | `/spartan:brownfield [svc]` | Map unfamiliar codebase → CONTEXT-MAP.md |
 | `/spartan:kotlin-service [name]` | Scaffold Micronaut microservice |
 | `/spartan:next-app [name]` | Scaffold Next.js app |
 | `/spartan:gsd-upgrade [mode]` | Upgrade GSD v5 (memory + waves) |
+| `/spartan:workstreams [action]` | Parallel workstreams: `list`, `create`, `switch`, `progress`, `complete` |
+| `/spartan:forensics "problem"` | Post-mortem investigation for failed workflows |
 
 ### Build (daily task work)
 | Command | Description |
@@ -373,7 +395,7 @@ Cannot be skipped, even in auto mode. Purpose: prevent building the wrong thing.
 
 ---
 
-## 11. Changelog — v1 to v3
+## 11. Changelog — v1 to v4
 
 ### v1 → v2 (original → consolidated)
 - Combined Superpowers + GSD + Spartan commands into 1 toolkit
@@ -395,7 +417,7 @@ Cannot be skipped, even in auto mode. Purpose: prevent building the wrong thing.
 
 **UX refactor:**
 - CLAUDE.md restructured: "Why Spartan" → "Command or Chat?" → 3 Journeys → commands by phase
-- No more flat list of 26 commands — grouped by Start/Build/Ship/Setup/Ops/Safety
+- No more flat list of 28 commands — grouped by Start/Build/Ship/Setup/Ops/Safety
 - CHEATSHEET.md: 1-page quick reference, print and pin next to monitor
 - Clear decision tree: when to use commands vs. when to just chat
 
@@ -412,6 +434,26 @@ Cannot be skipped, even in auto mode. Purpose: prevent building the wrong thing.
 - 8 company skills synced to all projects
 - 2 expert agents (micronaut-backend-expert, solution-architect-cto)
 - Setup script handles existing files: asks backup+overwrite or skip
+
+### v3 → v4 (GSD v1.28 features + 2 new commands)
+
+**New commands:**
+- `/spartan:workstreams` — Manage parallel workstreams for concurrent milestone work
+- `/spartan:forensics` — Post-mortem investigation for failed or stuck workflows
+
+**New project actions:**
+- `/spartan:project milestone-summary` — Generate onboarding doc from completed milestone
+- `/spartan:project manager` — Interactive command center for managing multiple phases
+
+**GSD v1.28 features wrapped:**
+- Workstream namespacing — run multiple milestones in parallel
+- Workspace isolation — isolated repo copies with independent `.planning/`
+- Forensics — post-mortem workflow investigation
+- Milestone summary — team onboarding after milestone completion
+- Manager — interactive command center for power users
+- New settings: `workflow.skip_discuss`, `workflow.discuss_mode`
+
+**Total commands:** 26 → 28
 
 ---
 
@@ -432,5 +474,5 @@ Cannot be skipped, even in auto mode. Purpose: prevent building the wrong thing.
 
 ---
 
-*Spartan AI Toolkit — 26 commands, 3 layers, 1 workflow.*
+*Spartan AI Toolkit — 28 commands, 3 layers, 1 workflow.*
 *Type `/spartan` to get started.*

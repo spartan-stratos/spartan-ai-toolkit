@@ -91,6 +91,10 @@ Based on what the user says, match to the right command:
 | "execute", "start building", "run phase" | `/spartan:phase execute N` |
 | "verify", "check work", "UAT" | `/spartan:phase verify N` |
 | "milestone done", "complete milestone" | `/spartan:project milestone-complete` |
+| "milestone summary", "onboarding doc", "what did we build" | `/spartan:project milestone-summary` |
+| "manage phases", "command center", "dashboard", "manager" | `/spartan:project manager` |
+| "workstreams", "parallel work", "concurrent milestones" | `/spartan:workstreams` |
+| "what went wrong", "forensics", "post-mortem", "why did it fail" | `/spartan:forensics` |
 
 ### Setup & scaffolding (less frequent)
 | User says something like... | Route to |
@@ -150,7 +154,7 @@ Say: "This does not need a command — let me handle it directly."
 
 Don't dump all 20. Group by journey:
 
-"Spartan has 26 commands, but you only need to remember 3 things:
+"Spartan has 28 commands, but you only need to remember 3 things:
 
 **New project:**
 `/spartan:init-project` → `kotlin-service` / `next-app` → `gsd-upgrade`

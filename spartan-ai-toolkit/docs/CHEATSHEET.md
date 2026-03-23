@@ -148,11 +148,13 @@ Cannot be skipped — not even in auto mode.
 | Phase | Command | Description |
 |---|---|---|
 | **Start** | `/spartan` | Smart router — asks what you need, routes |
-| **Start** | `/spartan:project [action]` | Large project: `new`, `status`, `milestone-new`, `milestone-complete` |
+| **Start** | `/spartan:project [action]` | Large project: `new`, `status`, `milestone-new`, `milestone-complete`, `milestone-summary`, `manager` |
 | **Start** | `/spartan:phase [action] [N]` | Phase: `discuss`, `plan`, `execute`, `verify` |
 | **Start** | `/spartan:init-project` | Scan code → generate CLAUDE.md |
 | **Start** | `/spartan:brownfield` | Map unfamiliar codebase before touching |
 | **Start** | `/spartan:gsd-upgrade` | Upgrade GSD v5 (memory + waves) |
+| **Start** | `/spartan:workstreams` | Parallel workstreams: list, create, switch, progress, complete |
+| **Start** | `/spartan:forensics` | Post-mortem investigation for failed workflows |
 | **Build** | `/spartan:quickplan` | Spec + plan + branch (< 1 day) |
 | **Build** | `/spartan:debug` | 4-phase root cause investigation |
 | **Build** | `/spartan:figma-to-code` | Figma MCP → production React |

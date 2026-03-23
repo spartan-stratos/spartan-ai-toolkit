@@ -202,13 +202,15 @@ Only after user answers all 3 → proceed to normal requirement gathering.
 | Command | Purpose |
 |---|---|
 | `/spartan` | **Smart router** — asks what you need, routes to right command |
-| `/spartan:project [action]` | Manage large projects: `new`, `status`, `milestone-new`, `milestone-complete` |
+| `/spartan:project [action]` | Manage large projects: `new`, `status`, `milestone-new`, `milestone-complete`, `milestone-summary`, `manager` |
 | `/spartan:phase [action] [N]` | Manage phases: `discuss`, `plan`, `execute`, `verify` |
 | `/spartan:init-project [name]` | Auto-generate project CLAUDE.md from codebase scan |
 | `/spartan:brownfield [svc]` | Map existing codebase; generates CONTEXT-MAP.md |
 | `/spartan:kotlin-service [name]` | Scaffold Micronaut microservice |
 | `/spartan:next-app [name]` | Scaffold Next.js app (App Router, Vitest, Docker, CI) |
 | `/spartan:gsd-upgrade [mode]` | Upgrade GSD to v5 (decompose + memory + waves) |
+| `/spartan:workstreams [action]` | Parallel workstreams: `list`, `create`, `switch`, `status`, `progress`, `complete`, `resume` |
+| `/spartan:forensics "problem"` | Post-mortem investigation — diagnose failed workflows |
 
 ### Build (daily task work)
 | Command | Purpose |
@@ -283,18 +285,48 @@ Wave 3 (final):    WU-6              ← integration
 ```
 Multi-tab: each Claude Code tab handles one WU from the same wave.
 
+### Workstreams & Workspaces (new in GSD v1.28)
+
+**Workstreams** (`/spartan:workstreams`) — run multiple milestones in parallel:
+- `create <name>` — spin up an independent work track
+- `switch <name>` — change active context between workstreams
+- `progress` — see all workstreams' completion at a glance
+- Useful when multiple features/initiatives need to move forward simultaneously
+
+**Workspaces** — isolated repo copies for safe parallel work:
+- Each workspace gets its own `.planning/` directory
+- No interference between concurrent work tracks
+- GSD manages workspace lifecycle automatically
+
+**Forensics** (`/spartan:forensics`) — post-mortem for failed workflows:
+- Analyzes git history, planning artifacts, and state
+- Diagnoses what went wrong and why
+- Read-only diagnostic tool — does not modify anything
+
+**Milestone Summary** (`/spartan:project milestone-summary`) — generate onboarding doc:
+- Comprehensive summary from completed milestone artifacts
+- Share with team members joining mid-project
+
+**Manager** (`/spartan:project manager`) — interactive command center:
+- Dashboard view of all phases and their status
+- Quick actions from one terminal for power users
+
 ### Project Lifecycle Commands (wraps GSD under the hood)
 ```
 /spartan:project new               Create project → PROJECT.md → ROADMAP.md
 /spartan:project status             Where are we? Current milestone/phase
 /spartan:project milestone-new      Start next milestone
 /spartan:project milestone-complete Archive milestone + git tag
+/spartan:project milestone-summary  Generate onboarding doc from milestone
+/spartan:project manager            Interactive command center for power users
 
 /spartan:phase discuss N            Office Hours (3 questions) → decompose → requirements
 /spartan:phase plan N               Generate wave-parallel execution plan
 /spartan:phase execute N            Execute tasks wave by wave (TDD, safety)
 /spartan:phase verify N             UAT + acceptance criteria + capture to .memory/
 
+/spartan:workstreams [action]       Manage parallel workstreams (list/create/switch/complete)
+/spartan:forensics "problem"        Post-mortem investigation for failed workflows
 /spartan:quickplan "task"           Ad-hoc task < 1 day (no full lifecycle needed)
 ```
 
