@@ -453,6 +453,23 @@ Generate one automatically:
 
 ---
 
+## Contributing
+
+We welcome contributions! Before submitting a PR, please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
+
+- How to structure commands, rules, skills, and agents
+- Testing your changes (there's no automated test suite &mdash; manual verification required)
+- Commit message conventions
+- What makes a good PR
+
+**Quick rules:**
+1. Every command must work standalone &mdash; no hidden dependencies between commands
+2. Rules must be enforceable &mdash; if Claude can't follow it consistently, don't add it
+3. Test with `setup.sh --global` on a clean `~/.claude/` before submitting
+4. Keep `CLAUDE.md` under 200 lines of actionable content &mdash; Claude reads it every session
+
+---
+
 ## Credits
 
 - [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent
