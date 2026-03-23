@@ -9,6 +9,7 @@
     "dev": "node --watch bridge.js"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.0",
     "dotenv": "^16.4.7",
     "node-telegram-bot-api": "^0.66.0"
   }
