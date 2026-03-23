@@ -314,17 +314,56 @@ Careful mode overrides auto mode &mdash; destructive operations always require c
 
 ---
 
-## Bonus: Telegram Bridge
+## Telegram Bridge — Control Claude from Your Phone
 
-Control Claude Code remotely from your phone when you're away from your desk. Built on the [Claude Agent SDK](https://docs.anthropic.com/en/docs/claude-code/sdk) &mdash; no CLI spawning, real streaming responses.
+Away from your desk but need to check something, run a command, or debug an issue? The Telegram bridge lets you control Claude Code remotely from your phone.
 
 ```
 Phone (Telegram) ←→ Bridge (Node.js) ←→ Claude Agent SDK ←→ Claude API
 ```
 
-Multi-project sessions, cost tracking, secret redaction, `/scan` for project discovery, `/cancel` to abort queries.
+Built on the [Claude Agent SDK](https://docs.anthropic.com/en/docs/claude-code/sdk) &mdash; no CLI spawning, real streaming responses.
 
-See [`claude-telegram-bridge/README.md`](claude-telegram-bridge/README.md) for setup.
+### Quick Setup (5 min)
+
+**1. Create a Telegram bot:** Open Telegram &rarr; find `@BotFather` &rarr; `/newbot` &rarr; copy the **token**
+
+**2. Get your chat ID:** Find `@userinfobot` in Telegram &rarr; `/start` &rarr; copy your **Id**
+
+**3. Configure and run:**
+
+```bash
+cd claude-telegram-bridge
+cp .env.example .env
+# Edit .env: set TELEGRAM_TOKEN and MY_CHAT_ID
+npm install && node bridge.js
+```
+
+**4. Add projects from your phone:**
+
+Send `/scan` in Telegram &mdash; the bridge lists all folders in your workspace. Reply with a number to add a project. Done.
+
+### What You Can Do From Your Phone
+
+| Command | Action |
+|---------|--------|
+| Type any text | Send query to Claude in the active project |
+| `/scan` | Discover and add projects |
+| `/sessions` | List all sessions with status and cost |
+| `/1` `/2` `/3` | Quick switch between projects |
+| `/cancel` | Abort current query |
+| `/cost` | See cost breakdown per project |
+
+### Features
+
+- **Multi-project sessions** &mdash; switch between projects with one tap
+- **Real-time streaming** &mdash; responses update live as Claude generates output
+- **Cost tracking** &mdash; per-project and total cost breakdown
+- **Secret redaction** &mdash; API keys, tokens, passwords auto-redacted before reaching Telegram
+- **Session persistence** &mdash; sessions survive bridge restarts (resume via session ID)
+- **Security** &mdash; hard rejects all messages not from your chat ID
+
+For background running with pm2, advanced config, and troubleshooting, see [`claude-telegram-bridge/README.md`](claude-telegram-bridge/README.md).
 
 ---
 
