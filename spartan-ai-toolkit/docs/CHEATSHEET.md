@@ -171,6 +171,7 @@ Cannot be skipped — not even in auto mode.
 | **Ops** | `/spartan:daily` | Standup summary |
 | **Ops** | `/spartan:env-setup` | Audit env vars |
 | **Ops** | `/spartan:context-save` | Save session → resume later |
+| **Ops** | `/spartan:update` | Check for updates + upgrade toolkit |
 | **Safety** | `/spartan:careful` | Warn before destructive ops |
 | **Safety** | `/spartan:freeze <dir>` | Lock edits to one directory |
 | **Safety** | `/spartan:unfreeze` | Remove directory lock |

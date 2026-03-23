@@ -23,7 +23,7 @@ TOOLKIT_ROOT="$(dirname "$SCRIPT_DIR")"
 echo ""
 echo -e "${BOLD}╔══════════════════════════════════════════╗${NC}"
 echo -e "${BOLD}║     Spartan AI Toolkit Setup v3.1        ║${NC}"
-echo -e "${BOLD}║   Superpowers + GSD v5 + 28 Commands     ║${NC}"
+echo -e "${BOLD}║   Superpowers + GSD v5 + 29 Commands     ║${NC}"
 echo -e "${BOLD}╚══════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  Mode: ${YELLOW}${MODE}${NC}"
@@ -32,7 +32,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 1: Prerequisites
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[1/9]${NC} ${BOLD}Checking prerequisites...${NC}"
+echo -e "${BLUE}[1/10]${NC} ${BOLD}Checking prerequisites...${NC}"
 
 ERRORS=0
 
@@ -71,7 +71,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 2: Superpowers
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[2/9]${NC} ${BOLD}Install Superpowers in Claude Code${NC}"
+echo -e "${BLUE}[2/10]${NC} ${BOLD}Install Superpowers in Claude Code${NC}"
 echo ""
 echo -e "  Open Claude Code and run these two commands:"
 echo ""
@@ -88,7 +88,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 3: GSD
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[3/9]${NC} ${BOLD}Installing GSD (Get Shit Done)...${NC}"
+echo -e "${BLUE}[3/10]${NC} ${BOLD}Installing GSD (Get Shit Done)...${NC}"
 
 GSD_FLAGS="--global"
 [[ "$MODE" == "local" ]] && GSD_FLAGS="--local"
@@ -103,7 +103,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 4: CLAUDE.md
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[4/9]${NC} ${BOLD}Installing CLAUDE.md...${NC}"
+echo -e "${BLUE}[4/10]${NC} ${BOLD}Installing CLAUDE.md...${NC}"
 
 SOURCE_CLAUDE="$TOOLKIT_ROOT/CLAUDE.md"
 
@@ -154,7 +154,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 5: Spartan commands
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[5/9]${NC} ${BOLD}Installing Spartan commands...${NC}"
+echo -e "${BLUE}[5/10]${NC} ${BOLD}Installing Spartan commands...${NC}"
 
 COMMANDS_SRC="$TOOLKIT_ROOT/.claude/commands/spartan"
 
@@ -197,7 +197,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 6: Company Rules
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[6/9]${NC} ${BOLD}Installing company rules...${NC}"
+echo -e "${BLUE}[6/10]${NC} ${BOLD}Installing company rules...${NC}"
 
 RULES_SRC="$TOOLKIT_ROOT/rules/project"
 
@@ -292,7 +292,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 7: Company Skills
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[7/9]${NC} ${BOLD}Installing company skills...${NC}"
+echo -e "${BLUE}[7/10]${NC} ${BOLD}Installing company skills...${NC}"
 
 SKILLS_SRC="$TOOLKIT_ROOT/skills"
 
@@ -412,7 +412,7 @@ echo ""
 AGENTS_SRC="$TOOLKIT_ROOT/agents"
 
 if [[ -d "$AGENTS_SRC" ]]; then
-  echo -e "${BLUE}[8/9]${NC} ${BOLD}Installing agents...${NC}"
+  echo -e "${BLUE}[8/10]${NC} ${BOLD}Installing agents...${NC}"
 
   if [[ "$MODE" == "global" ]]; then
     AGENTS_DEST="$HOME/.claude/agents"
@@ -439,7 +439,7 @@ fi
 # ─────────────────────────────────────────────────────────────
 # Step 9: Auto-save context hook
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[9/9]${NC} ${BOLD}Installing auto-save context hook...${NC}"
+echo -e "${BLUE}[9/10]${NC} ${BOLD}Installing auto-save context hook...${NC}"
 
 HOOK_SCRIPT_SRC="$TOOLKIT_ROOT/scripts/auto-save-context.js"
 
@@ -502,6 +502,24 @@ fi
 echo ""
 echo -e "  Auto-save activates when Claude Code auto-compacts (context getting full)."
 echo -e "  Saves to ${CYAN}.handoff/auto-*.md${NC} in your project root."
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Step 10: Write version for update checks
+# ─────────────────────────────────────────────────────────────
+SPARTAN_VERSION=$(cat "$TOOLKIT_ROOT/VERSION" 2>/dev/null || echo "unknown")
+echo -e "${BLUE}[10/10]${NC} ${BOLD}Recording version...${NC}"
+
+if [[ "$MODE" == "global" ]]; then
+  echo "$SPARTAN_VERSION" > "$HOME/.claude/.spartan-version"
+  # Save repo path for /spartan:update
+  echo "$TOOLKIT_ROOT" > "$HOME/.claude/.spartan-repo"
+else
+  echo "$SPARTAN_VERSION" > "$(pwd)/.claude/.spartan-version"
+  echo "$TOOLKIT_ROOT" > "$(pwd)/.claude/.spartan-repo"
+fi
+
+echo -e "  ${GREEN}✓${NC} Spartan v${SPARTAN_VERSION}"
 echo ""
 
 # ─────────────────────────────────────────────────────────────

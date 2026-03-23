@@ -241,6 +241,7 @@ Only after user answers all 3 → proceed to normal requirement gathering.
 |---|---|
 | `/spartan:daily` | Standup summary from git log + GSD status |
 | `/spartan:context-save` | Smart context management: compact first, full save if needed |
+| `/spartan:update` | Check for updates and upgrade Spartan to latest version |
 
 ### Safety (guardrails, on-demand)
 | Command | Purpose |

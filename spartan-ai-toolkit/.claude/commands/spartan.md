@@ -22,7 +22,22 @@ ls CLAUDE.md .planning/ .memory/ .handoff/ 2>/dev/null
 ls build.gradle.kts package.json next.config.* 2>/dev/null
 ls .git 2>/dev/null && git branch --show-current 2>/dev/null
 ls .planning/PROJECT.md 2>/dev/null && echo "GSD_ACTIVE"
+
+# Check for Spartan updates (silent, non-blocking)
+LOCAL_VER=$(cat ~/.claude/.spartan-version 2>/dev/null || echo "")
+REPO_PATH=$(cat ~/.claude/.spartan-repo 2>/dev/null || echo "")
+if [ -n "$REPO_PATH" ] && [ -d "$REPO_PATH/.git" ]; then
+  REMOTE_VER=$(cd "$REPO_PATH" && git fetch origin main --quiet 2>/dev/null && git show origin/main:spartan-ai-toolkit/VERSION 2>/dev/null || echo "")
+  if [ -n "$REMOTE_VER" ] && [ -n "$LOCAL_VER" ] && [ "$REMOTE_VER" != "$LOCAL_VER" ]; then
+    echo "SPARTAN_UPDATE_AVAILABLE=$REMOTE_VER"
+  fi
+fi
 ```
+
+**If the scan outputs `SPARTAN_UPDATE_AVAILABLE=X.Y.Z`**, show this banner before anything else:
+> **Update available:** Spartan vX.Y.Z (you have v$LOCAL_VER). Run `/spartan:update` to upgrade.
+
+Then continue with routing normally.
 
 Classify silently:
 - **No project files** → New project journey
@@ -111,6 +126,7 @@ Based on what the user says, match to the right command:
 | "standup", "what did I do yesterday" | `/spartan:daily` |
 | "context running out", "save session" | `/spartan:context-save` |
 | "upgrade GSD", "agent memory", "wave execution" | `/spartan:gsd-upgrade` |
+| "update spartan", "new version", "upgrade toolkit" | `/spartan:update` |
 
 ### Safety
 | User says something like... | Route to |
@@ -154,7 +170,7 @@ Say: "This does not need a command — let me handle it directly."
 
 Don't dump all 20. Group by journey:
 
-"Spartan has 28 commands, but you only need to remember 3 things:
+"Spartan has 29 commands, but you only need to remember 3 things:
 
 **New project:**
 `/spartan:init-project` → `kotlin-service` / `next-app` → `gsd-upgrade`
