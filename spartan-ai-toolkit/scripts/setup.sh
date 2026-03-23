@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Spartan AI Toolkit — Setup Script v3.0
+# Spartan AI Toolkit — Setup Script v3.1
 # Usage:
 #   ./scripts/setup.sh --global   install to ~/.claude (all projects)
 #   ./scripts/setup.sh --local    install to ./.claude (this project only)
@@ -22,7 +22,7 @@ TOOLKIT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 echo ""
 echo -e "${BOLD}╔══════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}║     Spartan AI Toolkit Setup v3.0        ║${NC}"
+echo -e "${BOLD}║     Spartan AI Toolkit Setup v3.1        ║${NC}"
 echo -e "${BOLD}║   Superpowers + GSD v5 + 26 Commands     ║${NC}"
 echo -e "${BOLD}╚══════════════════════════════════════════╝${NC}"
 echo ""
@@ -32,7 +32,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 1: Prerequisites
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[1/8]${NC} ${BOLD}Checking prerequisites...${NC}"
+echo -e "${BLUE}[1/9]${NC} ${BOLD}Checking prerequisites...${NC}"
 
 ERRORS=0
 
@@ -71,7 +71,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 2: Superpowers
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[2/8]${NC} ${BOLD}Install Superpowers in Claude Code${NC}"
+echo -e "${BLUE}[2/9]${NC} ${BOLD}Install Superpowers in Claude Code${NC}"
 echo ""
 echo -e "  Open Claude Code and run these two commands:"
 echo ""
@@ -88,7 +88,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 3: GSD
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[3/8]${NC} ${BOLD}Installing GSD (Get Shit Done)...${NC}"
+echo -e "${BLUE}[3/9]${NC} ${BOLD}Installing GSD (Get Shit Done)...${NC}"
 
 GSD_FLAGS="--global"
 [[ "$MODE" == "local" ]] && GSD_FLAGS="--local"
@@ -103,7 +103,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 4: CLAUDE.md
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[4/8]${NC} ${BOLD}Installing CLAUDE.md...${NC}"
+echo -e "${BLUE}[4/9]${NC} ${BOLD}Installing CLAUDE.md...${NC}"
 
 SOURCE_CLAUDE="$TOOLKIT_ROOT/CLAUDE.md"
 
@@ -154,7 +154,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 5: Spartan commands
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[5/8]${NC} ${BOLD}Installing Spartan commands...${NC}"
+echo -e "${BLUE}[5/9]${NC} ${BOLD}Installing Spartan commands...${NC}"
 
 COMMANDS_SRC="$TOOLKIT_ROOT/.claude/commands/spartan"
 
@@ -197,7 +197,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 6: Company Rules
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[6/8]${NC} ${BOLD}Installing company rules...${NC}"
+echo -e "${BLUE}[6/9]${NC} ${BOLD}Installing company rules...${NC}"
 
 RULES_SRC="$TOOLKIT_ROOT/rules/project"
 
@@ -292,7 +292,7 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 7: Company Skills
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[7/8]${NC} ${BOLD}Installing company skills...${NC}"
+echo -e "${BLUE}[7/9]${NC} ${BOLD}Installing company skills...${NC}"
 
 SKILLS_SRC="$TOOLKIT_ROOT/skills"
 
@@ -412,7 +412,7 @@ echo ""
 AGENTS_SRC="$TOOLKIT_ROOT/agents"
 
 if [[ -d "$AGENTS_SRC" ]]; then
-  echo -e "${BLUE}[8/8]${NC} ${BOLD}Installing agents...${NC}"
+  echo -e "${BLUE}[8/9]${NC} ${BOLD}Installing agents...${NC}"
 
   if [[ "$MODE" == "global" ]]; then
     AGENTS_DEST="$HOME/.claude/agents"
@@ -435,6 +435,74 @@ if [[ -d "$AGENTS_SRC" ]]; then
   echo -e "  Installed ${BOLD}${ACOUNT} agents${NC}"
   echo ""
 fi
+
+# ─────────────────────────────────────────────────────────────
+# Step 9: Auto-save context hook
+# ─────────────────────────────────────────────────────────────
+echo -e "${BLUE}[9/9]${NC} ${BOLD}Installing auto-save context hook...${NC}"
+
+HOOK_SCRIPT_SRC="$TOOLKIT_ROOT/scripts/auto-save-context.js"
+
+if [[ "$MODE" == "global" ]]; then
+  HOOK_SCRIPT_DEST="$HOME/.claude/scripts/auto-save-context.js"
+  SETTINGS_FILE="$HOME/.claude/settings.json"
+else
+  HOOK_SCRIPT_DEST="$(pwd)/.claude/scripts/auto-save-context.js"
+  SETTINGS_FILE="$(pwd)/.claude/settings.json"
+fi
+
+# Copy hook script
+mkdir -p "$(dirname "$HOOK_SCRIPT_DEST")"
+cp "$HOOK_SCRIPT_SRC" "$HOOK_SCRIPT_DEST"
+echo -e "  ${GREEN}✓${NC} auto-save-context.js copied"
+
+# Configure hook in settings.json
+HOOK_CMD="node $HOOK_SCRIPT_DEST"
+
+if [[ -f "$SETTINGS_FILE" ]]; then
+  # Check if hook already configured
+  if grep -q "auto-save-context" "$SETTINGS_FILE" 2>/dev/null; then
+    echo -e "  ${GREEN}✓${NC} PostCompact hook already configured"
+  else
+    # Use node to safely merge hook into existing settings.json
+    node -e "
+      const fs = require('fs');
+      const settings = JSON.parse(fs.readFileSync('$SETTINGS_FILE', 'utf-8'));
+      if (!settings.hooks) settings.hooks = {};
+      if (!settings.hooks.PostCompact) settings.hooks.PostCompact = [];
+      settings.hooks.PostCompact.push({
+        type: 'command',
+        command: '$HOOK_CMD'
+      });
+      fs.writeFileSync('$SETTINGS_FILE', JSON.stringify(settings, null, 2) + '\n', 'utf-8');
+    " 2>/dev/null
+    if [ $? -eq 0 ]; then
+      echo -e "  ${GREEN}✓${NC} PostCompact hook added to settings.json"
+    else
+      echo -e "  ${YELLOW}⚠${NC} Could not update settings.json — add hook manually (see below)"
+    fi
+  fi
+else
+  # Create new settings.json with hook
+  cat > "$SETTINGS_FILE" <<HOOK_EOF
+{
+  "hooks": {
+    "PostCompact": [
+      {
+        "type": "command",
+        "command": "$HOOK_CMD"
+      }
+    ]
+  }
+}
+HOOK_EOF
+  echo -e "  ${GREEN}✓${NC} settings.json created with PostCompact hook"
+fi
+
+echo ""
+echo -e "  Auto-save activates when Claude Code auto-compacts (context getting full)."
+echo -e "  Saves to ${CYAN}.handoff/auto-*.md${NC} in your project root."
+echo ""
 
 # ─────────────────────────────────────────────────────────────
 # Done

@@ -82,7 +82,7 @@ chmod +x scripts/setup.sh
 ./scripts/setup.sh --global
 ```
 
-The setup script runs 8 steps:
+The setup script runs 9 steps:
 
 1. Check prerequisites (node, npm, git, claude)
 2. Guide Superpowers plugin install
@@ -92,6 +92,7 @@ The setup script runs 8 steps:
 6. Install 9 coding rule files to `~/.claude/rules/`
 7. Install 8 skills to `~/.claude/skills/`
 8. Install 2 expert agents to `~/.claude/agents/`
+9. Configure auto-save context hook (saves state when context gets full)
 
 ### Verify
 
