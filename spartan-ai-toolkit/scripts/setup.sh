@@ -465,14 +465,17 @@ if [[ -f "$SETTINGS_FILE" ]]; then
     echo -e "  ${GREEN}✓${NC} PostCompact hook already configured"
   else
     # Use node to safely merge hook into existing settings.json
+    # Uses nested {hooks:[{type,command}]} format to match GSD hook structure
     node -e "
       const fs = require('fs');
       const settings = JSON.parse(fs.readFileSync('$SETTINGS_FILE', 'utf-8'));
       if (!settings.hooks) settings.hooks = {};
       if (!settings.hooks.PostCompact) settings.hooks.PostCompact = [];
       settings.hooks.PostCompact.push({
-        type: 'command',
-        command: '$HOOK_CMD'
+        hooks: [{
+          type: 'command',
+          command: '$HOOK_CMD'
+        }]
       });
       fs.writeFileSync('$SETTINGS_FILE', JSON.stringify(settings, null, 2) + '\n', 'utf-8');
     " 2>/dev/null
@@ -489,8 +492,12 @@ else
   "hooks": {
     "PostCompact": [
       {
-        "type": "command",
-        "command": "$HOOK_CMD"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOK_CMD"
+          }
+        ]
       }
     ]
   }
