@@ -377,11 +377,40 @@ Send `/scan` in Telegram &mdash; the bridge lists all folders in your workspace.
 | `/sessions` | List all sessions with status and cost |
 | `/1` `/2` `/3` | Quick switch between projects |
 | `/cancel` | Abort current query |
+| `/permissions` | Toggle approve/deny tool use from phone |
 | `/cost` | See cost breakdown per project |
+
+### Permission Relay — Approve/Deny from Phone
+
+By default, the bridge auto-allows all tools (bypass mode). Turn on interactive permissions to approve or deny each tool action from your phone:
+
+```
+/permissions on     ← Enable: Claude asks before Write, Edit, Bash, Task
+/permissions off    ← Disable: auto-allow everything (default)
+/permissions        ← Toggle
+```
+
+When enabled, Claude sends an inline keyboard for each dangerous action:
+
+```
+[session] Permission
+Claude wants to run: git push origin main
+
+[Allow]  [Deny]  [Always Allow]
+```
+
+- **Allow** &mdash; approve this one action
+- **Deny** &mdash; reject (Claude gets "Denied by user" message)
+- **Always Allow** &mdash; approve + don't ask again for this tool pattern
+- Safe tools (Read, Glob, Grep, WebSearch, WebFetch) are always auto-allowed
+- Unanswered prompts auto-deny after 5 min (configurable via `PERMISSION_TIMEOUT` env var)
+
+Set `PERMISSION_MODE=interactive` in `.env` to start with interactive mode by default.
 
 ### Features
 
 - **Multi-project sessions** &mdash; switch between projects with one tap
+- **Permission relay** &mdash; approve/deny Claude's tool use from your phone
 - **Real-time streaming** &mdash; responses update live as Claude generates output
 - **Cost tracking** &mdash; per-project and total cost breakdown
 - **Secret redaction** &mdash; API keys, tokens, passwords auto-redacted before reaching Telegram

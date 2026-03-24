@@ -136,6 +136,7 @@ Projects added via `/add` or `/scan` are automatically saved to `projects.json`.
 | `y` / `n` | Quick replies (keyboard buttons) |
 | `/cancel` | Abort current query |
 | `/stop <name>` | Abort a specific session's query |
+| `/permissions [on\|off]` | Toggle approve/deny tool use from phone |
 | `/status` | Show last output lines |
 | `/cost` | Show cost breakdown per project |
 | `/ping` | Check bridge status |
@@ -171,6 +172,39 @@ Every query reports cost. Use `/cost` for a per-project breakdown, or `/sessions
 ### Secret Redaction
 
 API keys, tokens, passwords, connection strings, and private keys are automatically redacted before being sent to Telegram.
+
+### Permission Relay
+
+Control what Claude can do from your phone. By default, the bridge auto-allows all tools (bypass mode — original behavior). Enable interactive mode to approve or deny each dangerous action:
+
+```
+/permissions on     ← Claude asks before Write, Edit, Bash, Task
+/permissions off    ← Auto-allow everything (default)
+/permissions        ← Toggle current mode
+```
+
+When enabled, Claude sends an inline keyboard for each action that needs approval:
+
+```
+[session-name] Permission
+
+Claude wants to run: rm -rf dist/
+Reason: Clean build directory before rebuild
+
+[Allow]  [Deny]  [Always Allow]
+```
+
+| Button | What it does |
+|--------|-------------|
+| **Allow** | Approve this one action |
+| **Deny** | Reject — Claude gets "Denied by user" and adjusts |
+| **Always Allow** | Approve + remember for this tool pattern (no future prompts) |
+
+**Safe tools are always auto-allowed** (no prompts): Read, Glob, Grep, WebSearch, WebFetch.
+
+**Timeout**: Unanswered prompts auto-deny after 5 minutes. Configure with `PERMISSION_TIMEOUT` in `.env` (milliseconds).
+
+**Default mode**: Set `PERMISSION_MODE=interactive` in `.env` to start all sessions in interactive mode.
 
 ### Project Scanning
 

@@ -13,6 +13,10 @@ const TOKEN = process.env.TELEGRAM_TOKEN;
 const CHAT_ID = Number(process.env.MY_CHAT_ID);
 const MODEL = process.env.CLAUDE_MODEL || "claude-opus-4-6";
 const STATUS_LINES = Number(process.env.STATUS_LINES) || 50;
+const PERMISSION_TIMEOUT_MS = Number(process.env.PERMISSION_TIMEOUT) || 300000; // 5 min
+// Tools auto-allowed without prompting in interactive permission mode (read-only, safe)
+const SAFE_TOOLS = ["Read", "Glob", "Grep", "WebSearch", "WebFetch"];
+const DEFAULT_PERM_INTERACTIVE = process.env.PERMISSION_MODE === "interactive";
 // Comma-separated list of directories to scan for projects
 const SCAN_ROOTS = (process.env.SCAN_ROOTS || `${homedir()}/WORKSPACES`)
   .split(",")
@@ -117,6 +121,7 @@ function saveSessionData() {
         sessionId: session.sessionId,
         lastUsed: Date.now(),
         totalCost: session.totalCost,
+        permInteractive: session.permInteractive,
       };
     }
   }
@@ -128,6 +133,10 @@ function saveSessionData() {
 }
 
 const persistedSessions = loadSessionData();
+
+// ── Permission relay ────────────────────────────────────────
+// Map<toolUseID, { resolve, timeout, msgId, promptText, suggestions }>
+const pendingPermissions = new Map();
 
 // ── Telegram setup ──────────────────────────────────────────
 const bot = new TelegramBot(TOKEN, { polling: true });
@@ -216,6 +225,7 @@ function createSession(project) {
     streamBuffer: "",
     lastEditTime: 0,
     outputHistory: [],
+    permInteractive: persisted?.permInteractive ?? DEFAULT_PERM_INTERACTIVE,
   };
 }
 
@@ -271,6 +281,87 @@ async function finalEdit(session, text) {
   await sendTg(full);
 }
 
+// ── Permission relay helpers ─────────────────────────────────
+function formatPermissionPrompt(sessionName, toolName, input, opts) {
+  const header = `[${sessionName}] Permission`;
+  const action = opts.title || `Use tool: ${toolName}`;
+
+  let detail = "";
+  if (toolName === "Bash" && input.command) {
+    detail = `> ${input.command}`;
+  } else if ((toolName === "Write" || toolName === "Edit") && input.file_path) {
+    detail = `File: ${input.file_path}`;
+  } else if (toolName === "Task" && input.prompt) {
+    detail = input.prompt.slice(0, 200);
+  } else if (input.url) {
+    detail = input.url;
+  } else {
+    const keys = Object.keys(input).slice(0, 3);
+    detail = keys.map((k) => `${k}: ${String(input[k]).slice(0, 100)}`).join("\n");
+  }
+
+  if (detail.length > 500) detail = detail.slice(0, 500) + "...";
+
+  const reason = opts.decisionReason ? `\nReason: ${opts.decisionReason}` : "";
+  return `${header}\n\n${action}${reason}\n\n${detail}`;
+}
+
+function buildCanUseTool(sessionName) {
+  return async (toolName, input, opts) => {
+    const toolUseID = opts.toolUseID;
+    const promptText = formatPermissionPrompt(sessionName, toolName, input, opts);
+
+    try {
+      const msg = await bot.sendMessage(CHAT_ID, redactSecrets(promptText), {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: "Allow", callback_data: `pa_${toolUseID}` },
+              { text: "Deny", callback_data: `pd_${toolUseID}` },
+              { text: "Always Allow", callback_data: `ps_${toolUseID}` },
+            ],
+          ],
+        },
+      });
+
+      return new Promise((resolve) => {
+        const timeout = setTimeout(() => {
+          pendingPermissions.delete(toolUseID);
+          bot
+            .editMessageText(`${redactSecrets(promptText)}\n\nTimed out — denied`, {
+              chat_id: CHAT_ID,
+              message_id: msg.message_id,
+            })
+            .catch(() => {});
+          resolve({ behavior: "deny", message: "Permission timed out", toolUseID });
+        }, PERMISSION_TIMEOUT_MS);
+
+        // Clean up on abort (query canceled)
+        opts.signal?.addEventListener(
+          "abort",
+          () => {
+            clearTimeout(timeout);
+            pendingPermissions.delete(toolUseID);
+            resolve({ behavior: "deny", message: "Query canceled", toolUseID });
+          },
+          { once: true }
+        );
+
+        pendingPermissions.set(toolUseID, {
+          resolve,
+          timeout,
+          msgId: msg.message_id,
+          promptText,
+          suggestions: opts.suggestions,
+        });
+      });
+    } catch (err) {
+      console.error("[bridge] Permission prompt send failed:", err.message);
+      return { behavior: "deny", message: "Failed to send permission prompt", toolUseID };
+    }
+  };
+}
+
 // ── Core: runQuery ──────────────────────────────────────────
 async function runQuery(sessionName, prompt) {
   const session = sessions.get(sessionName);
@@ -299,11 +390,24 @@ async function runQuery(sessionName, prompt) {
     const options = {
       cwd: session.path,
       model: session.model,
-      permissionMode: "bypassPermissions",
-      allowedTools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep", "WebSearch", "WebFetch", "Task"],
       abortController: session.abortController,
       settingSources: ["user", "project"],
     };
+
+    if (session.permInteractive) {
+      // Interactive mode: prompt user for dangerous tools via Telegram
+      options.permissionMode = "default";
+      options.allowedTools = SAFE_TOOLS;
+      options.canUseTool = buildCanUseTool(sessionName);
+    } else {
+      // Bypass mode: auto-allow everything (original behavior)
+      options.permissionMode = "bypassPermissions";
+      options.allowDangerouslySkipPermissions = true;
+      options.allowedTools = [
+        "Read", "Write", "Edit", "Bash", "Glob", "Grep",
+        "WebSearch", "WebFetch", "Task",
+      ];
+    }
 
     if (session.sessionId) {
       options.resume = session.sessionId;
@@ -585,6 +689,28 @@ bot.on("message", (msg) => {
     return;
   }
 
+  // Handle /permissions [on|off] — toggle permission relay for active session
+  const permMatch = text.match(/^\/permissions(?:\s+(on|off))?$/i);
+  if (permMatch) {
+    const session = getActiveSession();
+    if (!session) {
+      sendTg("No active session.");
+      return;
+    }
+    if (permMatch[1]) {
+      session.permInteractive = permMatch[1].toLowerCase() === "on";
+    } else {
+      session.permInteractive = !session.permInteractive;
+    }
+    saveSessionData();
+    const mode = session.permInteractive ? "ON (interactive)" : "OFF (bypass all)";
+    const desc = session.permInteractive
+      ? "Claude will ask permission before Write, Edit, Bash, and Task.\nSafe tools (Read, Glob, Grep, WebSearch, WebFetch) are auto-allowed."
+      : "All tools auto-allowed without prompting.";
+    sendTg(`[${session.name}] Permissions: ${mode}\n${desc}`);
+    return;
+  }
+
   // Handle /restart <name|number> — clear session ID so next query starts fresh
   const restartMatch = text.match(/^\/restart(?:\s+(.+))?$/i);
   if (restartMatch) {
@@ -622,6 +748,7 @@ bot.on("message", (msg) => {
           "Active session commands:\n" +
           "/status  - Last output lines\n" +
           "/cancel  - Abort current query\n" +
+          "/permissions [on|off]  - Toggle approve/deny from phone\n" +
           "/cost  - Show cost breakdown\n" +
           "/ping  - Check bridge status\n\n" +
           "Quick replies: y, n\n" +
@@ -733,6 +860,61 @@ bot.on("message", (msg) => {
   }
 });
 
+// ── Permission inline button handler ─────────────────────────
+bot.on("callback_query", async (query) => {
+  const data = query.data;
+  if (!data) return;
+
+  // Parse: pa_<id> (allow), pd_<id> (deny), ps_<id> (always allow)
+  const match = data.match(/^p([ads])_(.+)$/);
+  if (!match) return;
+
+  const [, action, toolUseID] = match;
+  const pending = pendingPermissions.get(toolUseID);
+  if (!pending) {
+    await bot.answerCallbackQuery(query.id, { text: "Expired or already handled" });
+    return;
+  }
+
+  clearTimeout(pending.timeout);
+  pendingPermissions.delete(toolUseID);
+
+  let result;
+  let statusText;
+
+  switch (action) {
+    case "a":
+      result = { behavior: "allow", toolUseID };
+      statusText = "Allowed";
+      break;
+    case "d":
+      result = { behavior: "deny", message: "Denied by user", toolUseID };
+      statusText = "Denied";
+      break;
+    case "s":
+      result = {
+        behavior: "allow",
+        updatedPermissions: pending.suggestions || [],
+        toolUseID,
+      };
+      statusText = "Always allowed";
+      break;
+  }
+
+  // Update message to show decision (remove inline buttons)
+  try {
+    await bot.editMessageText(
+      `${redactSecrets(pending.promptText)}\n\n${statusText}`,
+      { chat_id: CHAT_ID, message_id: pending.msgId }
+    );
+  } catch {
+    // Ignore edit errors
+  }
+
+  await bot.answerCallbackQuery(query.id, { text: statusText });
+  pending.resolve(result);
+});
+
 bot.on("polling_error", (err) => {
   console.error("[TG polling error]", err.message);
 });
@@ -740,6 +922,12 @@ bot.on("polling_error", (err) => {
 // ── Graceful shutdown ───────────────────────────────────────
 const shutdown = (signal) => {
   console.log(`\n[bridge] ${signal} received, shutting down...`);
+  // Clear pending permission prompts
+  for (const [id, pending] of pendingPermissions) {
+    clearTimeout(pending.timeout);
+    pending.resolve({ behavior: "deny", message: "Bridge shutting down" });
+  }
+  pendingPermissions.clear();
   // Abort all active queries
   for (const [name, session] of sessions) {
     if (session.busy && session.abortController) {
@@ -766,7 +954,8 @@ for (const project of PROJECTS) {
 }
 
 if (PROJECTS.length > 0) {
-  sendTg(`Bridge started (SDK mode). ${PROJECTS.length} project(s) ready.\nActive: ${activeSessionName}\nSend a message to start.`);
+  const permMode = DEFAULT_PERM_INTERACTIVE ? "interactive" : "bypass";
+  sendTg(`Bridge started (SDK mode). ${PROJECTS.length} project(s) ready.\nActive: ${activeSessionName}\nPermissions: ${permMode}\nSend a message to start.`);
 } else {
   sendTg("Bridge started (SDK mode). No projects configured.\nUse /add <name> <path> to add a project.");
 }
