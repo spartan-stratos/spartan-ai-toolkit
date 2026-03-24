@@ -151,7 +151,8 @@ Cannot be skipped — not even in auto mode.
 | **Start** | `/spartan:project [action]` | Large project: `new`, `status`, `milestone-new`, `milestone-complete`, `milestone-summary`, `manager` |
 | **Start** | `/spartan:phase [action] [N]` | Phase: `discuss`, `plan`, `execute`, `verify` |
 | **Start** | `/spartan:init-project` | Scan code → generate CLAUDE.md |
-| **Start** | `/spartan:brownfield` | Map unfamiliar codebase before touching |
+| **Start** | `/spartan:brownfield` | Quick overview of unfamiliar codebase |
+| **Start** | `/spartan:map-codebase` | Deep codebase analysis (7 docs, 4 agents) |
 | **Start** | `/spartan:gsd-upgrade` | Upgrade GSD v5 (memory + waves) |
 | **Start** | `/spartan:workstreams` | Parallel workstreams: list, create, switch, progress, complete |
 | **Start** | `/spartan:forensics` | Post-mortem investigation for failed workflows |

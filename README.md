@@ -3,7 +3,7 @@
   <p align="center">
     <strong>Turn Claude Code from a smart assistant into a disciplined engineering team</strong>
     <br />
-    26 commands &middot; 9 coding rules &middot; 8 skills &middot; 2 expert agents
+    27 commands &middot; 9 coding rules &middot; 8 skills &middot; 2 expert agents
   </p>
   <p align="center">
     <a href="#quick-start">Quick Start</a> &middot;
@@ -181,7 +181,7 @@ What do you need?
 └─ Not sure which command                     → /spartan (smart router)
 ```
 
-### All 26 Commands
+### All 27 Commands
 
 | Phase | Command | Purpose |
 |-------|---------|---------|
@@ -189,7 +189,8 @@ What do you need?
 | | `/spartan:project [action]` | Large project lifecycle: `new`, `status`, `milestone-new`, `milestone-complete` |
 | | `/spartan:phase [action] [N]` | Phase lifecycle: `discuss`, `plan`, `execute`, `verify` |
 | | `/spartan:init-project` | Scan codebase, generate project CLAUDE.md |
-| | `/spartan:brownfield` | Map unfamiliar codebase before touching it |
+| | `/spartan:brownfield` | Quick overview of unfamiliar codebase (1 file) |
+| | `/spartan:map-codebase` | Deep codebase analysis with 4 parallel agents (7 files) |
 | | `/spartan:kotlin-service` | Scaffold Kotlin + Micronaut microservice |
 | | `/spartan:next-app` | Scaffold Next.js app (App Router, Vitest, Docker, CI) |
 | | `/spartan:gsd-upgrade` | Upgrade GSD to v5 (agent memory + wave execution) |

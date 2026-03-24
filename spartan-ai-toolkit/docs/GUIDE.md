@@ -367,7 +367,8 @@ Cannot be skipped, even in auto mode. Purpose: prevent building the wrong thing.
 | `/spartan:project [action]` | Large project lifecycle: `new`, `status`, `milestone-new`, `milestone-complete`, `milestone-summary`, `manager` |
 | `/spartan:phase [action] [N]` | Phase lifecycle: `discuss`, `plan`, `execute`, `verify` |
 | `/spartan:init-project [name]` | Scan code → auto-generate CLAUDE.md |
-| `/spartan:brownfield [svc]` | Map unfamiliar codebase → CONTEXT-MAP.md |
+| `/spartan:brownfield [svc]` | Quick overview of unfamiliar codebase → CONTEXT-MAP.md |
+| `/spartan:map-codebase` | Deep codebase analysis → 7 docs in .planning/codebase/ |
 | `/spartan:kotlin-service [name]` | Scaffold Micronaut microservice |
 | `/spartan:next-app [name]` | Scaffold Next.js app |
 | `/spartan:gsd-upgrade [mode]` | Upgrade GSD v5 (memory + waves) |
