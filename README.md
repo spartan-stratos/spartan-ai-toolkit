@@ -93,7 +93,7 @@ Spartan integrates three open-source tools into a single unified workflow. Each 
 ## 30-Second Quick Start
 
 ```bash
-git clone https://github.com/spartan-stratos/spartan-ai-toolkit.git
+git clone git@github.com:spartan-stratos/spartan-ai-toolkit.git
 cd spartan-ai-toolkit/spartan-ai-toolkit
 chmod +x scripts/setup.sh && ./scripts/setup.sh --global
 ```
