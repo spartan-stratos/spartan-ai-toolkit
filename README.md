@@ -47,6 +47,8 @@ Spartan doesn't replace Claude &mdash; it makes Claude **consistent and reliable
 
 ## How It Works
 
+Spartan integrates three open-source tools into a single unified workflow. Each tool is powerful alone, but **they don't know about each other** &mdash; Spartan connects them.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Layer 1: Superpowers  (always on, automatic)               │
@@ -63,6 +65,28 @@ Spartan doesn't replace Claude &mdash; it makes Claude **consistent and reliable
 │  Agent memory (.memory/) persists across all sessions       │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### Why Not Just Use Each Tool Separately?
+
+| | Superpowers alone | GSD alone | OpenSpec alone | **Spartan (all combined)** |
+|---|---|---|---|---|
+| **Auto-trigger skills** | Yes &mdash; "review this" triggers review | No | No | Yes &mdash; Superpowers handles it |
+| **Coding rules enforcement** | No | No | No | **9 rule files enforced every session** |
+| **Project lifecycle** | No | Yes &mdash; phases, milestones | No | Yes &mdash; GSD under the hood |
+| **Persistent memory** | No | Yes &mdash; `.memory/` | No | Yes &mdash; GSD memory + Spartan context save |
+| **Fast-forward planning** | No | No | Yes &mdash; spec-first | Yes &mdash; `/spartan:quickplan` (inspired by OpenSpec) |
+| **Safety guardrails** | No | No | No | **freeze, careful, guard modes** |
+| **Team consistency** | No | No | No | **Same rules + skills for everyone** |
+| **Context management** | No | No | No | **Auto-compact, session handoff** |
+| **Scaffolding** | No | No | No | **Kotlin/Next.js service generators** |
+
+**The gap when using tools separately:**
+
+- **Superpowers** auto-triggers skills, but doesn't enforce coding rules, has no project lifecycle, and doesn't manage context. Your team of 5 devs each gets different code style.
+- **GSD** manages phases and milestones, but doesn't know your stack conventions, doesn't enforce TDD, and doesn't have pre-PR checklists. You still forget to rebase before PRs.
+- **OpenSpec** gives you spec-first thinking, but stops at the spec. No execution plan, no wave parallelism, no memory between sessions.
+
+**Spartan fills the gaps:** It wires Superpowers' auto-triggers to follow your team's coding rules. It wraps GSD's lifecycle with your stack-specific conventions (TDD, layered architecture, soft deletes). It takes OpenSpec's fast-forward concept and extends it into a full quickplan &rarr; execute &rarr; PR pipeline. And it adds what none of them have: safety guardrails, context management, and team-wide consistency via shared rules.
 
 ---
 
@@ -470,11 +494,13 @@ We welcome contributions! Before submitting a PR, please read [CONTRIBUTING.md](
 
 ---
 
-## Credits
+## Built On
 
-- [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent
-- [GSD](https://github.com/gsd-build/get-shit-done) by TACHES
-- Inspired by [OpenSpec](https://github.com/Fission-AI/OpenSpec) fast-forward concept
+Spartan stands on the shoulders of three excellent open-source projects:
+
+- **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent &mdash; Auto-triggering skill layer. Spartan uses it as Layer 1 for always-on capabilities (review, debug, plan).
+- **[GSD](https://github.com/gsd-build/get-shit-done)** by TACHES &mdash; Project lifecycle engine. Spartan wraps it as Layer 3 for phases, milestones, wave execution, and persistent memory.
+- **[OpenSpec](https://github.com/Fission-AI/OpenSpec)** by Fission AI &mdash; Spec-first fast-forward concept. Inspired `/spartan:quickplan` (spec &rarr; plan &rarr; branch in one shot).
 
 ---
 
