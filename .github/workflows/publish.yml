@@ -1,13 +1,15 @@
 name: Publish to npm
 
 on:
-  push:
-    tags: ['v*.*.*']
+  workflow_run:
+    workflows: ["Auto Release"]
+    types: [completed]
 
 jobs:
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: read
       id-token: write
@@ -20,17 +22,31 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Verify version matches tag
+      - name: Verify version matches
         run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          FILE_VERSION=$(cat toolkit/VERSION | tr -d '[:space:]')
           PKG_VERSION=$(node -p "require('./toolkit/package.json').version")
-          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "Tag v$TAG_VERSION doesn't match toolkit/package.json version $PKG_VERSION"
+          if [ "$FILE_VERSION" != "$PKG_VERSION" ]; then
+            echo "VERSION file ($FILE_VERSION) doesn't match package.json ($PKG_VERSION)"
             exit 1
           fi
-          echo "Version: $TAG_VERSION"
+          echo "Version: $FILE_VERSION"
+
+      - name: Check if already published
+        id: check
+        run: |
+          PKG_VERSION=$(node -p "require('./toolkit/package.json').version")
+          if npm view @c0x12c/spartan-ai-toolkit@$PKG_VERSION version 2>/dev/null; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+            echo "v$PKG_VERSION already on npm, skipping."
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Validate structure
+        if: steps.check.outputs.already_published == 'false'
         run: |
           echo "Checking required files..."
           for f in \
@@ -51,6 +67,7 @@ jobs:
           echo "Commands: $CMD_COUNT, Skills: $SKILL_COUNT"
 
       - name: Publish
+        if: steps.check.outputs.already_published == 'false'
         working-directory: toolkit
         run: npm publish --access public
         env:
