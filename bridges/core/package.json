@@ -1,0 +1,14 @@
+{
+  "name": "@spartan-ai/bridge-core",
+  "version": "1.0.0",
+  "description": "Shared engine for Spartan bridge providers",
+  "type": "module",
+  "main": "engine.js",
+  "exports": {
+    "./engine": "./engine.js",
+    "./provider": "./provider.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.0"
+  }
+}

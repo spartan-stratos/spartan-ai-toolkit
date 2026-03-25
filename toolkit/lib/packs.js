@@ -49,7 +49,15 @@ export const PACKS = {
     skills: [],
     agents: [],
     claudeSections: ['50-ops.md']
+  },
+  research: {
+    description: 'Startup research pipeline — from idea to investor-ready',
+    commands: ['kickoff', 'deep-dive', 'full-run', 'fundraise', 'research', 'pitch', 'outreach', 'content', 'write'],
+    rules: [],
+    skills: ['brainstorm', 'idea-validation', 'market-research', 'competitive-teardown', 'deep-research', 'investor-materials', 'investor-outreach', 'article-writing', 'content-engine', 'startup-pipeline'],
+    agents: ['idea-killer.md', 'research-planner.md'],
+    claudeSections: ['60-research.md']
   }
 };
 
-export const PACK_ORDER = ['core', 'backend', 'frontend', 'project-mgmt', 'product', 'ops'];
+export const PACK_ORDER = ['core', 'backend', 'frontend', 'project-mgmt', 'product', 'ops', 'research'];

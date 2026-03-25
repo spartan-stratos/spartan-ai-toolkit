@@ -14,8 +14,9 @@
     "rules/",
     "agents/",
     "claude-md/",
+    "frameworks/",
+    "templates/",
     "scripts/packs.sh",
-    "CLAUDE.md",
     "VERSION",
     ".claude-plugin/"
   ],
@@ -32,7 +33,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/khoadtran/spartan-ai-toolkit"
+    "url": "https://github.com/spartan-stratos/spartan-ai-toolkit"
   },
   "engines": {
     "node": ">=18"

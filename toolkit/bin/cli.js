@@ -86,7 +86,32 @@ if (showHelp) {
     --help          Show this help
 
   ${bold('Packs:')}
-${PACK_ORDER.map(p => `    ${bold(p.padEnd(14))} ${PACKS[p].description}`).join('\n')}
+${PACK_ORDER.map(p => {
+  const d = PACKS[p];
+  const items = [
+    d.commands.length ? `${d.commands.length} commands` : '',
+    d.rules.length ? `${d.rules.length} rules` : '',
+    d.skills.length ? `${d.skills.length} skills` : '',
+    d.agents.length ? `${d.agents.length} agents` : '',
+  ].filter(Boolean).join(', ');
+  return `    ${bold(p.padEnd(14))} ${d.description}${items ? dim(` (${items})`) : ''}`;
+}).join('\n')}
+
+  ${bold('Examples:')}
+    ${cyan('npx spartan-ai-toolkit@latest')}
+      Interactive — pick agent and packs from menu
+
+    ${cyan('npx spartan-ai-toolkit@latest --packs=frontend,product')}
+      Next.js app with product thinking tools
+
+    ${cyan('npx spartan-ai-toolkit@latest --packs=backend,project-mgmt')}
+      Kotlin APIs with full project lifecycle
+
+    ${cyan('npx spartan-ai-toolkit@latest --all')}
+      Everything — 35 commands, 9 rules, 8 skills, 2 agents
+
+    ${cyan('npx spartan-ai-toolkit@latest --agent=cursor')}
+      Install rules for Cursor (rules + AGENTS.md only)
 `);
   process.exit(0);
 }

@@ -35,7 +35,7 @@ Available in `toolkit/skills/`. Each follows the Agent Skills spec:
 npx spartan-ai-toolkit@latest
 
 # Any agent (skills only)
-npx skills add khoadtran/spartan-ai-toolkit
+npx skills add spartan-stratos/spartan-ai-toolkit
 ```
 
 ## More Info

@@ -26,6 +26,6 @@
 ## Checklist
 
 - [ ] Commit messages follow `type(scope): description` format
-- [ ] Updated docs (README, GUIDE, CHEATSHEET) if adding/changing commands
+- [ ] Updated README.md + pack files (packs.sh, packs.js) if adding/changing commands
 - [ ] No secrets or credentials in the diff
 - [ ] CLAUDE.md stays under 200 lines of actionable content

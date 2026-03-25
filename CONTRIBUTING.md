@@ -16,7 +16,7 @@ Thanks for your interest in contributing! This guide covers what you need to kno
 
 | Type | Location | Description |
 |------|----------|-------------|
-| **Commands** | `.claude/commands/spartan/` | Slash commands for structured workflows |
+| **Commands** | `commands/spartan/` | Slash commands for structured workflows |
 | **Rules** | `rules/project/` | Coding standards Claude enforces automatically |
 | **Skills** | `skills/` | Reusable prompt templates for common tasks |
 | **Agents** | `agents/` | Expert agent definitions for specialized guidance |
@@ -28,7 +28,7 @@ Thanks for your interest in contributing! This guide covers what you need to kno
 
 ## Guidelines by Component
 
-### Commands (`.claude/commands/spartan/`)
+### Commands (`commands/spartan/`)
 
 - **One file per command** — `command-name.md`
 - **Must work standalone** — no hidden dependencies between commands
@@ -47,7 +47,7 @@ Thanks for your interest in contributing! This guide covers what you need to kno
 
 ### Skills (`skills/`)
 
-- **Each skill is a directory** with a `skill.md` entry point
+- **Each skill is a directory** with a `SKILL.md` entry point (follows Agent Skills spec)
 - **Include examples** — show input/output pairs so Claude knows what to generate
 - **Target a specific task** — "generate API endpoint" not "do backend stuff"
 - **Reference rules** — skills should follow the conventions defined in `rules/project/`
@@ -66,12 +66,11 @@ Thanks for your interest in contributing! This guide covers what you need to kno
 - **Test with a real Telegram bot** — mock testing won't catch Telegram API quirks
 - **Keep bridge.js reasonable** — if adding major features, consider splitting into modules
 
-### Docs (`docs/` at repo root)
+### Docs
 
-- **Keep CHEATSHEET.md to 1 page** — it's meant to be printed
-- **GUIDE.md is the comprehensive reference** — detailed explanations go here
-- **FIRST-RUN.md is a tutorial** — step-by-step, no skipping steps
-- **Update all affected docs** — if you add a command, update README, GUIDE, and CHEATSHEET
+- **README.md is the single source of truth** — all commands, packs, examples live here
+- **docs/ROADMAP.md** — future plans only
+- **If you add a command** — update README.md command table + add to the right pack in both `packs.sh` and `lib/packs.js`
 
 ---
 
@@ -102,7 +101,7 @@ type(scope): what changed
 ```
 feat(commands): add /spartan:rollback for deployment rollbacks
 fix(bridge): handle Telegram rate limit (429) with exponential backoff
-docs: update GUIDE.md with new wave execution section
+docs: update README with new wave execution section
 refactor(setup): simplify backup logic in setup.sh
 ```
 
@@ -115,7 +114,7 @@ refactor(setup): simplify backup logic in setup.sh
 1. **Test with clean install** — back up your `~/.claude/`, delete it, run `setup.sh --global`, verify everything works
 2. **Run the affected commands** — if you changed a command, run it in Claude Code
 3. **Check for conflicts** — your changes shouldn't break existing commands or rules
-4. **Update docs** — if you added/changed a command, update README + GUIDE + CHEATSHEET
+4. **Update docs** — if you added/changed a command, update README.md + both pack files (packs.sh, packs.js)
 
 ### PR Description
 

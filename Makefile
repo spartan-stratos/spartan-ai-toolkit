@@ -15,7 +15,7 @@ setup-local: ## Run the toolkit installer (local mode)
 validate: ## Check all toolkit files are in place
 	@echo "Checking toolkit structure..."
 	@ERRORS=0; \
-	for f in toolkit/CLAUDE.md \
+	for f in toolkit/claude-md/00-header.md \
 	         toolkit/scripts/setup.sh \
 	         toolkit/commands/spartan.md; do \
 	  if [ ! -f "$$f" ]; then \
@@ -53,24 +53,25 @@ lint-shell: ## Check setup.sh with shellcheck
 lint-markdown: ## Check markdown files for issues
 	@if command -v markdownlint-cli2 >/dev/null 2>&1; then \
 	  echo "Running markdown lint..."; \
-	  markdownlint-cli2 "docs/*.md" "README.md" "CONTRIBUTING.md"; \
+	  markdownlint-cli2 "README.md" "CONTRIBUTING.md" "toolkit/README.md" "docs/ROADMAP.md"; \
 	elif command -v markdownlint >/dev/null 2>&1; then \
 	  echo "Running markdown lint..."; \
-	  markdownlint "docs/*.md" "README.md" "CONTRIBUTING.md"; \
+	  markdownlint "README.md" "CONTRIBUTING.md" "toolkit/README.md" "docs/ROADMAP.md"; \
 	else \
 	  echo "markdownlint not found — install with: npm install -g markdownlint-cli2"; \
 	fi
 
-# ── Telegram Bridge ───────────────────────────────────
+# ── Bridges ───────────────────────────────────────────
 
 bridge-dev: ## Start telegram bridge in dev mode (watch)
-	@cd claude-telegram-bridge && npm run dev
+	@cd bridges/telegram && npm run dev
 
 bridge-start: ## Start telegram bridge
-	@cd claude-telegram-bridge && npm start
+	@cd bridges/telegram && npm start
 
-bridge-install: ## Install telegram bridge dependencies
-	@cd claude-telegram-bridge && npm install
+bridge-install: ## Install bridge dependencies (core + telegram)
+	@cd bridges/core && npm install
+	@cd bridges/telegram && npm install
 
 # ── Help ───────────────────────────────────────────────
 

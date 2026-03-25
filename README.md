@@ -3,13 +3,13 @@
   <p align="center">
     <strong>Turn Claude Code from a smart assistant into a disciplined engineering team</strong>
     <br />
-    27 commands &middot; 9 coding rules &middot; 8 skills &middot; 2 expert agents
+    35 commands &middot; 9 coding rules &middot; 8 skills &middot; 2 expert agents &middot; 6 packs
   </p>
   <p align="center">
     <a href="#quick-start">Quick Start</a> &middot;
-    <a href="docs/GUIDE.md">Full Guide</a> &middot;
-    <a href="docs/CHEATSHEET.md">Cheatsheet</a> &middot;
-    <a href="docs/FIRST-RUN.md">First Run</a>
+    <a href="#30-second-quick-start">Quick Start</a> &middot;
+    <a href="#packs--pick-what-you-need">Packs</a> &middot;
+    <a href="docs/ROADMAP.md">Roadmap</a>
   </p>
 </p>
 
@@ -55,7 +55,7 @@ Spartan integrates three open-source tools into a single unified workflow. Each 
 │  "debug this" → 4-phase root cause investigation            │
 │  "review this" → two-stage code review                      │
 ├─────────────────────────────────────────────────────────────┤
-│  Layer 2: Spartan Commands  (on-demand, 26 commands)        │
+│  Layer 2: Spartan Commands  (on-demand, 35 commands)        │
 │  /spartan            → smart router: asks what you need     │
 │  /spartan:quickplan  → spec + plan + branch in one shot     │
 │  /spartan:pr-ready   → full checklist before creating PR    │
@@ -144,7 +144,7 @@ The setup script runs 9 steps:
 2. Guide Superpowers plugin install
 3. Install GSD via npx
 4. Copy `CLAUDE.md` to `~/.claude/`
-5. Install 26 slash commands to `~/.claude/commands/`
+5. Install selected slash commands to `~/.claude/commands/`
 6. Install 9 coding rule files to `~/.claude/rules/`
 7. Install 8 skills to `~/.claude/skills/`
 8. Install 2 expert agents to `~/.claude/agents/`
@@ -181,7 +181,7 @@ What do you need?
 └─ Not sure which command                     → /spartan (smart router)
 ```
 
-### All 27 Commands
+### All 35 Commands
 
 | Phase | Command | Purpose |
 |-------|---------|---------|
@@ -208,10 +208,76 @@ What do you need?
 | | `/spartan:env-setup` | Audit env vars, generate `.env.example` |
 | **Ops** | `/spartan:daily` | Standup summary from git log + project status |
 | | `/spartan:context-save` | Save session state, resume in new session |
+| **Product** | `/spartan:think "idea"` | 6-phase guided thinking before coding |
+| | `/spartan:validate "idea"` | Score idea on 7 areas — GO / TEST MORE / KILL |
+| | `/spartan:teardown "competitor"` | Deep competitor analysis |
+| | `/spartan:interview "product"` | Generate Mom Test interview script |
+| | `/spartan:lean-canvas "product"` | Fill out 9-block Lean Canvas |
+| | `/spartan:brainstorm "theme"` | Generate ideas, filter, rank top 3 |
 | **Safety** | `/spartan:careful` | Warn before destructive ops (rm, DROP, force-push) |
 | | `/spartan:freeze <dir>` | Lock file edits to one directory only |
 | | `/spartan:unfreeze` | Remove directory lock |
 | | `/spartan:guard <dir>` | Careful + freeze combined (maximum safety) |
+
+---
+
+## Packs — Pick What You Need
+
+Spartan is modular. You don't have to install everything. Pick the packs that fit your project.
+
+### Install with packs
+
+```bash
+# Interactive — pick from a menu
+./scripts/setup.sh --global
+
+# Or specify packs directly
+./scripts/setup.sh --global --packs=backend,product
+
+# Or install everything
+./scripts/setup.sh --global --all
+
+# Or via npx (after npm publish)
+npx spartan-ai-toolkit@latest
+```
+
+### What's in each pack
+
+| Pack | Commands | Rules | Skills | Best for |
+|------|----------|-------|--------|----------|
+| **core** (always) | quickplan, daily, debug, pr-ready, init-project, context-save, update, safety (4) | — | — | Everyone |
+| **backend** | kotlin-service, migration, review, testcontainer | 8 Kotlin/DB rules | 7 backend skills + 2 agents | Kotlin + Micronaut APIs |
+| **frontend** | next-app, next-feature, fe-review, figma-to-code, e2e | 2 frontend rules | ui-ux-pro-max | React + Next.js apps |
+| **project-mgmt** | project, phase, workstreams, gsd-upgrade, forensics, brownfield, map-codebase | — | — | Multi-day projects with milestones |
+| **product** | think, validate, teardown, interview, lean-canvas, brainstorm | — | — | Product thinking before building |
+| **ops** | deploy, env-setup | — | — | Deploy & infrastructure |
+
+### Example setups
+
+**Solo founder building a Next.js SaaS:**
+```bash
+./scripts/setup.sh --global --packs=frontend,product
+# Gets: 22 commands, 2 rules, 1 skill, product thinking workflow
+```
+
+**Backend team working on Kotlin microservices:**
+```bash
+./scripts/setup.sh --global --packs=backend,project-mgmt
+# Gets: 22 commands, 8 rules, 7 skills, 2 agents, full project lifecycle
+```
+
+**Full-stack team, big project:**
+```bash
+./scripts/setup.sh --global --all
+# Gets: everything — 35 commands, 9 rules, 8 skills, 2 agents
+```
+
+**Just want product thinking tools:**
+```bash
+./scripts/setup.sh --global --packs=product
+# Gets: 17 commands (core + product), no rules, no skills
+# brainstorm → validate → think → build
+```
 
 ---
 
@@ -425,15 +491,12 @@ For background running with pm2, advanced config, and troubleshooting, see [`cla
 
 ```
 spartan-ai-toolkit/
-├── docs/                                # User-facing documentation
-│   ├── GUIDE.md                         # Comprehensive guide (15 min read)
-│   ├── CHEATSHEET.md                    # Quick reference card
-│   ├── FIRST-RUN.md                     # First-run walkthrough
+├── docs/
 │   └── ROADMAP.md                       # Development roadmap
 ├── .claude/
 │   └── settings.json                    # Project-level Claude Code config
 ├── toolkit/                             # Distribution content (installed to ~/.claude/)
-│   ├── CLAUDE.md                        # Workflow brain (Claude reads this)
+│   ├── claude-md/                       # CLAUDE.md sections (assembled per pack)
 │   ├── README.md                        # Toolkit-specific README
 │   ├── scripts/
 │   │   └── setup.sh                     # One-command installer (10 steps)
@@ -459,7 +522,7 @@ spartan-ai-toolkit/
 │   ├── agents/                       # 2 expert agent definitions
 │   │   ├── micronaut-backend-expert.md
 │   │   └── solution-architect-cto.md
-│   └── .claude/commands/             # 26 slash command prompts
+│   └── commands/                     # 35 slash command prompts
 │       ├── spartan.md                # Smart router (entry point)
 │       └── spartan/                  # 25 subcommands
 │           ├── quickplan.md
@@ -505,11 +568,11 @@ Generate one automatically:
 
 ## Documentation
 
-| Document | Description | Reading Time |
-|----------|-------------|:------------:|
-| [Full Guide](docs/GUIDE.md) | Comprehensive A-to-Z guide | 15 min |
-| [First Run](docs/FIRST-RUN.md) | Step-by-step first project walkthrough | 20 min |
-| [Cheatsheet](docs/CHEATSHEET.md) | Quick reference card (print it) | 2 min |
+| Document | Description |
+|----------|-------------|
+| This README | Quick start, commands, packs, examples |
+| [Roadmap](docs/ROADMAP.md) | Future plans and workstreams |
+| [Contributing](CONTRIBUTING.md) | How to add commands, skills, rules |
 
 ---
 

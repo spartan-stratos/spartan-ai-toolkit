@@ -3,7 +3,7 @@
   "name": "spartan-marketplace",
   "description": "Spartan AI Toolkit — engineering discipline layer for Claude Code",
   "owner": {
-    "name": "Khoa Tran"
+    "name": "Spartan Stratos"
   },
   "plugins": [
     {

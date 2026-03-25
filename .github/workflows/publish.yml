@@ -35,7 +35,7 @@ jobs:
           echo "Checking required files..."
           for f in \
             toolkit/commands/spartan.md \
-            toolkit/CLAUDE.md \
+            toolkit/claude-md/00-header.md \
             toolkit/package.json \
             toolkit/bin/cli.js \
             toolkit/.claude-plugin/plugin.json; do

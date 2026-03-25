@@ -1,6 +1,6 @@
 # Spartan AI Toolkit
 
-> AI workflow for Engineering Managers — **Superpowers + GSD v5 + 29 commands**, full-stack Kotlin + Next.js.
+> AI workflow for Engineering Managers — **35 commands in 6 packs**, full-stack Kotlin + Next.js.
 
 ---
 
@@ -46,7 +46,7 @@ Example: `/spartan:pr-ready` checks 6 steps (rebase, tests, lint, architecture, 
 │  /spartan            → smart router: asks what you need     │
 │  /spartan:quickplan  → spec+plan+branch in one shot         │
 │  /spartan:pr-ready   → full checklist before creating PR    │
-│  ... 29 commands total                                       │
+│  ... 35 commands total (6 packs)                             │
 ├─────────────────────────────────────────────────────────────┤
 │  Layer 3: GSD v5  (for large multi-session projects)        │
 │  /spartan:project new → decompose → plan → wave-execute     │
@@ -74,11 +74,11 @@ Example: `/spartan:pr-ready` checks 6 steps (rebase, tests, lint, architecture, 
 daily → quickplan → [code with Superpowers] → pr-ready → deploy
 ```
 
-Details: see **[CHEATSHEET.md](../docs/CHEATSHEET.md)** — print it and keep it next to your monitor.
+Details: see the **[README](../README.md)** for full command table and pack examples.
 
 ---
 
-## 29 Commands
+## 35 Commands
 
 ### Start (project setup)
 | Command | When to use |
@@ -169,7 +169,7 @@ toolkit/
 ├── agents/                        ← Expert agents (2)
 └── .claude/commands/
     ├── spartan.md                 ← Smart router (entry point)
-    └── spartan/                   ← 28 slash commands
+    └── spartan/                   ← 34 slash commands
 ```
 
 ---

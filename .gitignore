@@ -39,6 +39,9 @@ claude-telegram-bridge/projects.json
 # Local docs (not tracked)
 docs/ROADMAP.md
 
+# Internal research output (not tracked)
+research/
+
 # Backups created by setup script
 *.bak
 .backup-*/
