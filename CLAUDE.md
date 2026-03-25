@@ -1,7 +1,7 @@
 # Project: Spartan AI Toolkit
 
 ## About
-Spartan AI Toolkit is an engineering discipline layer for AI coding tools. It has 44 slash commands (11 packs), 11 coding rules, 18 skills, 4 agents, 13 frameworks, and 13 templates. Native integration with Claude Code (npx, plugin, setup script). All content is standard markdown — usable with any AI coding tool (Codex, Gemini, Copilot, Cursor, etc.). Includes a Telegram bridge for remote session control.
+Spartan AI Toolkit is an engineering discipline layer for AI coding tools. It has 48 slash commands (11 packs), 11 coding rules, 18 skills, 4 agents, 13 frameworks, and 13 templates. Native integration with Claude Code (npx, plugin, setup script). All content is standard markdown — usable with any AI coding tool (Codex, Gemini, Copilot, Cursor, etc.). Includes a Telegram bridge for remote session control.
 
 ## Tech Stack
 - **Primary language**: Markdown (commands, rules, skills, docs)
@@ -21,13 +21,13 @@ spartan-ai-toolkit/
 ├── .claude/
 │   └── settings.json            # Project-level config only (nothing else here)
 ├── toolkit/                     # Distribution content (npm: spartan-ai-toolkit)
-│   ├── commands/spartan/        # 44 slash commands
+│   ├── commands/spartan/        # 48 slash commands
 │   ├── commands/spartan.md      # Smart router (entry point)
 │   ├── skills/                  # 18 skill sets (each a directory with SKILL.md)
 │   ├── agents/                  # 4 agent definitions
 │   ├── rules/{pack}/            # 11 coding standard files (grouped by pack)
 │   ├── frameworks/              # 13 startup/product frameworks
-│   ├── templates/               # 6 reusable templates
+│   ├── templates/               # 13 reusable templates
 │   ├── claude-md/               # CLAUDE.md sections (assembled per pack)
 │   ├── .claude-plugin/          # Claude Code plugin manifest
 │   ├── packs/*.yaml             # Pack manifests (source of truth)
