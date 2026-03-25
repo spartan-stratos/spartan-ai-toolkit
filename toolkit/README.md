@@ -292,9 +292,3 @@ Rules and skills are tuned for this stack, but the command framework works with 
 
 > **Different stack?** Fork the repo, edit the rules and skills, run the installer. Commands work with any language or framework.
 
----
-
-## Credits
-- [Superpowers](https://github.com/obra/superpowers) — Jesse Vincent
-- [GSD](https://github.com/gsd-build/get-shit-done) — TÂCHES
-- Inspired by [OpenSpec](https://github.com/Fission-AI/OpenSpec) fast-forward concept
