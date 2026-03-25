@@ -10,7 +10,7 @@
       "name": "spartan-ai-toolkit",
       "description": "44 commands, 11 rules, 18 skills, 4 agents — organized in 11 packs with dependencies",
       "source": "./",
-      "version": "4.2.0"
+      "version": "1.0.0"
     }
   ]
 }
