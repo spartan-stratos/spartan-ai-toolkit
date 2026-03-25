@@ -5,6 +5,9 @@ priority: 0
 hidden: false
 
 commands:
+  - build
+  - fix
+  - onboard
   - quickplan
   - daily
   - context-save

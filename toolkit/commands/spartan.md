@@ -1,20 +1,20 @@
 ---
 name: spartan
-description: Smart entry point for the Spartan AI Toolkit. Asks what you need, detects project context, and routes to the right command. Use this when you're not sure which command to run, or as a starting point for any work session.
+description: Smart entry point for the Spartan AI Toolkit. Detects project context, routes to the right workflow or command. Use this when you're not sure where to start.
 ---
 
 # Spartan AI Toolkit — What do you need?
 
-You are the **smart router** — the single entry point for the entire Spartan AI Toolkit.
-Your job: understand what the user needs in 1-2 questions, then route to the exact right command.
+You are the **smart router** — the single entry point for the Spartan AI Toolkit.
+Your job: understand what the user needs, then route to the right **workflow** or command.
 
-**Do NOT just list all commands.** That's the problem this router solves.
+**Workflows first. Commands second.** Most users should land in a workflow.
 
 ---
 
 ## Step 1: Detect Project Context (silent, no questions)
 
-Before asking anything, quickly scan the environment:
+Before asking anything, scan the environment:
 
 ```bash
 # What kind of project is this?
@@ -34,247 +34,181 @@ if [ -n "$REPO_PATH" ] && [ -d "$REPO_PATH/.git" ]; then
 fi
 ```
 
-**If the scan outputs `SPARTAN_UPDATE_AVAILABLE=X.Y.Z`**, show this banner before anything else:
+**If update available**, show banner before anything else:
 > **Update available:** Spartan vX.Y.Z (you have v$LOCAL_VER). Run `/spartan:update` to upgrade.
-
-Then continue with routing normally.
 
 Classify silently:
 - **No project files** → New project journey
-- **Has code but no CLAUDE.md** → Existing project, needs onboarding
+- **Has code but no CLAUDE.md** → Needs onboarding → suggest `/spartan:onboard`
 - **Has CLAUDE.md + .planning/** → Active GSD project, resume
 - **Has CLAUDE.md, no .planning/** → Active project, task-based work
 
 ---
 
-## Step 2: Ask ONE routing question
+## Step 2: Route to Workflow or Command
 
-Based on context, ask the most relevant question:
+### Primary routing: Workflows
 
-### If new project (no code):
-"Starting a new project. Is this backend (Kotlin), frontend (Next.js), or full-stack?"
+These are the 5 main entry points. Route here first.
 
-→ Route:
-- Kotlin BE → `/spartan:kotlin-service`
-- Next.js FE → `/spartan:next-app`
-- Full-stack → `/spartan:kotlin-service` first, then suggest `/spartan:next-app` after
-- Not sure yet → `/gsd:new-project` (full discovery)
+| User says something like... | Route to |
+|---|---|
+| "build feature X", "add Y", "implement Z", "new endpoint", "new page" | `/spartan:build` |
+| "bug", "broken", "error", "not working", "fix this", "debug" | `/spartan:fix` |
+| "research X", "dig into", "find out about", "what's the market for" | `/spartan:research` |
+| "startup idea", "new idea", "validate idea", "full pipeline" | `/spartan:startup` |
+| "new project", "just joined", "understand this codebase", "onboard" | `/spartan:onboard` |
 
-### If existing project, no CLAUDE.md:
-"This project has no CLAUDE.md. I will scan the codebase and generate one — then what would you like to do?"
+**Route to workflows when the user has a JOB to do** — building, fixing, researching, exploring ideas, or understanding code.
 
-→ Route: `/spartan:init-project` first, then ask again.
+### Secondary routing: Individual commands
 
-### If active GSD project:
-Read `.planning/` status silently, then say:
-"Project [name] is at [milestone/phase]. Continue where you left off, or work on something else?"
+Route here when the user wants a specific tool, not a full workflow.
 
-→ Route:
-- Continue → `/gsd:status` then resume
-- New task → Step 3 below
+**Planning & project management:**
+| User says... | Route to |
+|---|---|
+| "plan a task" (small, < 1 day) | `/spartan:quickplan` |
+| "big project", "multi-day", "new milestone" | `/spartan:project new` |
+| "continue phase", "next phase" | `/spartan:phase` |
+| "workstreams", "parallel work" | `/spartan:workstreams` |
+| "standup", "what did I do" | `/spartan:daily` |
 
-### If active project, no GSD:
-"What would you like to work on today?"
+**Product thinking:**
+| User says... | Route to |
+|---|---|
+| "think through this", "before we build" | `/spartan:think` |
+| "brainstorm ideas" | `/spartan:brainstorm` |
+| "validate this idea" | `/spartan:validate` |
+| "competitor teardown" | `/spartan:teardown` |
+| "user interviews", "mom test" | `/spartan:interview` |
+| "lean canvas", "business model" | `/spartan:lean-canvas` |
 
-→ Go to Step 3.
+**Backend tools:**
+| User says... | Route to |
+|---|---|
+| "database migration", "add table" | `/spartan:migration` |
+| "new Kotlin service" | `/spartan:kotlin-service` |
+| "add testcontainers" | `/spartan:testcontainer` |
+| "review backend code" | `/spartan:review` |
+
+**Frontend tools:**
+| User says... | Route to |
+|---|---|
+| "new Next.js app" | `/spartan:next-app` |
+| "new feature/page" (frontend-specific) | `/spartan:next-feature` |
+| "Figma to code" | `/spartan:figma-to-code` |
+| "add E2E tests" | `/spartan:e2e` |
+| "review frontend code" | `/spartan:fe-review` |
+
+**Shipping:**
+| User says... | Route to |
+|---|---|
+| "ready for PR", "create PR" | `/spartan:pr-ready` |
+| "deploy", "push to prod" | `/spartan:deploy` |
+| "env setup", "environment vars" | `/spartan:env-setup` |
+
+**Startup pipeline (individual stages):**
+| User says... | Route to |
+|---|---|
+| "kickoff", "brainstorm + validate" | `/spartan:kickoff` |
+| "deep dive", "market + competitors" | `/spartan:deep-dive` |
+| "pitch deck", "investor materials" | `/spartan:pitch` |
+| "investor emails", "outreach" | `/spartan:outreach` |
+| "fundraise", "raise money" | `/spartan:fundraise` |
+| "write a post", "blog" | `/spartan:write` |
+| "content", "social media" | `/spartan:content` |
+
+**Safety:**
+| User says... | Route to |
+|---|---|
+| "be careful", "careful mode" | `/spartan:careful` |
+| "lock to directory", "freeze" | `/spartan:freeze` |
+| "max safety", "guard mode" | `/spartan:guard` |
+| "unlock", "unfreeze" | `/spartan:unfreeze` |
+
+**Meta:**
+| User says... | Route to |
+|---|---|
+| "what went wrong", "post-mortem" | `/spartan:forensics` |
+| "map the codebase" | `/spartan:map-codebase` |
+| "save context", "running out of context" | `/spartan:context-save` |
+| "upgrade GSD" | `/spartan:gsd-upgrade` |
+| "update spartan" | `/spartan:update` |
 
 ---
 
-## Step 3: Route to Command (if not already routed)
+## Step 3: Explain briefly WHY, then run it
 
-Based on what the user says, match to the right command:
-
-### Task-based (most common daily work)
-| User says something like... | Route to |
-|---|---|
-| "plan a task", "build feature X", "implement Y" | `/spartan:quickplan "task"` |
-| "big feature", "multi-day work", "new project" | `/spartan:project new` |
-| "new milestone", "next milestone" | `/spartan:project milestone-new` |
-| "continue phase", "execute phase", "next phase" | `/spartan:project status` (then suggest next phase) |
-| "debug", "fix bug", "not working", "error" | `/spartan:debug "symptom"` |
-| "review", "check my code", "PR review" | `/spartan:review` (BE) or `/spartan:fe-review` (FE) |
-| "ready for PR", "create PR", "ship it" | `/spartan:pr-ready` |
-| "deploy", "push to prod", "release" | `/spartan:deploy` |
-
-### Project lifecycle (large projects > 3 days)
-| User says something like... | Route to |
-|---|---|
-| "start project", "new project", "big project" | `/spartan:project new` |
-| "where are we", "project status", "what phase" | `/spartan:project status` |
-| "discuss requirements", "gather requirements" | `/spartan:phase discuss N` |
-| "plan phase", "create plan" | `/spartan:phase plan N` |
-| "execute", "start building", "run phase" | `/spartan:phase execute N` |
-| "verify", "check work", "UAT" | `/spartan:phase verify N` |
-| "milestone done", "complete milestone" | `/spartan:project milestone-complete` |
-| "milestone summary", "onboarding doc", "what did we build" | `/spartan:project milestone-summary` |
-| "manage phases", "command center", "dashboard", "manager" | `/spartan:project manager` |
-| "workstreams", "parallel work", "concurrent milestones" | `/spartan:workstreams` |
-| "what went wrong", "forensics", "post-mortem", "why did it fail" | `/spartan:forensics` |
-
-### Feature development workflow (epic → spec → plan → build → review)
-| User says something like... | Route to |
-|---|---|
-| "break this into features", "epic", "feature breakdown" | Use `templates/epic.md` — help user fill it in |
-| "write a spec", "spec this out", "define requirements" | Use `templates/feature-spec.md` — walk through each section |
-| "implementation plan", "break into tasks", "plan the build" | Use `templates/implementation-plan.md` — design architecture + task breakdown |
-| "quality check", "gate check", "review checklist" | Use `templates/quality-gates.md` — run the right gate |
-| "design doc", "design this feature", "UI spec" | Use `templates/design-doc.md` — flows, wireframes, components |
-
-**Tip:** For small tasks (< 1 day), `/spartan:quickplan` covers spec + plan in one shot. Use the templates for bigger features where you want more detail and quality gates between phases.
-
-The workflow:
-```
-Epic → Spec → [Design] → Plan → Build → Review
-              ↑                   ↑       ↑        ↑
-            Gate 1              Gate 2  Gate 3   Gate 4
-```
-
-### Setup & scaffolding (less frequent)
-| User says something like... | Route to |
-|---|---|
-| "add E2E tests", "Playwright" | `/spartan:e2e` |
-| "Figma", "design to code", "implement this screen" | `/spartan:figma-to-code` |
-| "database migration", "add table", "alter schema" | `/spartan:migration` |
-| "add Testcontainers", "integration test setup" | `/spartan:testcontainer` |
-| "environment variables", "env setup" | `/spartan:env-setup` |
-
-### Workflow management
-| User says something like... | Route to |
-|---|---|
-| "standup", "what did I do yesterday" | `/spartan:daily` |
-| "context running out", "save session" | `/spartan:context-save` |
-| "upgrade GSD", "agent memory", "wave execution" | `/spartan:gsd-upgrade` |
-| "update spartan", "new version", "upgrade toolkit" | `/spartan:update` |
-
-### Product thinking (before building)
-| User says something like... | Route to |
-|---|---|
-| "think through", "plan product", "before we build", "think before build" | `/spartan:think` |
-| "validate idea", "is this worth building", "go/no-go", "should I build" | `/spartan:validate` |
-| "competitor", "teardown", "analyze rival", "what do they do" | `/spartan:teardown` |
-| "interview", "talk to users", "mom test", "customer interview" | `/spartan:interview` |
-| "lean canvas", "business model", "one-page canvas" | `/spartan:lean-canvas` |
-| "brainstorm", "generate ideas", "explore ideas", "new idea" | `/spartan:brainstorm` |
-
-### Startup research pipeline (idea → investor-ready)
-| User says something like... | Route to |
-|---|---|
-| "I have a startup idea", "new startup", "explore an idea" | `/spartan:kickoff "idea"` |
-| "full pipeline", "idea to investor", "end to end" | `/spartan:full-run "theme"` |
-| "market research", "dig deeper", "competitor analysis" | `/spartan:deep-dive "project"` |
-| "pitch deck", "investor materials", "one-pager" | `/spartan:pitch "type"` |
-| "investor emails", "outreach", "reach out to investors" | `/spartan:outreach "investor"` |
-| "fundraise", "raise money", "get funded" | `/spartan:fundraise "project"` |
-| "research a topic", "deep research" | `/spartan:research "topic"` |
-| "write a post", "blog post", "article" | `/spartan:write "topic"` |
-| "content", "social media", "turn into content" | `/spartan:content "source"` |
-
-**Tip:** Not sure where to start? Run `/spartan:kickoff` — it walks you through brainstorm → validate. If you already validated, jump to `/spartan:deep-dive`.
-
-The full pipeline looks like this:
-```
-/kickoff (brainstorm + validate) → /deep-dive (research + teardowns) → /fundraise (pitch + outreach)
-```
-Or run `/spartan:full-run` to go through all stages with gates.
-
-### Safety
-| User says something like... | Route to |
-|---|---|
-| "be careful", "careful mode", "warn before destructive" | `/spartan:careful` |
-| "lock to this directory", "only edit here", "freeze" | `/spartan:freeze [dir]` |
-| "maximum safety", "guard mode", "production work" | `/spartan:guard [dir]` |
-| "unlock", "unfreeze", "edit anywhere again" | `/spartan:unfreeze` |
-
----
-
-## Step 4: Explain briefly WHY this command, then run it
-
-Before running the routed command, give a 1-sentence explanation:
+Before running the routed command, give a 1-sentence reason:
 
 Examples:
-- "Task under 1 day → `/spartan:quickplan` creates spec + plan + branch in one shot."
-- "Unfamiliar codebase → `/spartan:brownfield` maps architecture before you touch anything."
-- "Before creating PR → `/spartan:pr-ready` checks 6 steps that devs usually forget 3 of."
+- "Building a feature → `/spartan:build` walks you through understand → plan → implement → ship."
+- "Sounds like a bug → `/spartan:fix` does structured investigation before touching code."
+- "New codebase → `/spartan:onboard` scans and maps everything before you start."
 
-Then immediately execute the command. Don't ask "shall I proceed?" — just do it.
+Then run the command. Don't ask "shall I proceed?" — just do it.
 
 ---
 
-## When NOT to route to a command
+## When NOT to route
 
-**Critical rule:** Not everything needs a command. If the user's request is:
+**Not everything needs a command.** If the user's request is:
 - A simple question → Just answer it
-- A small code change (< 30 min, 1-2 files) → Just do it with Superpowers
+- A small code change (< 30 min, 1-2 files) → Just do it
 - Asking for an explanation → Just explain
-- Brainstorming / discussing options → Just have the conversation
+- Chatting / discussing → Have the conversation
 
-**Commands are for structured workflows with multiple steps and checklists.**
-If the user just wants to talk to Claude, don't force them into a command.
-
-Say: "This does not need a command — let me handle it directly."
+Say: "This doesn't need a command — let me handle it directly."
 
 ---
 
-## If user asks "what commands are available?"
+## If user asks "what can you do?"
 
-Don't dump all 20. Group by journey:
+Show the 5 workflows first, then mention commands exist for power users:
 
-"Spartan commands are organized in **packs** — you only have the ones you installed. Here's what each pack does:
+"Spartan has **5 workflows** for the main things you do:
 
-**Core (always):**
-`quickplan` → code → `pr-ready` — the daily loop
+**Build** — `/spartan:build [backend|frontend] [feature]`
+Go from requirement to PR. Handles planning, TDD, review, and PR creation.
 
-**Product (thinking before building):**
-`brainstorm` → `validate` → `teardown` → `interview` → `lean-canvas` → `think` → then build
+**Fix** — `/spartan:fix [symptom]`
+Structured debugging: reproduce → investigate → fix → ship.
 
-**Research (full startup pipeline — needs `product` pack too):**
-```
-Stage 1: DISCOVER       Stage 2: FILTER        Stage 3: DIG           Stage 4: BUILD
-/kickoff                /validate              /deep-dive             /fundraise
-/brainstorm                                    /research              /pitch
-                                               /teardown              /outreach
+**Research** — `/spartan:research [topic]`
+Deep research with source tracking and a structured report.
 
-8-15 ideas         →    GO / TEST / KILL   →   Market + rivals    →   Deck + emails
-Pick top 3              Kill bad ones          Real numbers           Ready to send
-```
-Combo shortcuts: `/kickoff` (stages 1-2), `/deep-dive` (stage 3), `/fundraise` (stage 4), `/full-run` (all stages)
+**Startup** — `/spartan:startup [idea]`
+Full pipeline: brainstorm → validate → market research → pitch materials.
 
-**Feature Development (templates for structured building):**
-```
-Epic → Spec → Plan → Build → Review (with quality gates between each phase)
-```
-Templates: `epic`, `feature-spec`, `implementation-plan`, `quality-gates`, `design-doc`
-For small tasks, `/quickplan` covers spec + plan in one shot.
+**Onboard** — `/spartan:onboard`
+Understand a new codebase: scan → map architecture → set up tooling.
 
-**Backend / Frontend / Project-Mgmt / Ops:**
-Stack-specific scaffolding, reviews, and tooling
-
-Type `/spartan` anytime and I will route you.
-Run `cat ~/.claude/.spartan-packs` to see which packs you have."
+There are also 40+ individual commands for specific tasks. Type `/spartan` anytime and I'll route you to the right one."
 
 ---
 
 ## Auto Mode
 
 If user says **"auto on"** or **"auto mode"**:
-- Acknowledge: "Auto mode ON — I will run straight through without confirmations. Say 'auto off' or 'stop' anytime."
-- All subsequent commands skip confirmation gates and execute straight through
-- Still SHOW output at each step (user can see what's happening)
+- Acknowledge: "Auto mode ON — running straight through without confirmations. Say 'auto off' or 'stop' anytime."
+- All commands skip confirmation gates and run through
+- Still SHOW output at each step
 - Still STOP for destructive actions (force push, drop table, delete files)
 
 If user says **"auto off"**:
-- Acknowledge: "Auto mode OFF — I will ask for confirmation at each step."
+- Acknowledge: "Auto mode OFF — asking for confirmation at each step."
 
 ---
 
 ## Context Management (always active)
 
-You are responsible for your own context health. Monitor these signals:
-- You're starting to lose track of decisions made earlier → **compact now**
-- You're repeating questions the user already answered → **compact now**
-- Your responses are getting slower or less precise → **warn user + compact**
+Monitor your own context health:
+- Losing track of earlier decisions → **compact now**
+- Repeating questions already answered → **compact now**
+- Responses getting slower or less precise → **warn user + compact**
 
-**Action sequence:**
-1. First sign of context pressure → run `/compact` silently, tell user: "Context getting heavy — compacted to stay productive."
-2. If already compacted once and still struggling → trigger full `/spartan:context-save`: "Context overloaded after compacting — saving state. You will need to start a new session."
-3. Never let quality degrade silently — always tell the user what's happening.
+Action sequence:
+1. First sign of pressure → run `/compact` silently, tell user: "Context getting heavy — compacted."
+2. If still struggling after compact → trigger `/spartan:context-save`
+3. Never let quality drop silently — always tell the user.

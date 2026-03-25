@@ -51,6 +51,36 @@ After install, open any project, run `claude`, then type `/spartan`.
 
 ---
 
+## How to Use — Pick Your Style
+
+**Workflows** &mdash; guided multi-stage processes. Best for features, bug fixes, research. Uses more tokens but catches what you'd miss.
+
+| Workflow | Command | What it does |
+|----------|---------|-------------|
+| **Build** | `/spartan:build [backend\|frontend] [feature]` | Requirement &rarr; plan &rarr; TDD &rarr; review &rarr; PR |
+| **Fix** | `/spartan:fix [symptom]` | Reproduce &rarr; investigate &rarr; test-first fix &rarr; PR |
+| **Research** | `/spartan:research [topic]` | Frame &rarr; gather &rarr; analyze &rarr; report |
+| **Startup** | `/spartan:startup [idea]` | Brainstorm &rarr; validate &rarr; research &rarr; pitch |
+| **Onboard** | `/spartan:onboard` | Scan &rarr; map architecture &rarr; set up tooling |
+
+**Direct commands** &mdash; one command, one job. Best when you know what step you need. Saves tokens.
+
+```
+/spartan:quickplan "task"   ← just the planning step
+/spartan:review             ← just the code review
+/spartan:pr-ready           ← just the PR creation
+/spartan:migration "desc"   ← just the migration
+```
+
+**Rules only** &mdash; zero overhead. Rules load automatically and enforce coding standards every session. No commands needed.
+
+```bash
+# Install packs → rules work silently in every session
+npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut
+```
+
+---
+
 ## Pick Your Packs
 
 Packs group commands, rules, skills, and agents by use case. **Core is always installed.** Pick the rest based on what you're building.
@@ -105,7 +135,7 @@ npx @c0x12c/spartan-ai-toolkit@latest --all
 
 | Pack | Category | Depends on | What you get |
 |------|----------|------------|--------------|
-| **core** | Core | — | Always installed. quickplan, debug, pr-ready, daily, init-project, safety commands |
+| **core** | Core | — | Always installed. Workflows (build, fix, onboard), quickplan, pr-ready, daily, safety commands |
 | **backend-micronaut** | Backend | database, shared-backend | Kotlin service scaffold, code review, testcontainers, API/DB/Kotlin rules, 5 skills, 2 agents |
 | **backend-nodejs** | Backend | database, shared-backend | Coming soon |
 | **backend-python** | Backend | database, shared-backend | Coming soon |
@@ -113,7 +143,7 @@ npx @c0x12c/spartan-ai-toolkit@latest --all
 | **project-mgmt** | Planning | — | Project lifecycle, phases, workstreams, GSD upgrade, forensics, brownfield, codebase mapping |
 | **product** | Planning | — | Think-before-build, validate, teardown, interview, lean canvas, brainstorm |
 | **ops** | Ship | — | Deploy + env-setup |
-| **research** | Research | product | Full startup pipeline — kickoff to investor outreach, 10 skills, 2 agents |
+| **research** | Research | product | Startup + research workflows, kickoff to investor outreach, 10 skills, 2 agents |
 
 Hidden packs (`database`, `shared-backend`) get pulled in as dependencies — you don't pick them directly.
 
@@ -125,12 +155,20 @@ All commands start with `/spartan:` (e.g., `/spartan:quickplan "task"`).
 
 Type `/spartan` to get the smart router — it asks what you need and picks the right command.
 
+### Workflows (core + research packs)
+| Command | What it does |
+|---------|-------------|
+| `build [mode] [feature]` | Build a feature end-to-end (backend, frontend, or auto-detect) |
+| `fix [symptom]` | Find and fix a bug with structured investigation |
+| `research [topic]` | Deep research with source tracking and report |
+| `startup [idea]` | Full startup pipeline: brainstorm to investor-ready |
+| `onboard` | Understand a new codebase and set up tooling |
+
 ### Core (always installed)
 | Command | What it does |
 |---------|-------------|
 | `quickplan "task"` | Task < 1 day — spec + plan + branch in one shot |
 | `daily` | Standup summary from git history |
-| `debug "symptom"` | 4-phase root cause investigation |
 | `pr-ready` | Full checklist before creating any PR |
 | `init-project` | Auto-generate CLAUDE.md from codebase scan |
 | `context-save` | Save session state to resume later |
@@ -187,15 +225,15 @@ Type `/spartan` to get the smart router — it asks what you need and picks the 
 ### Research (research pack)
 | Command | What it does |
 |---------|-------------|
-| `kickoff` | Start new idea — brainstorm + validate |
-| `deep-dive` | Market research + competitor teardowns |
-| `full-run` | Full pipeline from brainstorm to outreach |
-| `fundraise` | Pitch materials + investor outreach |
-| `research` | Deep research with source checking |
-| `pitch` | Investor-facing materials |
-| `outreach` | Draft investor emails |
-| `content` | Turn ideas into platform-native content |
-| `write` | Write blog posts and articles |
+| `startup [idea]` | Full pipeline from brainstorm to outreach |
+| `kickoff [theme]` | Start new idea — brainstorm + validate |
+| `deep-dive [project]` | Market research + competitor teardowns |
+| `fundraise [project]` | Pitch materials + investor outreach |
+| `research [topic]` | Deep research with source checking |
+| `pitch [type]` | Investor-facing materials |
+| `outreach [investor]` | Draft investor emails |
+| `content [source]` | Turn ideas into platform-native content |
+| `write [topic]` | Write blog posts and articles |
 
 ---
 

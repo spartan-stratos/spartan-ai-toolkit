@@ -3,13 +3,13 @@
   <p align="center">
     <strong>Engineering discipline layer for AI coding tools</strong>
     <br />
-    Commands &middot; Rules &middot; Skills &middot; Agents &middot; Packs
+    Workflows &middot; Commands &middot; Rules &middot; Skills &middot; Agents
   </p>
   <p align="center">
     <a href="#install">Install</a> &middot;
     <a href="#pick-your-packs">Pick Your Packs</a> &middot;
-    <a href="#what-to-do-first">First Steps</a> &middot;
-    <a href="#which-command-do-i-use">Command Guide</a> &middot;
+    <a href="#how-to-use">How to Use</a> &middot;
+    <a href="#all-commands">All Commands</a> &middot;
     <a href="CONTRIBUTING.md">Contributing</a>
   </p>
 </p>
@@ -24,12 +24,12 @@ Spartan fixes this. It's a set of **commands, rules, skills, and workflows** tha
 
 | Without Spartan | With Spartan |
 |----------------|-------------|
-| "Create a PR" &rarr; pushes without tests or description | `/spartan:pr-ready` &rarr; rebase, tests, lint, security, auto PR description |
-| "Debug this" &rarr; guesses a fix, hopes for the best | `/spartan:debug` &rarr; reproduce, isolate, root-cause, verify |
+| "Build this feature" &rarr; jumps to code, no plan, no tests | `/spartan:build` &rarr; understand, plan, TDD, review, PR |
+| "Fix this bug" &rarr; guesses a fix, hopes for the best | `/spartan:fix` &rarr; reproduce, root-cause, test-first fix, PR |
 | Team of 5 devs &rarr; each gets different code style | Rule files &rarr; same standards for everyone, every session |
 | 3-week feature &rarr; no plan, lost context | `/spartan:project new` &rarr; roadmap, phases, wave execution, persistent memory |
 
-> Not everything needs a command. Questions, small code changes (&lt; 30 min) &mdash; just talk to your AI directly. Commands are for **structured workflows where missing steps cause real problems**.
+> Not everything needs a workflow. Questions, small code changes (&lt; 30 min) &mdash; just talk to your AI directly. Workflows are for **structured work where missing steps cause real problems**.
 
 ---
 
@@ -158,187 +158,175 @@ npx @c0x12c/spartan-ai-toolkit@latest --all
 
 ---
 
-## What to Do First
+## How to Use
 
-You installed the toolkit. Now what?
+After installing, open any project and type `/spartan`. The smart router figures out what you need.
 
-### Step 1: Open a project and test it
+But here's the real guide &mdash; **pick the approach that fits how you work:**
 
-```
-cd your-project
-claude
-```
+### Approach 1: Workflows (guided, thorough)
 
-Then type:
+**Best for:** Features with 3+ tasks, bugs you can't figure out quickly, research projects, codebase onboarding.
 
-```
-/spartan
-```
+Workflows walk you through stages with gates between each step. They call the right commands and skills for you &mdash; you don't need to know what's under the hood.
 
-The smart router will ask what you need and route you to the right command. If you don't know which command to use, always start here.
+| Workflow | Command | What it does |
+|----------|---------|-------------|
+| **Build** | `/spartan:build [backend\|frontend] [feature]` | Requirement &rarr; plan &rarr; TDD &rarr; review &rarr; PR |
+| **Fix** | `/spartan:fix [symptom]` | Reproduce &rarr; investigate &rarr; test-first fix &rarr; PR |
+| **Research** | `/spartan:research [topic]` | Frame question &rarr; gather sources &rarr; analyze &rarr; report |
+| **Startup** | `/spartan:startup [idea]` | Brainstorm &rarr; validate &rarr; market research &rarr; pitch |
+| **Onboard** | `/spartan:onboard` | Scan codebase &rarr; map architecture &rarr; set up tooling |
 
-### Step 2: Generate your project's CLAUDE.md
-
-```
-/spartan:init-project
-```
-
-This scans your codebase and generates a CLAUDE.md file with your stack, conventions, and domain context. Claude reads this every session so it knows your project.
-
-### Step 3: Start your day
+**Build** auto-detects your stack. If you have `build.gradle.kts`, it uses Kotlin/Micronaut skills. If you have `next.config.*`, it uses React/Next.js skills. You can also be explicit:
 
 ```
-/spartan:daily
+/spartan:build backend add user profile endpoint
+/spartan:build frontend dashboard page
+/spartan:build add payment processing        ← auto-detect
 ```
 
-Generates a standup summary from your recent git history. Good way to pick up where you left off.
+**Startup** replaces the old `/spartan:full-run`. Same 4-stage pipeline, new name.
 
-### Step 4: Plan a task
+**Fix** replaces the old `/spartan:debug`. Same investigation protocol, but now goes all the way to PR.
 
+### Approach 2: Direct commands (fast, focused)
+
+**Best for:** When you know exactly what you need. One command, one job, done.
+
+Workflows use more tokens because they run multiple stages. If you want to save tokens or you already know what step you're on, jump straight to the command:
+
+| Instead of... | Use directly |
+|---------------|-------------|
+| Running the full Build workflow | `/spartan:quickplan "task"` for planning, then code manually |
+| Running the full Fix workflow | `/spartan:debug "symptom"` for just the investigation part |
+| Build workflow's review stage | `/spartan:review` (backend) or `/spartan:fe-review` (frontend) |
+| Build workflow's ship stage | `/spartan:pr-ready` to create the PR |
+| Startup workflow's full pipeline | `/spartan:kickoff` (stages 1-2), `/spartan:deep-dive` (stage 3), `/spartan:fundraise` (stage 4) |
+
+Think of it this way: **workflows are the recipe, commands are individual cooking steps.** If you already know how to cook, just grab the step you need.
+
+### Approach 3: Rules only (zero overhead)
+
+**Best for:** Teams that want consistent code style without changing how they work.
+
+Rules cost zero extra tokens. They're loaded automatically every session as part of CLAUDE.md. You don't run anything &mdash; the AI just follows the standards.
+
+What rules do:
+- Force consistent naming (`NAMING_CONVENTIONS`)
+- Enforce architecture patterns (`ARCHITECTURE`, `CONTROLLERS`, `SERVICES_AND_BEANS`)
+- Prevent bad database design (`SCHEMA`, `ORM_AND_REPO`, `TRANSACTIONS`)
+- Catch Kotlin anti-patterns (`KOTLIN`)
+- Keep frontend code clean (`FRONTEND`)
+
+Install with just the packs you want, and the rules work silently in every session:
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut
+# Now every AI session follows your Kotlin + Micronaut coding standards
 ```
-/spartan:quickplan "add user profile endpoint"
-```
 
-Creates a spec + plan + git branch in one shot. Good for tasks under a day.
+### Getting started
 
-For bigger work (multi-day), use `/spartan:project new` instead.
+Whichever approach you pick:
+
+1. **Run `/spartan:onboard`** (or `/spartan:init-project` for just the CLAUDE.md) to set up your project
+2. **Try `/spartan:build backend [small feature]`** to see the full workflow once
+3. After that, use whichever approach fits the task
 
 ---
 
-## Which Command Do I Use?
+## All Commands
 
-Don't memorize the list. Use `/spartan` and it'll figure it out. But if you want to go direct:
+Type `/spartan` to get the smart router. Or go direct:
 
-### "I need to start a task"
+### Workflows
+| Command | What it does |
+|---------|-------------|
+| `build [mode] [feature]` | Build a feature end-to-end (backend, frontend, or auto-detect) |
+| `fix [symptom]` | Find and fix a bug with structured investigation |
+| `research [topic]` | Deep research with source tracking and report |
+| `startup [idea]` | Full startup pipeline: brainstorm to investor-ready |
+| `onboard` | Understand a new codebase and set up tooling |
 
-| What you're doing | Command |
-|-------------------|---------|
-| Small task (< 1 day) | `/spartan:quickplan "task"` |
-| Big project (multi-day) | `/spartan:project new` |
-| New Kotlin microservice | `/spartan:kotlin-service "name"` |
-| New Next.js app | `/spartan:next-app "name"` |
-| New feature in existing Next.js | `/spartan:next-feature "name"` |
-| New database migration | `/spartan:migration "description"` |
-| Joining unfamiliar codebase | `/spartan:brownfield "service"` |
+### Core (always installed)
+| Command | What it does |
+|---------|-------------|
+| `quickplan "task"` | Task &lt; 1 day &mdash; spec + plan + branch in one shot |
+| `daily` | Standup summary from git history |
+| `pr-ready` | Full checklist before creating any PR |
+| `init-project` | Auto-generate CLAUDE.md from codebase scan |
+| `context-save` | Save session state to resume later |
+| `update` | Check for toolkit updates |
+| `careful` | Warn before destructive ops |
+| `freeze <dir>` | Lock edits to one directory |
+| `unfreeze` | Remove directory lock |
+| `guard <dir>` | careful + freeze combined |
 
-### "I need to fix something"
+### Backend (backend-micronaut pack)
+| Command | What it does |
+|---------|-------------|
+| `kotlin-service "name"` | Scaffold new Micronaut microservice |
+| `review` | PR review with Kotlin/Micronaut conventions |
+| `testcontainer "type"` | Setup Testcontainers integration testing |
+| `migration "desc"` | Create Flyway database migration |
 
-| What you're doing | Command |
-|-------------------|---------|
-| Bug with unclear cause | `/spartan:debug "symptom"` |
-| Something broke in workflow | `/spartan:forensics "problem"` |
+### Frontend (frontend-react pack)
+| Command | What it does |
+|---------|-------------|
+| `next-app "name"` | Scaffold new Next.js app |
+| `next-feature "name"` | Add feature to existing Next.js app |
+| `fe-review` | PR review with Next.js conventions |
+| `figma-to-code "url"` | Figma design to production React |
+| `e2e "feature"` | Setup Playwright E2E testing |
 
-### "I need to ship"
+### Planning (project-mgmt pack)
+| Command | What it does |
+|---------|-------------|
+| `project [action]` | Large project lifecycle (new, status, milestone) |
+| `phase [action]` | Phase lifecycle (discuss, plan, execute, verify) |
+| `workstreams [action]` | Parallel work tracks |
+| `think` | Guided thinking before coding |
+| `gsd-upgrade` | Upgrade to GSD v5 with memory + waves |
+| `forensics "problem"` | Post-mortem for failed workflows |
+| `brownfield "svc"` | Map unfamiliar codebase before touching it |
+| `map-codebase` | Deep codebase analysis with parallel agents |
 
-| What you're doing | Command |
-|-------------------|---------|
-| Ready to create PR | `/spartan:pr-ready` |
-| Review a backend PR | `/spartan:review` |
-| Review a frontend PR | `/spartan:fe-review` |
-| Deploy a service | `/spartan:deploy "service" "target"` |
+### Product (product pack)
+| Command | What it does |
+|---------|-------------|
+| `validate` | Score an idea &mdash; GO / TEST MORE / KILL |
+| `teardown` | Deep competitor analysis |
+| `interview` | Mom Test interview questions |
+| `lean-canvas` | Fill out a 9-block Lean Canvas |
+| `brainstorm` | Generate and rank ideas |
 
-### "I need to think before building"
+### Ship (ops pack)
+| Command | What it does |
+|---------|-------------|
+| `deploy "svc" "target"` | Deploy + verify |
+| `env-setup "svc"` | Audit env vars across environments |
 
-| What you're doing | Command |
-|-------------------|---------|
-| Think through a problem first | `/spartan:think` |
-| Validate an idea | `/spartan:validate` |
-| Analyze a competitor | `/spartan:teardown` |
-| Interview users | `/spartan:interview` |
-| Build a lean canvas | `/spartan:lean-canvas` |
-| Generate and filter ideas | `/spartan:brainstorm` |
+### Research (research pack)
+| Command | What it does |
+|---------|-------------|
+| `startup [idea]` | Full pipeline: brainstorm to investor outreach |
+| `kickoff [theme]` | Start new idea &mdash; brainstorm + validate |
+| `deep-dive [project]` | Market research + competitor teardowns |
+| `fundraise [project]` | Pitch materials + investor outreach |
+| `research [topic]` | Deep research with source checking |
+| `pitch [type]` | Investor-facing materials |
+| `outreach [investor]` | Draft investor emails |
+| `content [source]` | Turn ideas into platform-native content |
+| `write [topic]` | Write blog posts and articles |
 
-### "I have a startup idea" (Research Pipeline)
-
-The `research` pack (which pulls in `product`) gives you a 4-stage pipeline from idea to investor-ready. Each stage has a gate &mdash; you decide whether to keep going or stop.
-
-```
-Stage 1: DISCOVER       Stage 2: FILTER        Stage 3: DIG           Stage 4: BUILD
-───────────────         ──────────────         ─────────────          ──────────────
-/kickoff                /validate              /deep-dive             /fundraise
-/brainstorm                                    /research              /pitch
-                                               /teardown              /outreach
-
- 8-15 ideas        →    GO / TEST / KILL   →   Market + rivals    →   Deck + emails
- Pick top 3             Kill bad ones          Real numbers           Ready to send
-```
-
-**Combo commands** &mdash; so you don't have to run each step by hand:
-
-| What you're doing | Command | Stages |
-|-------------------|---------|--------|
-| Start from scratch | `/spartan:kickoff "theme"` | 1 &rarr; 2 |
-| Dig into a validated idea | `/spartan:deep-dive "project"` | 3 |
-| Build pitch + outreach | `/spartan:fundraise "project"` | 4 |
-| Run the whole pipeline | `/spartan:full-run "theme"` | 1 &rarr; 4 |
-
-**Single commands** for when you know what you need:
-
-| What you're doing | Command |
-|-------------------|---------|
-| Deep research on a topic | `/spartan:research "topic"` |
-| Create pitch materials | `/spartan:pitch "type"` |
-| Write investor emails | `/spartan:outreach "investor"` |
-| Turn research into content | `/spartan:content "source"` |
-| Write a blog post | `/spartan:write "topic"` |
-
-### "I'm building a feature" (Feature Development Workflow)
-
-The toolkit includes templates for a structured feature development workflow with quality gates between each phase.
-
-```
-Epic → Spec → [Design] → Plan → Build → Review
-              ↑                   ↑       ↑        ↑
-            Gate 1              Gate 2  Gate 3   Gate 4
-```
-
-| Phase | What Happens | Template |
-|-------|-------------|----------|
-| **Epic** | Break big feature into ordered sub-features | `templates/epic.md` |
-| **Spec** | Define problem, requirements, data model, API, edge cases | `templates/feature-spec.md` |
-| **Design** | User flows, wireframes, components, responsive (optional, for UI features) | `templates/design-doc.md` |
-| **Plan** | Design architecture, list files, break into tasks with phases | `templates/implementation-plan.md` |
-| **Build** | Implement task by task, run Gate 3 after each | quality-gates Gate 3 |
-| **Review** | Final review: all tests pass, no TODOs, no regressions | quality-gates Gate 4 |
-
-**Quality gates** (`templates/quality-gates.md`) are checklists that must pass before moving to the next phase. They catch missing specs, bad architecture, code violations, and incomplete testing.
-
-**Stack-specific workflows** &mdash; each pack has its own version with real code patterns, file locations, and quality gates tuned to the stack:
-
-| Pack | Workflow | Build Phases |
-|------|----------|-------------|
-| `backend-micronaut` | `templates/workflow-backend-micronaut.md` | Database &rarr; Business Logic &rarr; API &rarr; Tests |
-| `frontend-react` | `templates/workflow-frontend-react.md` | Types &amp; API &rarr; Components &rarr; Pages &rarr; Tests |
-| Generic (any stack) | `templates/quality-gates.md` | Adapt phases to your stack |
-
-The backend workflow includes code patterns for Controllers, Managers, Repositories, Factories, DTOs, and Tests &mdash; with real module paths and Kotlin-specific quality gates.
-
-The frontend workflow includes App Router conventions, TypeScript checks, accessibility gates, and responsive verification.
-
-**How to use it:**
-1. Start with `/spartan:quickplan` for small tasks (it covers spec + plan in one shot)
-2. For bigger features, use the stack-specific workflow as your guide
-3. Use `/spartan:project new` for multi-day projects with milestone tracking
-
-There's also a **design doc template** (`templates/design-doc.md`) for UI features &mdash; covers user flows, wireframes, responsive behavior, and accessibility.
-
-### "I need to manage a project"
-
-| What you're doing | Command |
-|-------------------|---------|
-| Run a project phase | `/spartan:phase discuss/plan/execute/verify` |
-| Manage workstreams | `/spartan:workstreams list/create/switch` |
-| Upgrade to GSD v5 | `/spartan:gsd-upgrade` |
-| Map an entire codebase | `/spartan:map-codebase` |
-
-### "I need safety"
-
-| What you're doing | Command |
-|-------------------|---------|
-| Warn before destructive ops | `/spartan:careful` |
-| Lock edits to one directory | `/spartan:freeze src/api` |
-| Remove the lock | `/spartan:unfreeze` |
-| Max safety (both combined) | `/spartan:guard src/api` |
+### Safety
+| Command | What it does |
+|---------|-------------|
+| `careful` | Warn before destructive ops |
+| `freeze <dir>` | Lock edits to one directory |
+| `unfreeze` | Remove directory lock |
+| `guard <dir>` | careful + freeze combined |
 
 ---
 
