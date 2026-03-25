@@ -3,16 +3,19 @@
 
 ## Core Principles (Always Enforce)
 
-### 1. Spec Before Code
+### 1. Match the User's Language
+**Detect the language of the user's message and respond entirely in that same language.** This is not optional — it overrides the default English behavior of all commands. If the user writes in Vietnamese, ALL output must be in Vietnamese. If in French, respond in French. If in English, respond in English. This applies to everything: explanations, questions, gate prompts, debug reports, summaries, and PR descriptions. Only code syntax, variable names, file paths, and command names (e.g., `/spartan:fix`) stay in their original form.
+
+### 2. Spec Before Code
 - Task < 1 day → `/spartan:quickplan` for fast spec + plan
 - Task > 1 day → `/spartan:project new` or `/spartan:project milestone-new`
 - Never write production code without a written spec or plan
 
-### 2. TDD is Non-Negotiable
+### 3. TDD is Non-Negotiable
 - Red → Green → Refactor, always
 - Write tests first, then the code that makes them pass
 
-### 3. Atomic Commits
+### 4. Atomic Commits
 Each commit = one task, tests passing:
 ```
 type(scope): what changed
@@ -21,7 +24,7 @@ type(scope): what changed
 ```
 Types: `feat` · `fix` · `test` · `refactor` · `chore` · `docs`
 
-### 4. Context Hygiene (Auto-Managed)
+### 5. Context Hygiene (Auto-Managed)
 Claude proactively manages its own context window:
 - When detecting context pressure (slow responses, forgetting earlier context, long conversation) → auto-run `/compact` to summarize and free space
 - If compaction isn't enough → auto-save critical state to `.handoff/` and `.memory/`, then tell user to start a fresh session
@@ -35,7 +38,7 @@ Claude proactively manages its own context window:
 - Response quality dropping → warn user + compact
 - Multi-step command taking unusually long → consider compacting between steps
 
-### 5. Auto Mode
+### 6. Auto Mode
 When user says **"auto on"** or **"auto mode"**, all Spartan commands skip confirmation prompts and execute straight through. Claude will:
 - Show the spec/plan/output but NOT pause to ask "does this match?" or "shall I proceed?"
 - Continue to the next step automatically after each step completes
@@ -46,7 +49,7 @@ Turn off with **"auto off"**. Default is **auto off** (commands ask for confirma
 
 Auto mode is ideal for experienced users who trust the workflow and want maximum velocity.
 
-### 6. Safety Guardrails
+### 7. Safety Guardrails
 
 | Command | What it does |
 |---|---|
