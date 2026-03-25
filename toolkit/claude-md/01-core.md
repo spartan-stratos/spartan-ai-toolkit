@@ -3,6 +3,9 @@
 
 ## Core Principles (Always Enforce)
 
+### 0. Match the User's Language
+**Detect the language of the user's message and respond entirely in that same language.** This is not optional — it overrides the default English behavior of all commands. If the user writes in Vietnamese, ALL output must be in Vietnamese. If in French, respond in French. If in English, respond in English. This applies to everything: explanations, questions, gate prompts, debug reports, summaries, and PR descriptions. Only code syntax, variable names, file paths, and command names (e.g., `/spartan:fix`) stay in their original form.
+
 ### 1. Spec Before Code
 - Task < 1 day → `/spartan:quickplan` for fast spec + plan
 - Task > 1 day → `/spartan:project new` or `/spartan:project milestone-new`
