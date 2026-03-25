@@ -7,9 +7,9 @@
   </p>
   <p align="center">
     <a href="#quick-start">Quick Start</a> &middot;
-    <a href="spartan-ai-toolkit/docs/GUIDE.md">Full Guide</a> &middot;
-    <a href="spartan-ai-toolkit/docs/CHEATSHEET.md">Cheatsheet</a> &middot;
-    <a href="spartan-ai-toolkit/docs/FIRST-RUN.md">First Run</a>
+    <a href="docs/GUIDE.md">Full Guide</a> &middot;
+    <a href="docs/CHEATSHEET.md">Cheatsheet</a> &middot;
+    <a href="docs/FIRST-RUN.md">First Run</a>
   </p>
 </p>
 
@@ -94,7 +94,7 @@ Spartan integrates three open-source tools into a single unified workflow. Each 
 
 ```bash
 git clone git@github.com:spartan-stratos/spartan-ai-toolkit.git
-cd spartan-ai-toolkit/spartan-ai-toolkit
+cd spartan-ai-toolkit/toolkit
 chmod +x scripts/setup.sh && ./scripts/setup.sh --global
 ```
 
@@ -133,7 +133,7 @@ The setup script copies everything into `~/.claude/` — Claude reads these file
 
 ```bash
 git clone https://github.com/spartan-stratos/spartan-ai-toolkit.git
-cd spartan-ai-toolkit/spartan-ai-toolkit
+cd spartan-ai-toolkit/toolkit
 chmod +x scripts/setup.sh
 ./scripts/setup.sh --global
 ```
@@ -425,16 +425,19 @@ For background running with pm2, advanced config, and troubleshooting, see [`cla
 
 ```
 spartan-ai-toolkit/
-├── spartan-ai-toolkit/               # Main toolkit
-│   ├── CLAUDE.md                     # Workflow brain (Claude reads this)
-│   ├── README.md                     # Toolkit-specific README
+├── docs/                                # User-facing documentation
+│   ├── GUIDE.md                         # Comprehensive guide (15 min read)
+│   ├── CHEATSHEET.md                    # Quick reference card
+│   ├── FIRST-RUN.md                     # First-run walkthrough
+│   └── ROADMAP.md                       # Development roadmap
+├── .claude/
+│   └── settings.json                    # Project-level Claude Code config
+├── toolkit/                             # Distribution content (installed to ~/.claude/)
+│   ├── CLAUDE.md                        # Workflow brain (Claude reads this)
+│   ├── README.md                        # Toolkit-specific README
 │   ├── scripts/
-│   │   └── setup.sh                  # One-command installer (8 steps)
-│   ├── docs/
-│   │   ├── GUIDE.md                  # Comprehensive guide (15 min read)
-│   │   ├── CHEATSHEET.md             # Quick reference card
-│   │   └── FIRST-RUN.md             # First-run walkthrough
-│   ├── rules/project/                # 9 coding standard files
+│   │   └── setup.sh                     # One-command installer (10 steps)
+│   ├── rules/project/                   # 9 coding standard files
 │   │   ├── CORE_RULES.md
 │   │   ├── ARCHITECTURE_RULES.md
 │   │   ├── API_RULES.md
@@ -467,9 +470,12 @@ spartan-ai-toolkit/
 │   ├── bridge.js
 │   ├── package.json
 │   └── README.md
-├── CLAUDE.md                         # Project-level AI context
-├── README.md                         # This file
-├── LICENSE                           # MIT License
+├── Makefile                             # Dev shortcuts (setup, validate, lint)
+├── .claudeignore                        # Reduce Claude context noise
+├── CLAUDE.md                            # Project-level AI context
+├── CONTRIBUTING.md                      # Contribution guidelines
+├── README.md                            # This file
+├── LICENSE                              # MIT License
 └── .gitignore
 ```
 
@@ -480,8 +486,8 @@ spartan-ai-toolkit/
 ### For Your Team
 
 1. Fork this repo
-2. Edit `spartan-ai-toolkit/CLAUDE.md` &mdash; change stack conventions
-3. Edit files in `spartan-ai-toolkit/rules/project/` &mdash; change coding rules
+2. Edit `toolkit/CLAUDE.md` &mdash; change stack conventions
+3. Edit files in `toolkit/rules/project/` &mdash; change coding rules
 4. Add/replace skills and commands
 5. Share the fork &mdash; everyone runs `setup.sh --global`
 
@@ -501,9 +507,9 @@ Generate one automatically:
 
 | Document | Description | Reading Time |
 |----------|-------------|:------------:|
-| [Full Guide](spartan-ai-toolkit/docs/GUIDE.md) | Comprehensive A-to-Z guide | 15 min |
-| [First Run](spartan-ai-toolkit/docs/FIRST-RUN.md) | Step-by-step first project walkthrough | 20 min |
-| [Cheatsheet](spartan-ai-toolkit/docs/CHEATSHEET.md) | Quick reference card (print it) | 2 min |
+| [Full Guide](docs/GUIDE.md) | Comprehensive A-to-Z guide | 15 min |
+| [First Run](docs/FIRST-RUN.md) | Step-by-step first project walkthrough | 20 min |
+| [Cheatsheet](docs/CHEATSHEET.md) | Quick reference card (print it) | 2 min |
 
 ---
 

@@ -1,0 +1,713 @@
+#!/usr/bin/env bash
+# Spartan AI Toolkit — Setup Script v4.0
+# Usage:
+#   ./scripts/setup.sh --global                 interactive pack selection
+#   ./scripts/setup.sh --global --all           install everything
+#   ./scripts/setup.sh --global --packs=backend,product   specific packs
+#   ./scripts/setup.sh --local                  install to ./.claude (this project only)
+
+set -e
+
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+DIM='\033[2m'
+NC='\033[0m'
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TOOLKIT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Source pack definitions
+source "$SCRIPT_DIR/packs.sh"
+
+# ─────────────────────────────────────────────────────────────
+# Parse arguments
+# ─────────────────────────────────────────────────────────────
+MODE="global"
+PACKS_ARG=""
+INSTALL_ALL=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --local)       MODE="local" ;;
+    --global)      MODE="global" ;;
+    --all)         INSTALL_ALL=true ;;
+    --packs=*)     PACKS_ARG="${arg#--packs=}" ;;
+  esac
+done
+
+# Set target base directory
+if [[ "$MODE" == "global" ]]; then
+  TARGET_BASE="$HOME/.claude"
+else
+  TARGET_BASE="$(pwd)/.claude"
+fi
+mkdir -p "$TARGET_BASE"
+
+# ─────────────────────────────────────────────────────────────
+# Determine which packs to install
+# ─────────────────────────────────────────────────────────────
+SELECTED_PACKS="core"
+
+resolve_packs() {
+  if [[ "$INSTALL_ALL" == true ]]; then
+    SELECTED_PACKS="$PACK_ORDER"
+    return
+  fi
+
+  if [[ -n "$PACKS_ARG" ]]; then
+    # Parse comma-separated pack names, always include core
+    SELECTED_PACKS="core"
+    IFS=',' read -ra PACKS_LIST <<< "$PACKS_ARG"
+    for p in "${PACKS_LIST[@]}"; do
+      p="$(echo "$p" | tr -d ' ')"
+      if [[ "$p" != "core" ]]; then
+        SELECTED_PACKS="$SELECTED_PACKS $p"
+      fi
+    done
+    return
+  fi
+
+  # Check for saved packs from previous install
+  local saved_file="$TARGET_BASE/.spartan-packs"
+  if [[ -f "$saved_file" ]]; then
+    local saved
+    saved=$(tr '\n' ' ' < "$saved_file" | sed 's/ *$//')
+    if [[ -n "$saved" ]]; then
+      echo ""
+      echo -e "  ${CYAN}Previously installed packs:${NC} $saved"
+      echo -n "  Re-install same packs? [Y/n]: "
+      read -r reuse_choice
+      if [[ "$reuse_choice" != "n" && "$reuse_choice" != "N" ]]; then
+        SELECTED_PACKS="$saved"
+        return
+      fi
+    fi
+  fi
+
+  # Interactive menu
+  show_pack_menu
+}
+
+show_pack_menu() {
+  echo ""
+  echo -e "  ${BOLD}Choose your packs:${NC}"
+  echo ""
+
+  local i=1
+  for pack in $PACK_ORDER; do
+    local desc
+    desc=$(pack_var "DESC" "$pack")
+    if [[ "$pack" == "core" ]]; then
+      echo -e "  ${DIM}[$i]${NC} ${BOLD}$pack${NC} — $desc ${GREEN}(always included)${NC}"
+    else
+      echo -e "  ${DIM}[$i]${NC} ${BOLD}$pack${NC} — $desc"
+    fi
+    i=$((i+1))
+  done
+
+  echo ""
+  echo -n "  Install all packs? [Y/n]: "
+  read -r all_choice
+
+  if [[ "$all_choice" != "n" && "$all_choice" != "N" ]]; then
+    SELECTED_PACKS="$PACK_ORDER"
+    return
+  fi
+
+  # Walk through each optional pack
+  SELECTED_PACKS="core"
+  for pack in $PACK_ORDER; do
+    [[ "$pack" == "core" ]] && continue
+    local desc
+    desc=$(pack_var "DESC" "$pack")
+    echo -n "  ${BOLD}$pack${NC} — $desc? [y/N]: "
+    read -r pack_choice
+    if [[ "$pack_choice" == "y" || "$pack_choice" == "Y" ]]; then
+      SELECTED_PACKS="$SELECTED_PACKS $pack"
+    fi
+  done
+}
+
+# Helper: check if a pack is selected
+is_selected() {
+  local target="$1"
+  for p in $SELECTED_PACKS; do
+    [[ "$p" == "$target" ]] && return 0
+  done
+  return 1
+}
+
+# Helper: get all items for a category across selected packs
+get_selected_items() {
+  local category="$1"
+  local items=""
+  for pack in $SELECTED_PACKS; do
+    local pack_items
+    pack_items=$(pack_var "$category" "$pack")
+    if [[ -n "$pack_items" ]]; then
+      items="$items $pack_items"
+    fi
+  done
+  echo "$items" | tr -s ' ' | sed 's/^ //'
+}
+
+echo ""
+echo -e "${BOLD}╔══════════════════════════════════════════╗${NC}"
+echo -e "${BOLD}║     Spartan AI Toolkit Setup v4.0        ║${NC}"
+echo -e "${BOLD}║        Modular Pack System                ║${NC}"
+echo -e "${BOLD}╚══════════════════════════════════════════╝${NC}"
+echo ""
+echo -e "  Mode: ${YELLOW}${MODE}${NC}"
+
+# ─────────────────────────────────────────────────────────────
+# Step 1: Prerequisites
+# ─────────────────────────────────────────────────────────────
+echo ""
+echo -e "${BLUE}[1/11]${NC} ${BOLD}Checking prerequisites...${NC}"
+
+ERRORS=0
+
+check_cmd() {
+  local cmd=$1
+  local hint=${2:-""}
+  if command -v "$cmd" &>/dev/null; then
+    echo -e "  ${GREEN}✓${NC} $cmd $(${cmd} --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+' | head -1)"
+  else
+    echo -e "  ${RED}✗${NC} $cmd not found${hint:+ — $hint}"
+    ERRORS=$((ERRORS+1))
+  fi
+}
+
+check_cmd node   "install from nodejs.org (need >= 18)"
+check_cmd npm    ""
+check_cmd git    ""
+check_cmd claude "npm install -g @anthropic-ai/claude-code"
+
+# Node version check
+if command -v node &>/dev/null; then
+  NODE_VER=$(node -v | sed 's/v//' | cut -d. -f1)
+  if [ "$NODE_VER" -lt 18 ]; then
+    echo -e "  ${RED}✗${NC} Node.js ${NODE_VER} is too old (need >= 18)"
+    ERRORS=$((ERRORS+1))
+  fi
+fi
+
+if [ "$ERRORS" -gt 0 ]; then
+  echo ""
+  echo -e "  ${RED}Fix the above errors and run setup again.${NC}"
+  exit 1
+fi
+
+# ─────────────────────────────────────────────────────────────
+# Step 2: Pack Selection
+# ─────────────────────────────────────────────────────────────
+echo ""
+echo -e "${BLUE}[2/11]${NC} ${BOLD}Selecting packs...${NC}"
+resolve_packs
+echo ""
+echo -e "  ${GREEN}Selected:${NC} ${BOLD}${SELECTED_PACKS}${NC}"
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Step 3: Superpowers
+# ─────────────────────────────────────────────────────────────
+echo -e "${BLUE}[3/11]${NC} ${BOLD}Install Superpowers in Claude Code${NC}"
+echo ""
+echo -e "  Open Claude Code and run these two commands:"
+echo ""
+echo -e "  ${CYAN}/plugin marketplace add obra/superpowers-marketplace${NC}"
+echo -e "  ${CYAN}/plugin install superpowers@superpowers-marketplace${NC}"
+echo ""
+echo -e "  Then ${BOLD}restart Claude Code${NC} before continuing."
+echo ""
+echo -e "  ${YELLOW}Press ENTER when done (or Ctrl+C to skip for now)...${NC}"
+read -r
+echo -e "  ${GREEN}✓${NC} Superpowers noted"
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Step 4: GSD
+# ─────────────────────────────────────────────────────────────
+echo -e "${BLUE}[4/11]${NC} ${BOLD}Installing GSD (Get Shit Done)...${NC}"
+
+GSD_FLAGS="--global"
+[[ "$MODE" == "local" ]] && GSD_FLAGS="--local"
+
+if npx get-shit-done-cc@latest $GSD_FLAGS 2>&1 | tail -5; then
+  echo -e "  ${GREEN}✓${NC} GSD installed (${MODE})"
+else
+  echo -e "  ${YELLOW}⚠${NC} GSD install may have had warnings — check above"
+fi
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Step 5: Assemble & Install CLAUDE.md
+# ─────────────────────────────────────────────────────────────
+echo -e "${BLUE}[5/11]${NC} ${BOLD}Assembling CLAUDE.md from selected packs...${NC}"
+
+CLAUDE_MD_DIR="$TOOLKIT_ROOT/claude-md"
+
+if [[ "$MODE" == "global" ]]; then
+  TARGET_CLAUDE="$HOME/.claude/CLAUDE.md"
+else
+  TARGET_CLAUDE="$(pwd)/CLAUDE.md"
+fi
+
+# Backup existing if different
+if [[ -f "$TARGET_CLAUDE" ]]; then
+  cp "$TARGET_CLAUDE" "${TARGET_CLAUDE}.$(date +%Y%m%d-%H%M%S).bak"
+  echo -e "  ${DIM}Backed up existing CLAUDE.md${NC}"
+fi
+
+# Assemble: always include header + core + footer, plus selected pack sections
+ASSEMBLED=""
+
+# Always include header and core
+for always_file in "00-header.md" "01-core.md"; do
+  if [[ -f "$CLAUDE_MD_DIR/$always_file" ]]; then
+    ASSEMBLED="$ASSEMBLED$(cat "$CLAUDE_MD_DIR/$always_file")
+"
+  fi
+done
+
+# Include pack-specific sections
+for pack in $SELECTED_PACKS; do
+  local_sections=$(pack_var "CLAUDE_SECTIONS" "$pack")
+  for section_file in $local_sections; do
+    if [[ -f "$CLAUDE_MD_DIR/$section_file" ]]; then
+      ASSEMBLED="$ASSEMBLED$(cat "$CLAUDE_MD_DIR/$section_file")
+"
+    fi
+  done
+done
+
+# Always include footer
+if [[ -f "$CLAUDE_MD_DIR/90-footer.md" ]]; then
+  ASSEMBLED="$ASSEMBLED$(cat "$CLAUDE_MD_DIR/90-footer.md")
+"
+fi
+
+echo "$ASSEMBLED" > "$TARGET_CLAUDE"
+
+# Count which sections were included
+SECTION_COUNT=2  # header + core always
+for pack in $SELECTED_PACKS; do
+  local_sections=$(pack_var "CLAUDE_SECTIONS" "$pack")
+  for _ in $local_sections; do
+    SECTION_COUNT=$((SECTION_COUNT+1))
+  done
+done
+SECTION_COUNT=$((SECTION_COUNT+1))  # footer
+
+echo -e "  ${GREEN}✓${NC} CLAUDE.md assembled (${SECTION_COUNT} sections)"
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Step 6: Spartan commands (pack-filtered)
+# ─────────────────────────────────────────────────────────────
+echo -e "${BLUE}[6/11]${NC} ${BOLD}Installing Spartan commands...${NC}"
+
+COMMANDS_SRC="$TOOLKIT_ROOT/commands/spartan"
+
+if [[ "$MODE" == "global" ]]; then
+  COMMANDS_DEST="$HOME/.claude/commands/spartan"
+else
+  COMMANDS_DEST="$(pwd)/.claude/commands/spartan"
+fi
+
+mkdir -p "$COMMANDS_DEST"
+COUNT=0
+
+# Copy smart router (always)
+ROUTER_SRC="$TOOLKIT_ROOT/commands/spartan.md"
+if [[ "$MODE" == "global" ]]; then
+  ROUTER_DEST="$HOME/.claude/commands/spartan.md"
+else
+  ROUTER_DEST="$(pwd)/.claude/commands/spartan.md"
+fi
+
+if [[ -f "$ROUTER_SRC" ]]; then
+  cp "$ROUTER_SRC" "$ROUTER_DEST"
+  echo -e "  ${GREEN}✓${NC} /spartan (smart router)"
+  COUNT=$((COUNT+1))
+fi
+
+# Build list of commands to install from selected packs
+SELECTED_COMMANDS=$(get_selected_items "COMMANDS")
+
+for cmd_name in $SELECTED_COMMANDS; do
+  src_file="$COMMANDS_SRC/${cmd_name}.md"
+  if [[ -f "$src_file" ]]; then
+    cp "$src_file" "$COMMANDS_DEST/${cmd_name}.md"
+    echo -e "  ${GREEN}✓${NC} /spartan:${cmd_name}"
+    COUNT=$((COUNT+1))
+  else
+    echo -e "  ${YELLOW}⚠${NC} /spartan:${cmd_name} (file not found, skipped)"
+  fi
+done
+
+echo ""
+echo -e "  Installed ${BOLD}${COUNT} commands${NC}"
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Step 7: Company Rules (pack-filtered)
+# ─────────────────────────────────────────────────────────────
+SELECTED_RULES=$(get_selected_items "RULES")
+
+if [[ -n "$SELECTED_RULES" ]]; then
+  echo -e "${BLUE}[7/11]${NC} ${BOLD}Installing company rules...${NC}"
+
+  RULES_SRC="$TOOLKIT_ROOT/rules/project"
+
+  if [[ "$MODE" == "global" ]]; then
+    RULES_DEST="$HOME/.claude/rules/project"
+  else
+    RULES_DEST="$(pwd)/rules/project"
+  fi
+
+  mkdir -p "$RULES_DEST"
+  RCOUNT=0
+  RSKIP=0
+  RULES_CONFLICT=false
+
+  # Deduplicate rule files (e.g., NAMING_CONVENTIONS.md in both backend + frontend)
+  SEEN_RULES=""
+  UNIQUE_RULES=""
+  for rule in $SELECTED_RULES; do
+    case " $SEEN_RULES " in
+      *" $rule "*) ;;  # already seen, skip
+      *) SEEN_RULES="$SEEN_RULES $rule"; UNIQUE_RULES="$UNIQUE_RULES $rule" ;;
+    esac
+  done
+  SELECTED_RULES="$UNIQUE_RULES"
+
+  # Check for conflicts
+  for rule in $SELECTED_RULES; do
+    if [[ -f "$RULES_DEST/$rule" ]]; then
+      if ! diff -q "$RULES_SRC/$rule" "$RULES_DEST/$rule" > /dev/null 2>&1; then
+        RULES_CONFLICT=true
+        break
+      fi
+    fi
+  done
+
+  RULES_ACTION="overwrite"
+  if [[ "$RULES_CONFLICT" == true ]]; then
+    echo ""
+    echo -e "  ${YELLOW}⚠  Existing rules differ from toolkit version${NC}"
+    echo -e "  ${BOLD}[b]${NC} Backup existing + overwrite"
+    echo -e "  ${BOLD}[s]${NC} Skip — keep existing, only install missing"
+    echo -n "  Your choice [b/s]: "
+    read -r RULES_CHOICE
+    case "$RULES_CHOICE" in
+      s|S|skip) RULES_ACTION="skip" ;;
+      *) RULES_ACTION="backup" ;;
+    esac
+  fi
+
+  BACKUP_DIR="$RULES_DEST/.backup-$(date +%Y%m%d-%H%M%S)"
+
+  for rule in $SELECTED_RULES; do
+    src_file="$RULES_SRC/$rule"
+    dest_file="$RULES_DEST/$rule"
+    [[ -f "$src_file" ]] || continue
+
+    if [[ -f "$dest_file" ]]; then
+      if diff -q "$src_file" "$dest_file" > /dev/null 2>&1; then
+        echo -e "  ${GREEN}✓${NC} ${rule} (unchanged)"
+        RCOUNT=$((RCOUNT+1))
+        continue
+      fi
+      if [[ "$RULES_ACTION" == "skip" ]]; then
+        echo -e "  ${YELLOW}⏭${NC} ${rule} (skipped)"
+        RSKIP=$((RSKIP+1))
+        continue
+      fi
+      mkdir -p "$BACKUP_DIR"
+      cp "$dest_file" "$BACKUP_DIR/$rule"
+      cp "$src_file" "$dest_file"
+      echo -e "  ${GREEN}✓${NC} ${rule} (backed up → overwritten)"
+      RCOUNT=$((RCOUNT+1))
+    else
+      cp "$src_file" "$dest_file"
+      echo -e "  ${GREEN}✓${NC} ${rule} (new)"
+      RCOUNT=$((RCOUNT+1))
+    fi
+  done
+
+  echo ""
+  if [[ "$RSKIP" -gt 0 ]]; then
+    echo -e "  Installed ${BOLD}${RCOUNT}${NC} rules, skipped ${BOLD}${RSKIP}${NC}"
+  else
+    echo -e "  Installed ${BOLD}${RCOUNT} rules${NC}"
+  fi
+  if [[ -d "$BACKUP_DIR" ]]; then
+    echo -e "  Backups at: ${CYAN}${BACKUP_DIR}${NC}"
+  fi
+  echo ""
+else
+  echo -e "${BLUE}[7/11]${NC} ${BOLD}Rules${NC} — ${DIM}no rule packs selected, skipping${NC}"
+  echo ""
+fi
+
+# ─────────────────────────────────────────────────────────────
+# Step 8: Company Skills (pack-filtered)
+# ─────────────────────────────────────────────────────────────
+SELECTED_SKILLS=$(get_selected_items "SKILLS")
+SKILLS_SRC="$TOOLKIT_ROOT/skills"
+
+if [[ -n "$SELECTED_SKILLS" ]]; then
+  echo -e "${BLUE}[8/11]${NC} ${BOLD}Installing company skills...${NC}"
+
+  if [[ "$MODE" == "global" ]]; then
+    SKILLS_DEST="$HOME/.claude/skills"
+  else
+    SKILLS_DEST="$(pwd)/.claude/skills"
+  fi
+
+  SCOUNT=0
+  SSKIP=0
+  SKILLS_CONFLICT=false
+
+  # Check for conflicts
+  for skill_name in $SELECTED_SKILLS; do
+    skill_dir="$SKILLS_SRC/$skill_name"
+    dest_dir="$SKILLS_DEST/$skill_name"
+    [[ -d "$skill_dir" ]] || continue
+    [[ -d "$dest_dir" ]] || continue
+    for sf in "$skill_dir"/skill.md "$skill_dir"/SKILL.md; do
+      [[ -f "$sf" ]] || continue
+      sf_dest="$dest_dir/$(basename "$sf")"
+      if [[ -f "$sf_dest" ]] && ! diff -q "$sf" "$sf_dest" > /dev/null 2>&1; then
+        SKILLS_CONFLICT=true
+        break 2
+      fi
+    done
+  done
+
+  SKILLS_ACTION="overwrite"
+  if [[ "$SKILLS_CONFLICT" == true ]]; then
+    echo ""
+    echo -e "  ${YELLOW}⚠  Existing skills differ from toolkit version${NC}"
+    echo -e "  ${BOLD}[b]${NC} Backup existing + overwrite"
+    echo -e "  ${BOLD}[s]${NC} Skip — keep existing, only install missing"
+    echo -n "  Your choice [b/s]: "
+    read -r SKILLS_CHOICE
+    case "$SKILLS_CHOICE" in
+      s|S|skip) SKILLS_ACTION="skip" ;;
+      *) SKILLS_ACTION="backup" ;;
+    esac
+  fi
+
+  SKILL_BACKUP_DIR="$SKILLS_DEST/.backup-$(date +%Y%m%d-%H%M%S)"
+
+  for skill_name in $SELECTED_SKILLS; do
+    skill_dir="$SKILLS_SRC/$skill_name"
+    dest_dir="$SKILLS_DEST/$skill_name"
+    [[ -d "$skill_dir" ]] || continue
+
+    if [[ -d "$dest_dir" ]]; then
+      IS_IDENTICAL=true
+      for sf in "$skill_dir"/skill.md "$skill_dir"/SKILL.md; do
+        [[ -f "$sf" ]] || continue
+        sf_dest="$dest_dir/$(basename "$sf")"
+        if [[ -f "$sf_dest" ]] && ! diff -q "$sf" "$sf_dest" > /dev/null 2>&1; then
+          IS_IDENTICAL=false
+          break
+        fi
+      done
+
+      if [[ "$IS_IDENTICAL" == true ]]; then
+        echo -e "  ${GREEN}✓${NC} /$skill_name (unchanged)"
+        SCOUNT=$((SCOUNT+1))
+        continue
+      fi
+      if [[ "$SKILLS_ACTION" == "skip" ]]; then
+        echo -e "  ${YELLOW}⏭${NC} /$skill_name (skipped)"
+        SSKIP=$((SSKIP+1))
+        continue
+      fi
+      mkdir -p "$SKILL_BACKUP_DIR/$skill_name"
+      cp -r "$dest_dir"/* "$SKILL_BACKUP_DIR/$skill_name/" 2>/dev/null
+      rm -rf "$dest_dir"
+      mkdir -p "$dest_dir"
+      cp -r "$skill_dir"* "$dest_dir/" 2>/dev/null
+      rm -rf "$dest_dir"/__pycache__ "$dest_dir"/scripts/__pycache__ 2>/dev/null
+      echo -e "  ${GREEN}✓${NC} /$skill_name (backed up → overwritten)"
+      SCOUNT=$((SCOUNT+1))
+    else
+      mkdir -p "$dest_dir"
+      cp -r "$skill_dir"* "$dest_dir/" 2>/dev/null
+      rm -rf "$dest_dir"/__pycache__ "$dest_dir"/scripts/__pycache__ 2>/dev/null
+      echo -e "  ${GREEN}✓${NC} /$skill_name (new)"
+      SCOUNT=$((SCOUNT+1))
+    fi
+  done
+
+  echo ""
+  if [[ "$SSKIP" -gt 0 ]]; then
+    echo -e "  Installed ${BOLD}${SCOUNT}${NC} skills, skipped ${BOLD}${SSKIP}${NC}"
+  else
+    echo -e "  Installed ${BOLD}${SCOUNT} skills${NC}"
+  fi
+  if [[ -d "$SKILL_BACKUP_DIR" ]]; then
+    echo -e "  Backups at: ${CYAN}${SKILL_BACKUP_DIR}${NC}"
+  fi
+  echo ""
+else
+  echo -e "${BLUE}[8/11]${NC} ${BOLD}Skills${NC} — ${DIM}no skill packs selected, skipping${NC}"
+  echo ""
+fi
+
+# ─────────────────────────────────────────────────────────────
+# Step 9: Agents (pack-filtered)
+# ─────────────────────────────────────────────────────────────
+SELECTED_AGENTS=$(get_selected_items "AGENTS")
+AGENTS_SRC="$TOOLKIT_ROOT/agents"
+
+if [[ -n "$SELECTED_AGENTS" ]]; then
+  echo -e "${BLUE}[9/11]${NC} ${BOLD}Installing agents...${NC}"
+
+  if [[ "$MODE" == "global" ]]; then
+    AGENTS_DEST="$HOME/.claude/agents"
+  else
+    AGENTS_DEST="$(pwd)/.claude/agents"
+  fi
+
+  mkdir -p "$AGENTS_DEST"
+  ACOUNT=0
+
+  for agent_file in $SELECTED_AGENTS; do
+    src_file="$AGENTS_SRC/$agent_file"
+    if [[ -f "$src_file" ]]; then
+      cp "$src_file" "$AGENTS_DEST/$agent_file"
+      echo -e "  ${GREEN}✓${NC} ${agent_file%.md}"
+      ACOUNT=$((ACOUNT+1))
+    fi
+  done
+
+  echo ""
+  echo -e "  Installed ${BOLD}${ACOUNT} agents${NC}"
+  echo ""
+else
+  echo -e "${BLUE}[9/11]${NC} ${BOLD}Agents${NC} — ${DIM}no agent packs selected, skipping${NC}"
+  echo ""
+fi
+
+# ─────────────────────────────────────────────────────────────
+# Step 10: Auto-save context hook
+# ─────────────────────────────────────────────────────────────
+echo -e "${BLUE}[10/11]${NC} ${BOLD}Installing auto-save context hook...${NC}"
+
+HOOK_SCRIPT_SRC="$TOOLKIT_ROOT/scripts/auto-save-context.js"
+
+if [[ "$MODE" == "global" ]]; then
+  HOOK_SCRIPT_DEST="$HOME/.claude/scripts/auto-save-context.js"
+  SETTINGS_FILE="$HOME/.claude/settings.json"
+else
+  HOOK_SCRIPT_DEST="$(pwd)/.claude/scripts/auto-save-context.js"
+  SETTINGS_FILE="$(pwd)/.claude/settings.json"
+fi
+
+# Copy hook script
+mkdir -p "$(dirname "$HOOK_SCRIPT_DEST")"
+cp "$HOOK_SCRIPT_SRC" "$HOOK_SCRIPT_DEST"
+echo -e "  ${GREEN}✓${NC} auto-save-context.js copied"
+
+# Configure hook in settings.json
+HOOK_CMD="node $HOOK_SCRIPT_DEST"
+
+if [[ -f "$SETTINGS_FILE" ]]; then
+  if grep -q "auto-save-context" "$SETTINGS_FILE" 2>/dev/null; then
+    echo -e "  ${GREEN}✓${NC} PostCompact hook already configured"
+  else
+    node -e "
+      const fs = require('fs');
+      const settings = JSON.parse(fs.readFileSync('$SETTINGS_FILE', 'utf-8'));
+      if (!settings.hooks) settings.hooks = {};
+      if (!settings.hooks.PostCompact) settings.hooks.PostCompact = [];
+      settings.hooks.PostCompact.push({
+        hooks: [{
+          type: 'command',
+          command: '$HOOK_CMD'
+        }]
+      });
+      fs.writeFileSync('$SETTINGS_FILE', JSON.stringify(settings, null, 2) + '\n', 'utf-8');
+    " 2>/dev/null
+    if [ $? -eq 0 ]; then
+      echo -e "  ${GREEN}✓${NC} PostCompact hook added to settings.json"
+    else
+      echo -e "  ${YELLOW}⚠${NC} Could not update settings.json — add hook manually"
+    fi
+  fi
+else
+  cat > "$SETTINGS_FILE" <<HOOK_EOF
+{
+  "hooks": {
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOK_CMD"
+          }
+        ]
+      }
+    ]
+  }
+}
+HOOK_EOF
+  echo -e "  ${GREEN}✓${NC} settings.json created with PostCompact hook"
+fi
+
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Step 11: Version + save pack selection
+# ─────────────────────────────────────────────────────────────
+SPARTAN_VERSION=$(cat "$TOOLKIT_ROOT/VERSION" 2>/dev/null || echo "unknown")
+echo -e "${BLUE}[11/11]${NC} ${BOLD}Recording version & pack selection...${NC}"
+
+if [[ "$MODE" == "global" ]]; then
+  echo "$SPARTAN_VERSION" > "$HOME/.claude/.spartan-version"
+  echo "$TOOLKIT_ROOT" > "$HOME/.claude/.spartan-repo"
+  echo "$SELECTED_PACKS" | tr ' ' '\n' > "$HOME/.claude/.spartan-packs"
+else
+  echo "$SPARTAN_VERSION" > "$(pwd)/.claude/.spartan-version"
+  echo "$TOOLKIT_ROOT" > "$(pwd)/.claude/.spartan-repo"
+  echo "$SELECTED_PACKS" | tr ' ' '\n' > "$(pwd)/.claude/.spartan-packs"
+fi
+
+echo -e "  ${GREEN}✓${NC} Spartan v${SPARTAN_VERSION}"
+echo -e "  ${GREEN}✓${NC} Packs saved: ${SELECTED_PACKS}"
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Done
+# ─────────────────────────────────────────────────────────────
+echo -e "${BOLD}${GREEN}╔══════════════════════════════════════════╗${NC}"
+echo -e "${BOLD}${GREEN}║          Setup Complete ✓                ║${NC}"
+echo -e "${BOLD}${GREEN}╚══════════════════════════════════════════╝${NC}"
+echo ""
+echo -e "${BOLD}Installed packs:${NC} ${CYAN}${SELECTED_PACKS}${NC}"
+echo ""
+echo -e "${BOLD}Next steps:${NC}"
+echo ""
+echo -e "  1. ${YELLOW}Restart Claude Code${NC} (required for Superpowers)"
+echo ""
+echo -e "  2. Open any project folder and type:"
+echo -e "     ${CYAN}/spartan${NC}"
+echo -e "     → Smart router asks what you need = everything working"
+echo ""
+echo -e "  3. To change packs later:"
+echo -e "     ${CYAN}./scripts/setup.sh --global --packs=core,backend,product${NC}"
+echo -e "     Or re-run without flags for interactive menu"
+echo ""
+echo -e "  Full guide: ${YELLOW}docs/GUIDE.md${NC}"
+echo -e "  Cheatsheet: ${YELLOW}docs/CHEATSHEET.md${NC}"
+echo ""

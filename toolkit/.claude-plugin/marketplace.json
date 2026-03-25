@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "spartan-marketplace",
+  "description": "Spartan AI Toolkit — engineering discipline layer for Claude Code",
+  "owner": {
+    "name": "Khoa Tran"
+  },
+  "plugins": [
+    {
+      "name": "spartan-ai-toolkit",
+      "description": "35 commands, 9 rules, 8 skills, 2 agents — organized in 6 packs (core, backend, frontend, project-mgmt, product, ops)",
+      "source": "./",
+      "version": "4.1.0"
+    }
+  ]
+}

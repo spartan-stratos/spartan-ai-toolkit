@@ -1,0 +1,57 @@
+name: Publish to npm
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Verify version matches tag
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          PKG_VERSION=$(node -p "require('./toolkit/package.json').version")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "Tag v$TAG_VERSION doesn't match toolkit/package.json version $PKG_VERSION"
+            exit 1
+          fi
+          echo "Version: $TAG_VERSION"
+
+      - name: Validate structure
+        run: |
+          echo "Checking required files..."
+          for f in \
+            toolkit/commands/spartan.md \
+            toolkit/CLAUDE.md \
+            toolkit/package.json \
+            toolkit/bin/cli.js \
+            toolkit/.claude-plugin/plugin.json; do
+            if [ ! -f "$f" ]; then
+              echo "MISSING: $f"
+              exit 1
+            fi
+          done
+          echo "All required files present."
+
+          CMD_COUNT=$(ls toolkit/commands/spartan/*.md 2>/dev/null | wc -l)
+          SKILL_COUNT=$(ls -d toolkit/skills/*/ 2>/dev/null | wc -l)
+          echo "Commands: $CMD_COUNT, Skills: $SKILL_COUNT"
+
+      - name: Publish
+        working-directory: toolkit
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

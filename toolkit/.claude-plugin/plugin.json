@@ -1,0 +1,12 @@
+{
+  "name": "spartan-ai-toolkit",
+  "version": "4.1.0",
+  "description": "Engineering discipline layer for Claude Code — 35 commands, 9 rules, 8 skills, 2 agents organized in 6 installable packs",
+  "author": {
+    "name": "Khoa Tran",
+    "url": "https://github.com/khoadtran"
+  },
+  "repository": "https://github.com/khoadtran/spartan-ai-toolkit",
+  "license": "MIT",
+  "keywords": ["engineering", "workflow", "kotlin", "micronaut", "nextjs", "product-thinking"]
+}

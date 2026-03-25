@@ -21,7 +21,7 @@ Thanks for your interest in contributing! This guide covers what you need to kno
 | **Skills** | `skills/` | Reusable prompt templates for common tasks |
 | **Agents** | `agents/` | Expert agent definitions for specialized guidance |
 | **Telegram Bridge** | `claude-telegram-bridge/` | Remote control features |
-| **Docs** | `docs/` and `README.md` | Guides, cheatsheet, first-run walkthrough |
+| **Docs** | `docs/` (root) and `README.md` | Guides, cheatsheet, first-run walkthrough |
 | **Setup Script** | `scripts/setup.sh` | Installer improvements |
 
 ---
@@ -66,7 +66,7 @@ Thanks for your interest in contributing! This guide covers what you need to kno
 - **Test with a real Telegram bot** — mock testing won't catch Telegram API quirks
 - **Keep bridge.js reasonable** — if adding major features, consider splitting into modules
 
-### Docs (`docs/`)
+### Docs (`docs/` at repo root)
 
 - **Keep CHEATSHEET.md to 1 page** — it's meant to be printed
 - **GUIDE.md is the comprehensive reference** — detailed explanations go here
@@ -77,7 +77,7 @@ Thanks for your interest in contributing! This guide covers what you need to kno
 
 ## CLAUDE.md — The Brain File
 
-`spartan-ai-toolkit/CLAUDE.md` is the most important file in the project. Claude reads it at the start of every session. Rules for editing it:
+`toolkit/CLAUDE.md` is the most important file in the project. Claude reads it at the start of every session. Rules for editing it:
 
 - **Keep it under 200 lines of actionable content** — every line has a cost (tokens)
 - **No filler** — if a section doesn't change Claude's behavior, remove it

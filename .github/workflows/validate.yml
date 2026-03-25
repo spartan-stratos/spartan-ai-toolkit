@@ -1,0 +1,74 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck on setup.sh
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: toolkit/scripts
+
+  structure:
+    name: Validate Structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required files exist
+        run: |
+          ERRORS=0
+          for f in \
+            toolkit/CLAUDE.md \
+            toolkit/scripts/setup.sh \
+            toolkit/commands/spartan.md \
+            docs/GUIDE.md \
+            docs/CHEATSHEET.md \
+            docs/FIRST-RUN.md \
+            README.md \
+            CONTRIBUTING.md; do
+            if [ ! -f "$f" ]; then
+              echo "MISSING: $f"
+              ERRORS=$((ERRORS+1))
+            fi
+          done
+
+          CMD_COUNT=$(ls toolkit/commands/spartan/*.md 2>/dev/null | wc -l)
+          RULE_COUNT=$(ls toolkit/rules/project/*.md 2>/dev/null | wc -l)
+          SKILL_COUNT=$(ls -d toolkit/skills/*/ 2>/dev/null | wc -l)
+          AGENT_COUNT=$(ls toolkit/agents/*.md 2>/dev/null | wc -l)
+
+          echo "Commands: $CMD_COUNT"
+          echo "Rules:    $RULE_COUNT"
+          echo "Skills:   $SKILL_COUNT"
+          echo "Agents:   $AGENT_COUNT"
+
+          if [ "$ERRORS" -gt 0 ]; then
+            echo ""
+            echo "$ERRORS required file(s) missing!"
+            exit 1
+          fi
+
+          echo "All required files present."
+
+  cli-check:
+    name: Validate CLI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check CLI runs
+        run: node toolkit/bin/cli.js --help
+      - name: Check package.json valid
+        run: node -e "require('./toolkit/package.json')"
+      - name: Check plugin.json valid
+        run: node -e "require('./toolkit/.claude-plugin/plugin.json')"

@@ -29,8 +29,15 @@ __pycache__/
 # Telegram bridge user config
 claude-telegram-bridge/projects.json
 
-# Claude local state
-.claude/
+# Claude local state (keep .claude/settings.json for project config)
+.claude/settings.local.json
+.claude/projects/
+.claude/memory/
+.claude/todo.md
+.claude/statsig/
+
+# Local docs (not tracked)
+docs/ROADMAP.md
 
 # Backups created by setup script
 *.bak

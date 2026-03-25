@@ -1,0 +1,29 @@
+# Build artifacts
+node_modules/
+__pycache__/
+*.pyc
+
+# Large data files (UI/UX skill CSV data — not needed in context)
+toolkit/skills/ui-ux-pro-max/data/**/*.csv
+toolkit/skills/ui-ux-pro-max/scripts/*.py
+
+# IDE
+.idea/
+.vscode/
+
+# Environment
+.env
+.env.local
+
+# Session state
+.planning/
+.memory/
+.handoff/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backups from setup script
+*.bak
+.backup-*/
