@@ -21,6 +21,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOOLKIT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Source pack definitions
+# shellcheck source=packs.sh
 source "$SCRIPT_DIR/packs.sh"
 
 # ─────────────────────────────────────────────────────────────
@@ -626,7 +627,7 @@ if [[ -f "$SETTINGS_FILE" ]]; then
   if grep -q "auto-save-context" "$SETTINGS_FILE" 2>/dev/null; then
     echo -e "  ${GREEN}✓${NC} PostCompact hook already configured"
   else
-    node -e "
+    if node -e "
       const fs = require('fs');
       const settings = JSON.parse(fs.readFileSync('$SETTINGS_FILE', 'utf-8'));
       if (!settings.hooks) settings.hooks = {};
@@ -638,8 +639,7 @@ if [[ -f "$SETTINGS_FILE" ]]; then
         }]
       });
       fs.writeFileSync('$SETTINGS_FILE', JSON.stringify(settings, null, 2) + '\n', 'utf-8');
-    " 2>/dev/null
-    if [ $? -eq 0 ]; then
+    " 2>/dev/null; then
       echo -e "  ${GREEN}✓${NC} PostCompact hook added to settings.json"
     else
       echo -e "  ${YELLOW}⚠${NC} Could not update settings.json — add hook manually"

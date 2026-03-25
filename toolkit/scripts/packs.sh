@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Spartan AI Toolkit — Pack Definitions
 # Sourced by setup.sh. Bash 3.2 compatible (no associative arrays).
+# shellcheck disable=SC2034  # Variables are used dynamically via pack_var()
 
 # ─── Pack order (controls display order) ─────────────────────────
 PACK_ORDER="core backend frontend project-mgmt product ops"
