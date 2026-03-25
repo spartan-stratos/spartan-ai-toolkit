@@ -20,7 +20,7 @@
 
 AI coding tools are powerful. But on real projects, they write code without tests, push PRs without rebasing, edit files you didn't ask about, and forget decisions from 20 minutes ago. Every developer on your team gets different code style from the same AI.
 
-Spartan fixes this. It's a set of **commands, rules, skills, and workflows** that make AI coding tools consistent and reliable for production work.
+Spartan fixes this. It's a set of **workflows, rules, and commands** that make AI coding tools consistent and reliable for production work.
 
 | Without Spartan | With Spartan |
 |----------------|-------------|
@@ -100,9 +100,7 @@ Don't overthink it &mdash; find your situation below and copy the command.
 npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut
 ```
 
-You get: service scaffolding, migration commands, PR review with Kotlin conventions, testcontainers setup, plus 9 rule files (API design, database, Kotlin standards, etc.), 7 skills (endpoint creator, test patterns, security), and 2 expert agents.
-
-Dependencies `database` and `shared-backend` are pulled in automatically.
+Pulls in `database` and `shared-backend` automatically. 9 rules, 7 skills, 2 agents.
 
 ### "I build React + Next.js frontends"
 
@@ -110,33 +108,29 @@ Dependencies `database` and `shared-backend` are pulled in automatically.
 npx @c0x12c/spartan-ai-toolkit@latest --packs=frontend-react
 ```
 
-You get: Next.js app/feature scaffolding, Figma-to-code, Playwright E2E setup, frontend PR review, UI/UX design skill, and a frontend rule file.
-
-### "I do full-stack (Kotlin + Next.js)"
+### "Full-stack (Kotlin + Next.js)"
 
 ```bash
 npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,frontend-react
 ```
 
-Both packs, all their rules and skills. Most common setup for our team.
-
-### "I'm running a multi-week project"
+### "Multi-week project"
 
 ```bash
 npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,project-mgmt
 ```
 
-Add `project-mgmt` to your stack pack. You get project lifecycle, milestone tracking, phases, parallel workstreams, and GSD v5 wave execution.
+Adds milestone tracking, phases, parallel workstreams on top of your stack pack.
 
-### "I'm exploring startup ideas"
+### "Exploring startup ideas"
 
 ```bash
 npx @c0x12c/spartan-ai-toolkit@latest --packs=research
 ```
 
-Research pulls in `product` as a dependency. You get the full pipeline: brainstorm &rarr; validate &rarr; market research &rarr; competitor teardowns &rarr; pitch materials &rarr; investor outreach.
+Full pipeline: brainstorm &rarr; validate &rarr; research &rarr; pitch &rarr; outreach.
 
-### "Just give me everything"
+### "Give me everything"
 
 ```bash
 npx @c0x12c/spartan-ai-toolkit@latest --all
@@ -319,30 +313,6 @@ Type `/spartan` to get the smart router. Or go direct:
 | `outreach [investor]` | Draft investor emails |
 | `content [source]` | Turn ideas into platform-native content |
 | `write [topic]` | Write blog posts and articles |
-
-### Safety
-| Command | What it does |
-|---------|-------------|
-| `careful` | Warn before destructive ops |
-| `freeze <dir>` | Lock edits to one directory |
-| `unfreeze` | Remove directory lock |
-| `guard <dir>` | careful + freeze combined |
-
----
-
-## What Gets Installed
-
-Spartan installs four types of content:
-
-**Commands** &mdash; slash commands like `/spartan:quickplan`. Pre-built prompts for structured workflows.
-
-**Rules** &mdash; coding standards enforced every session. Things like "no `!!` in Kotlin", "TEXT not VARCHAR", "Controller &rarr; Manager &rarr; Repository layers". You don't call these &mdash; they're always active.
-
-**Skills** &mdash; deep knowledge in specific areas. API endpoint patterns, database design, test strategies, UI/UX design intelligence. Claude loads them when relevant.
-
-**Agents** &mdash; expert personas. A Micronaut backend expert, a CTO for architecture decisions, an idea-killer for stress-testing, a research planner for coordinating research.
-
-**Templates** &mdash; fill-in-the-blank documents for common workflows. Epics, feature specs, implementation plans, quality gates, design docs, lean canvases, competitor analyses, and more.
 
 ---
 
