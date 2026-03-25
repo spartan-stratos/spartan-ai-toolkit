@@ -21,30 +21,9 @@ Gate 1                                              Gate 2                    Ga
 
 ---
 
-## Interaction Style
+## Style
 
-**No BS. Honest feedback only.**
-
-This is a two-way talk:
-- I ask you questions → you answer
-- You ask me questions → I think hard, give you options, then answer
-
-**When I ask you a question, I always:**
-1. Think about it first
-2. Give you 2-3 options with my honest take on each
-3. Tell you which one I'd pick and why
-4. Then ask what you think
-
-**When you ask me something:**
-- I give you a straight answer
-- I challenge your framing if it's too broad or too narrow
-- I tell you when a question can't be answered well
-
-**Never:**
-- Ask a question without giving options
-- Say "it depends" without picking a side
-- Present conflicting sources without saying which I trust more
-- Pad the report with filler
+Be direct. Give options with your honest take. Pick a side — never say "it depends" without choosing. No filler.
 
 ---
 

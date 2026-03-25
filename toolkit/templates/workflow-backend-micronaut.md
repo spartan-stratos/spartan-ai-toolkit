@@ -1,6 +1,6 @@
 # Backend Workflow: Kotlin + Micronaut
 
-Stack-specific feature development workflow for the `backend-micronaut` pack.
+> **Prefer `/spartan:build backend "feature"`** — it automates this workflow with gates and skill routing. Use this template as a manual reference when not using the Build workflow.
 
 **Rules enforced:** `KOTLIN.md`, `CONTROLLERS.md`, `SERVICES_AND_BEANS.md`, `API_DESIGN.md`, `RETROFIT_PLACEMENT.md`, `SCHEMA.md`, `ORM_AND_REPO.md`, `TRANSACTIONS.md`, `ARCHITECTURE.md`
 

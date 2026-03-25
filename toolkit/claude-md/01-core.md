@@ -47,48 +47,31 @@ Turn off with **"auto off"**. Default is **auto off** (commands ask for confirma
 Auto mode is ideal for experienced users who trust the workflow and want maximum velocity.
 
 ### 6. Safety Guardrails
-Three levels of protection, activated on-demand:
 
 | Command | What it does |
 |---|---|
-| `/spartan:careful` | Warn + require confirm before destructive ops (rm -rf, DROP TABLE, force-push, etc.) |
-| `/spartan:freeze <dir>` | Lock file edits to ONE directory only (+ its test directory) |
-| `/spartan:guard <dir>` | Both careful + freeze at once. Maximum safety for production work. |
-
-**Careful mode overrides auto mode.** Even in auto mode, destructive operations always require "I confirm".
-
-**Freeze prevents scope creep.** Claude won't "helpfully" fix files outside your focus area.
-
-Deactivate: `/spartan:careful off`, `/spartan:unfreeze`, or `/spartan:guard off`.
+| `/spartan:careful` | Warn before destructive ops (rm -rf, DROP, force-push) |
+| `/spartan:freeze <dir>` | Lock edits to one directory only |
+| `/spartan:guard <dir>` | Both combined. Deactivate with `off` or `/spartan:unfreeze` |
 
 ---
 
 ## Core Commands (always available)
 
-### Build (daily task work)
+### Workflows (start here)
 | Command | Purpose |
 |---|---|
-| `/spartan` | **Smart router** — asks what you need, routes to right command |
-| `/spartan:quickplan "task"` | Spec + plan + branch in one shot (< 1 day tasks) |
-| `/spartan:debug "symptom"` | 4-phase root-cause investigation + Debug Report |
-| `/spartan:init-project [name]` | Auto-generate project CLAUDE.md from codebase scan |
+| `/spartan` | **Smart router** — routes to the right workflow or command |
+| `/spartan:build [backend\|frontend] "feature"` | Full feature workflow: understand → plan → TDD → review → PR |
+| `/spartan:fix "symptom"` | Bug workflow: reproduce → investigate → fix → PR |
+| `/spartan:onboard` | Codebase understanding: scan → map → setup |
 
-### Ship
+### Individual Commands
 | Command | Purpose |
 |---|---|
-| `/spartan:pr-ready` | Full pre-PR checklist + auto-generates PR description |
-
-### Ops (daily routine, session management)
-| Command | Purpose |
-|---|---|
-| `/spartan:daily` | Standup summary from git log + GSD status |
-| `/spartan:context-save` | Smart context management: compact first, full save if needed |
-| `/spartan:update` | Check for updates and upgrade Spartan to latest version |
-
-### Safety (guardrails, on-demand)
-| Command | Purpose |
-|---|---|
-| `/spartan:careful` | Warn + confirm before destructive ops (rm, DROP, force-push) |
-| `/spartan:freeze <dir>` | Lock file edits to one directory only |
-| `/spartan:unfreeze` | Remove directory lock |
-| `/spartan:guard <dir>` | Careful + freeze combined. Maximum safety. |
+| `/spartan:quickplan "task"` | Spec + plan + branch in one shot (< 1 day) |
+| `/spartan:pr-ready` | Pre-PR checklist + auto PR description |
+| `/spartan:daily` | Standup summary from git log |
+| `/spartan:init-project` | Auto-generate CLAUDE.md from codebase |
+| `/spartan:context-save` | Manage context: compact first, full save if needed |
+| `/spartan:update` | Upgrade Spartan to latest version |

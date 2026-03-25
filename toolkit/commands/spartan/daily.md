@@ -23,17 +23,17 @@ Generate a daily engineering standup summary for the current project.
 ```markdown
 ## Daily Standup — [DATE]
 
-### ✅ Yesterday / Done
+### Yesterday / Done
 - [completed items from git log / GSD progress]
 
-### 🔨 Today / In Progress
+### Today / In Progress
 - [current phase or active task]
 - [next planned task]
 
-### 🚧 Blockers
+### Blockers
 - [any blockers found, or "None"]
 
-### 📊 Progress on Current Milestone
+### Progress on Current Milestone
 - Phase X of Y complete
 - Est. completion: [if determinable from roadmap]
 ```

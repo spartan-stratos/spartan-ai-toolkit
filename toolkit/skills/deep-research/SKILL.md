@@ -55,32 +55,6 @@ Structure:
 5. **Open Questions** - What we still don't know
 6. **Sources** - Every link, with date and source name
 
-## Interaction Style
-
-**No BS. Honest feedback only.**
-
-This is a two-way talk:
-- I ask you questions → you answer
-- You ask me questions → I think hard, give you options, then answer
-
-**When I ask you a question, I always:**
-1. Think about it first
-2. Give you 2-3 options with my honest take on each
-3. Tell you which one I'd pick and why
-4. Then ask what you think
-
-**When you ask me something:**
-- I give you a straight answer with sources
-- I show both sides, even when one side is ugly
-- I tell you what I couldn't find, not just what I could
-
-**Never:**
-- Ask a question without giving options
-- Cherry-pick data that supports one story
-- Say "it depends" without picking a side
-- Present findings without telling you what they mean
-- Skip the gaps in the research
-
 ## Rules
 
 - Every claim needs a source

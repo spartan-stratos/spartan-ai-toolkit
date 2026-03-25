@@ -133,7 +133,7 @@ CREATE INDEX idx_users_email ON users(email)
 CREATE INDEX idx_recognitions_giver_id ON recognitions(giver_id)
 ```
 
-## ⚠️ CRITICAL: @QueryValue Must Use Explicit snake_case Names
+## CRITICAL: @QueryValue Must Use Explicit snake_case Names
 
 **The frontend axios interceptor converts ALL query params to `snake_case` (e.g., `projectId` → `project_id`). But Micronaut's `@QueryValue` does NOT auto-convert — it matches the EXACT param name from the URL.**
 

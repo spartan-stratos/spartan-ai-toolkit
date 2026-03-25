@@ -506,72 +506,7 @@ All tests MUST pass.
 
 ## Common Mistakes to Avoid
 
-### ❌ Wrong: Using Table instead of UUIDTable
-```kotlin
-object UserTable : Table("users")  // WRONG
-```
-
-### ✅ Correct: Use UUIDTable
-```kotlin
-object UserTable : UUIDTable("users")  // CORRECT
-```
-
----
-
-### ❌ Wrong: Forgetting soft delete filter
-```kotlin
-fun byId(id: UUID) = transaction(db.replica) {
-  UserTable.selectAll()
-    .where { UserTable.id eq id }  // WRONG - includes deleted
-    .map { convert(it) }
-    .singleOrNull()
-}
-```
-
-### ✅ Correct: Always filter deletedAt
-```kotlin
-fun byId(id: UUID) = transaction(db.replica) {
-  UserTable.selectAll()
-    .where { UserTable.id eq id }
-    .andWhere { UserTable.deletedAt.isNull() }  // CORRECT
-    .map { convert(it) }
-    .singleOrNull()
-}
-```
-
----
-
-### ❌ Wrong: Using VARCHAR
-```sql
-CREATE TABLE users (
-    name VARCHAR(255)  -- WRONG
-);
-```
-
-### ✅ Correct: Use TEXT
-```sql
-CREATE TABLE users (
-    name TEXT  -- CORRECT
-);
-```
-
----
-
-### ❌ Wrong: Hard delete
-```kotlin
-fun deleteById(id: UUID) = transaction(db.primary) {
-  UserTable.deleteWhere { id eq userId }  // WRONG - permanent
-}
-```
-
-### ✅ Correct: Soft delete
-```kotlin
-fun deleteById(id: UUID) = transaction(db.primary) {
-  UserTable.update({ id eq userId and deletedAt.isNull() }) {
-    it[deletedAt] = Instant.now()  // CORRECT - soft delete
-  }
-}
-```
+> See `examples.md` for common mistakes and anti-patterns.
 
 ## Success Criteria
 

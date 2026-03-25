@@ -202,150 +202,25 @@ class DefaultSyncManager(
 
 ## Bean Management (3-Tier Hierarchy)
 
-### Overview
-
-The architecture uses a **three-tier bean hierarchy** that makes modules reusable, testable, and maintainable through clear separation of concerns.
-
-### Tier 1: Shared Beans (Foundation Infrastructure)
-
-**Location**: `api-application/src/main/kotlin/com/yourcompany/runtime/factory/`
-
-Shared beans are foundational infrastructure components at the BOTTOM of the dependency hierarchy.
-
-**Characteristics**:
-- Provide fundamental infrastructure (database, cache, messaging, configuration)
-- NO dependencies on module beans or application beans
-- Must be provided by the application (or test configuration)
-- Should be mockable/replaceable for testing
-
-**Standard Shared Beans**:
-- `DatabaseContext` - Database connectivity
-- `RedissonClient` / `JedisCluster` - Distributed caching and locking
-- `AwsConfig` - AWS service configuration
-- `ObjectMapper` - JSON serialization
-
-**Example**: DatabaseFactory.kt
-```kotlin
-@Factory
-class DatabaseFactory {
-  @Singleton
-  fun provideDatabaseContext(config: AppConfiguration.DatabaseConfig): DatabaseContext {
-    return DatabaseContext.Builder(DatabaseConfig(/* ... */)).build(/* ... */)
-  }
-}
 ```
-
-### Tier 2: Module Beans (Module-Level Reusable Components)
-
-**Location**: `{module}/module-impl/src/main/kotlin/.../config/`
-
-Module beans are reusable components within a specific module. They encapsulate module-specific logic and DEPEND ON shared beans only.
-
-**Characteristics**:
-- Created by module-level factories
-- DEPEND ON shared beans ONLY (DatabaseContext, RedissonClient, etc.)
-- Can be reused in other projects that need the same module
-- Should NOT depend on other app modules (only core modules and shared beans)
-- Provide the public API of the module via interfaces
-
-**Example**: DurableJobFactory.kt
-```kotlin
-@Factory
-class DurableJobFactory {
-  @Bean
-  fun postgresActivityStore(
-    databaseContext: DatabaseContext,  // Shared bean
-    config: DurableJobConfiguration
-  ): ActivityStore {
-    return PostgresActivityStore(databaseContext, config)
-  }
-
-  @Bean
-  fun redisDistributedLock(
-    redissonClient: RedissonClient,  // Shared bean
-    config: DurableJobConfiguration
-  ): DistributedLock {
-    return RedisDistributedLock(redissonClient, config)
-  }
-}
+Application Beans (top)    — business logic, depends on module + shared
+       ↓
+Module Beans (middle)      — reusable module components, depends on shared only
+       ↓
+Shared Beans (bottom)      — infrastructure (DB, Redis, AWS), no dependencies
 ```
-
-**Key**: Module doesn't know or care if it's using production or test shared beans - it just depends on the interface.
-
-### Tier 3: Application Beans (Application-Specific Business Logic)
-
-**Location**: `app/module-{name}/module-impl/src/main/kotlin/.../runtime/factory/`
-
-Application beans are application-specific implementations that use module beans and shared beans for business logic unique to this application.
-
-**Characteristics**:
-- Created by application-specific factories within the module
-- DEPEND ON both shared beans AND module beans
-- Contain business logic specific to this application
-- Wire together repositories, managers, and services
-- NOT intended to be reused in other projects
-- At the TOP of the dependency hierarchy
-
-**Example**: AuthFactory.kt
-```kotlin
-@Factory
-class AuthFactory {
-  @Singleton
-  @Requires(bean = FirebaseAuth::class)
-  fun provideAuthManager(
-    firebaseAuth: FirebaseAuth,
-    userRepository: UserRepository,
-    refreshTokensRepository: RefreshTokensRepository,
-    databaseContext: DatabaseContext,  // Shared bean
-    featureFlagManager: FeatureFlagManager
-  ): AuthManager = DefaultAuthManager(/* ... */)
-
-  @Singleton
-  fun provideRefreshTokensRepository(db: DatabaseContext): RefreshTokensRepository {
-    return DefaultRefreshTokensRepository(db)
-  }
-}
-```
-
-### Bean Dependency Flow
-
-**The dependency flow goes UPWARD - higher tier beans depend on lower tier beans.**
-
-```
-┌────────────────────────────────────────────────────────┐
-│         Application Beans (Top Tier)                   │
-│  (AuthManager, UserManager, PaymentManager, etc.)      │
-│  DEPENDS ON: Module Beans + Shared Beans               │
-└──────────────────────────┬─────────────────────────────┘
-                           │ depends on
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│         Module Beans (Middle Tier)                     │
-│  (ActivityRuntime, DistributedLock, EventStore, etc.)  │
-│  DEPENDS ON: Shared Beans ONLY                         │
-└──────────────────────────┬─────────────────────────────┘
-                           │ depends on
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│         Shared Beans (Bottom Tier - Foundation)        │
-│  (DatabaseContext, RedissonClient, AwsConfig, etc.)    │
-│  PROVIDED BY: Application (prod) OR Test Config (test) │
-│  DEPENDS ON: Nothing (foundation layer)                │
-└────────────────────────────────────────────────────────┘
-```
-
-**Key Points**:
-1. Shared beans are at the BOTTOM - they have no dependencies on other beans
-2. Module beans depend on shared beans ONLY
-3. Application beans depend on both module beans and shared beans
-4. Shared beans can be provided by production application or test configuration
 
 ### Bean Creation Rules
 
-#### 1. Always Use @Factory Classes
+1. **Always use `@Factory` classes** — never `@Singleton` on implementations directly
+2. **Depend on interfaces**, not concrete classes
+3. **`@Named`** for multiple implementations of same interface
+4. **`@Primary`** for default implementation
+5. **`@Requires`** for conditional bean creation
+6. **No circular dependencies** — use intermediary or refactor
 
 ```kotlin
-// ✓ Good
+// CORRECT — Factory pattern
 @Factory
 class UserFactory {
   @Singleton
@@ -354,296 +229,25 @@ class UserFactory {
   }
 }
 
-// ❌ Bad - Don't annotate implementation directly
+// WRONG — @Singleton on implementation
 @Singleton
 class DefaultUserRepository(private val db: DatabaseContext) : UserRepository
 ```
 
-**Why**: Factories give centralized configuration, easy test replacement, and clear dependency management.
+### Bean Testing
 
-**Exception**: `ServiceConnectionQueueProcessor` MUST use `@Singleton` directly (for `@Scheduled`).
-
-#### 2. Depend on Abstractions, Not Implementations
-
-```kotlin
-// ✓ Good
-@Singleton
-fun provideAuthManager(
-  userRepository: UserRepository,  // Interface
-  featureFlagManager: FeatureFlagManager  // Interface
-): AuthManager
-
-// ❌ Bad
-fun provideAuthManager(
-  userRepository: DefaultUserRepository,  // Concrete class - don't do this!
-  ...
-)
-```
-
-#### 3. Use @Named for Multiple Implementations
-
+Use `@Replaces` to swap beans at any tier in tests:
 ```kotlin
 @Singleton
-@Named("jwtAuthorizationValidator")
-fun provideJwtAuthorizationValidator(/* ... */): AuthorizationValidator {
-  return JwtAuthorizationValidator(/* ... */)
-}
-
-@Singleton
-@Named("apiKeyAuthorizationValidator")
-fun provideApiKeyAuthorizationValidator(/* ... */): AuthorizationValidator {
-  return ApiKeyAuthorizationValidator(/* ... */)
-}
-
-// Use with @Named injection
-@Singleton
-fun provideChain(
-  @Named("jwtAuthorizationValidator") jwtValidator: AuthorizationValidator,
-  @Named("apiKeyAuthorizationValidator") apiKeyValidator: AuthorizationValidator
-): AuthorizationValidator.Chain
+@Replaces(DatabaseContext::class)
+fun testDatabaseContext(): DatabaseContext = InMemoryDatabaseContext()
 ```
 
-#### 4. Use @Primary for Default Implementations
+### Bean Scope
 
-```kotlin
-@Singleton
-@Primary
-fun provideJedisCluster(config: RedisConfig): JedisCluster {
-  return JedisFactory.cluster(/* ... */)
-}
-```
-
-#### 5. Use @Requires for Conditional Bean Creation
-
-```kotlin
-@Singleton
-@Requires(bean = FirebaseAuth::class)  // Only create if FirebaseAuth exists
-fun provideAuthManager(firebaseAuth: FirebaseAuth, /* ... */): AuthManager
-```
-
-#### 6. Avoid Circular Dependencies
-
-**Bad**: BeanA depends on BeanB, BeanB depends on BeanA
-
-**Good**: Introduce an intermediary (EventBus, interface, etc.) or refactor the design
-
-### Testing Strategy: Bean Replacement
-
-The key to testability is that **shared beans can be replaced in tests**, letting modules work with test implementations.
-
-#### Level 1: Replace Shared Beans
-
-Replace shared beans with test implementations (in-memory database, mock redis).
-
-```kotlin
-@MicronautTest(environments = ["test"])
-class ModuleTest {
-
-  @Factory
-  class TestConfiguration {
-    @Singleton
-    @Replaces(DatabaseContext::class)
-    fun testDatabaseContext(): DatabaseContext {
-      return InMemoryDatabaseContext()  // Test implementation
-    }
-
-    @Singleton
-    @Replaces(RedissonClient::class)
-    fun testRedisClient(): RedissonClient {
-      return MockRedissonClient()  // Test implementation
-    }
-  }
-
-  @Test
-  fun `module works with test shared beans`() {
-    // Module beans automatically use test shared beans
-  }
-}
-```
-
-#### Level 2: Replace Module Beans
-
-```kotlin
-@Bean
-@Replaces(ActivityRuntime::class)
-fun customActivityRuntime(/* ... */): ActivityRuntime {
-  return CustomTestActivityRuntime(/* ... */)
-}
-```
-
-#### Level 3: Replace Application Beans
-
-```kotlin
-@Singleton
-@Replaces(AgentManager::class)
-fun provideAgentManager(/* ... */): AgentManager {
-  return DefaultDummyAgentManager(/* ... */)
-}
-```
-
-**Key Pattern**: Tests use `@Replaces` annotation to swap out beans at any tier, and all higher-tier beans automatically use the replacement.
-
-### File Naming and Location Conventions
-
-#### Shared Beans (Production)
-- **Location**: `api-application/src/main/kotlin/com/yourcompany/runtime/factory/`
-- **Naming**: `{Purpose}Factory.kt` (e.g., `DatabaseFactory.kt`, `RedisFactory.kt`)
-
-#### Shared Beans (Test)
-- **Location**: Within test classes using `@Factory` inner class
-- **Naming**: `TestConfiguration` class inside test class
-
-#### Module Beans (Core Modules)
-- **Location**: `core/module-{name}/module-impl/src/main/kotlin/com/yourcompany/{module}/config/`
-- **Naming**: `{ModuleName}Factory.kt` (e.g., `DurableJobFactory.kt`)
-
-#### Module Beans (App Modules - if reusable)
-- **Location**: `module-{name}/module-impl/src/main/kotlin/com/yourcompany/{module}/config/`
-- **Naming**: `{ModuleName}Factory.kt`
-
-#### Application Beans (App Modules)
-- **Location**: `module-{name}/module-impl/src/main/kotlin/com/yourcompany/runtime/factory/`
-- **Naming**: `{ModuleName}Factory.kt` (e.g., `AuthFactory.kt`, `UserFactory.kt`)
-
-### Bean Lifecycle and Scope
-
-#### @Singleton (Default - Use This)
-Most beans should be singletons to avoid unnecessary object creation.
-
-```kotlin
-@Singleton
-fun provideUserRepository(db: DatabaseContext): UserRepository
-```
-
-#### @Prototype (Rarely Used)
-Only use when you need a new instance for each injection point.
-
-```kotlin
-@Prototype
-fun provideHttpClient(): HttpClient
-```
-
-#### @RequestScope (Controllers Only)
-Use for beans that should be created per HTTP request.
-
-```kotlin
-@RequestScope
-fun provideRequestContext(request: HttpRequest<*>): RequestContext
-```
-
-### Common Bean Patterns
-
-#### Pattern 1: Repository Creation
-
-Repositories depend only on `DatabaseContext`.
-
-```kotlin
-@Factory
-class RepositoryFactory {
-  @Singleton
-  fun provideUserRepository(db: DatabaseContext): UserRepository {
-    return DefaultUserRepository(db)
-  }
-}
-```
-
-#### Pattern 2: Manager Creation
-
-Managers orchestrate business logic and depend on repositories and services.
-
-```kotlin
-@Factory
-class ManagerFactory {
-  @Singleton
-  fun provideUserManager(
-    userRepository: UserRepository,
-    userSessionHandler: UserSessionHandler
-  ): UserManager {
-    return DefaultUserManager(userRepository, userSessionHandler)
-  }
-}
-```
-
-#### Pattern 3: Service Composition
-
-Complex services composed of multiple dependencies, often with qualifiers.
-
-```kotlin
-@Factory
-class ModuleAiFactory {
-  @Singleton
-  @OpenAi4O  // Qualifier annotation
-  fun provideOpenAi4OChatService(
-    openAiConfig: OpenAiConfig,
-    effectiveListener: SpanChatModelListener
-  ): ChatService {
-    return OpenAiChatService(/* ... */)
-  }
-
-  @Singleton
-  @Claude35Sonnet20241022  // Different qualifier
-  fun provideClaude35Sonnet20241022ChatService(
-    anthropicConfig: AnthropicConfig,
-    effectiveListener: SpanChatModelListener
-  ): ChatService {
-    return AnthropicChatService(/* ... */)
-  }
-}
-```
-
-#### Pattern 4: Bean Event Listener (Special Case)
-
-For configuring existing beans created by frameworks.
-
-```kotlin
-@Singleton
-class JacksonFactory : BeanCreatedEventListener<ObjectMapper> {
-  override fun onCreated(event: BeanCreatedEvent<ObjectMapper>): ObjectMapper {
-    return event.bean.configured()  // Apply custom configuration
-  }
-}
-```
-
-### Migration Guide: Converting Direct Beans to Factory Beans
-
-**Before** (Wrong):
-```kotlin
-@Singleton
-class DefaultUserRepository(private val db: DatabaseContext) : UserRepository
-```
-
-**After** (Correct):
-
-Create factory:
-```kotlin
-// In runtime/factory/UserFactory.kt
-@Factory
-class UserFactory {
-  @Singleton
-  fun provideUserRepository(db: DatabaseContext): UserRepository {
-    return DefaultUserRepository(db)
-  }
-}
-```
-
-Update implementation:
-```kotlin
-// Remove @Singleton annotation from implementation
-class DefaultUserRepository(private val db: DatabaseContext) : UserRepository {
-  // implementation
-}
-```
-
-### Common Bean Mistakes to Avoid
-
-| Mistake | Wrong | Right |
-|---------|-------|-------|
-| @Singleton on implementation | `@Singleton class DefaultUserRepo` | Create a factory instead |
-| Depending on concrete classes | `fun provide(repo: DefaultUserRepo)` | Depend on interface: `UserRepo` |
-| Circular dependencies | BeanA → BeanB → BeanA | Introduce intermediary or refactor |
-| Mixing prod and test beans | Test beans in production factory | Put test beans in TestConfiguration |
-| Not making beans replaceable | `object SingletonManager { ... }` | Use Micronaut DI with @Factory |
-| Wrong tier dependencies | Module bean depending on app bean | Follow strict tier hierarchy |
+- `@Singleton` — default, use this for most beans
+- `@Prototype` — rare, new instance per injection
+- `@RequestScope` — per HTTP request, controllers only
 
 ---
 

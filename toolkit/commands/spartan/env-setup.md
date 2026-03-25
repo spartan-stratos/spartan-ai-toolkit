@@ -130,11 +130,11 @@ aws secretsmanager list-secrets \
 | JWT_SECRET | ✅ | ✅ | ❌ | Missing in AWS |
 | SENTRY_DSN | ❌ | ✅ | ✅ | Missing locally (ok) |
 
-### ⚠️ Issues Found:
+### Issues Found:
 - [MISSING_VAR]: Required in prod but not set in Railway
 - [SECRET_IN_CODE]: Found hardcoded value in [file:line] — move to env var
 
-### ✅ All clear:
+### All clear:
 - .env.example is up to date
 - No secrets committed to git
 ```

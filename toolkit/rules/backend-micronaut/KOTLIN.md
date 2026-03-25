@@ -10,71 +10,18 @@ It causes runtime crashes, makes code unpredictable, and goes against Kotlin's n
 
 ### What to Use Instead
 
-**Safe call + elvis operator:**
 ```kotlin
-val result = someNullableValue?.doSomething() ?: defaultValue
+// Safe call + elvis
 val email = decodedToken.email ?: return AuthError.INVALID_CREDENTIALS.asException().left()
-```
 
-**Explicit null check (enables smart cast):**
-```kotlin
+// Null check (enables smart cast)
 if (user == null) {
     return AuthError.AUTHENTICATION_FAILED.asException().left()
 }
 generateTokensAndResponse(user, provider.value) // user is non-null here
-```
 
-**Let scope function:**
-```kotlin
-user?.let { validUser ->
-    generateTokensAndResponse(validUser, provider.value)
-} ?: return AuthError.AUTHENTICATION_FAILED.asException().left()
-```
-
-**requireNotNull (only when null means a programming error):**
-```kotlin
-val validUser = requireNotNull(user) {
-    "User must not be null at this point"
-}
-```
-
-### Smart Casts
-
-Use Kotlin's smart cast after null checks:
-```kotlin
-val user = userRepository.byId(userId)
-if (user != null) {
-    // user is automatically cast to non-null type here
-    println(user.email) // No need for user?.email
-}
-```
-
-### Codebase Examples
-
-```kotlin
-// Authentication Manager pattern
-override suspend fun loginWithOAuth(request: OAuthLoginRequest): Either<ClientException, LoginResponse> {
-    return transaction(db.primary) {
-        val user = findOrCreateUser(request)
-
-        // NEVER: generateTokensAndResponse(user!!, provider)
-        // ALWAYS:
-        if (user == null) {
-            return@transaction AuthError.AUTHENTICATION_FAILED.asException().left()
-        }
-        generateTokensAndResponse(user, provider).right()
-    }
-}
-
-// Repository pattern
-override fun byId(id: UUID): UserEntity? {
-    return transaction(db.replica) {
-        UsersTable.selectAll()
-            .where { UsersTable.id eq id }
-            .singleOrNull()
-            ?.let { convert(it) }  // Safe call chain
-    }
-}
+// requireNotNull (only when null = programming error)
+val validUser = requireNotNull(user) { "User must not be null here" }
 ```
 
 ---
@@ -83,103 +30,26 @@ override fun byId(id: UUID): UserEntity? {
 
 **NEVER use workarounds. Always fix the root cause. This rule has no exceptions.**
 
-### Forbidden: @Suppress Annotations
+**Forbidden patterns:**
+
+| Pattern | Instead |
+|---------|---------|
+| `@Suppress("UNUSED_PARAMETER")` | Remove the parameter, update call sites |
+| `@Suppress("DEPRECATION")` | Use the non-deprecated replacement |
+| `// TODO: Fix this later` + `!!` | Fix it now with proper null handling |
+| `// HACK:` comments | Fix the root cause using proper layers |
+| Placeholder parameters `reserved: String = ""` | Only include parameters you use |
 
 ```kotlin
 // WRONG
 @Suppress("UNUSED_PARAMETER")
 private fun createCommit(employeeId: UUID, authorUsername: String)
 
-// CORRECT - Remove the unused parameter and update all call sites
+// CORRECT — remove unused param, update all call sites
 private fun createCommit(authorUsername: String)
 ```
 
-```kotlin
-// WRONG
-@Suppress("DEPRECATION")
-fun oldMethod() { ... }
-
-// CORRECT - Use the non-deprecated replacement
-fun newMethod() { ... }
-```
-
-### Forbidden: Placeholder Parameters
-
-```kotlin
-// WRONG - Adding parameters "for future use"
-fun process(data: String, reserved: String = "") { }
-
-// CORRECT - Only include parameters you actually use
-fun process(data: String) { }
-```
-
-### Forbidden: TODO Comments Instead of Fixes
-
-```kotlin
-// WRONG
-// TODO: Fix this later
-val result = unsafeOperation()!!
-
-// CORRECT - Fix it now
-val result = unsafeOperation() ?: return error
-```
-
-### Forbidden: Temporary Hacks
-
-```kotlin
-// WRONG
-fun getUser(): User {
-    // HACK: Direct DB access because manager is broken
-    return database.query("SELECT * FROM users WHERE id = ?")
-}
-
-// CORRECT - Fix the manager or use proper layers
-fun getUser(): User {
-    return userManager.findById(id).throwOrValue()
-}
-```
-
-### What to Do Instead
-
-1. **Understand the root cause** - why does the warning/error exist?
-2. **Fix the actual problem** - unused param? Remove it. Deprecated? Use replacement. Tests fail? Fix the tests.
-3. **Update all related code** - method signature, all call sites, tests, docs, frontend if needed.
-4. **Ask for clarification** if unsure about the correct approach.
-
-### Real Examples
-
-**Entity field removed** (e.g., `employeeId` removed from `GitHubCommitEntity`):
-```kotlin
-// WRONG
-private fun createCommit(
-  @Suppress("UNUSED_PARAMETER") employeeId: UUID,
-  authorUsername: String
-): GitHubCommitEntity
-
-// CORRECT - Remove param AND update all call sites
-private fun createCommit(authorUsername: String): GitHubCommitEntity
-```
-
-**Repository method renamed** (e.g., `byGithubOrg` -> `findByOrgLogin`):
-```kotlin
-// WRONG - Leave old test unchanged
-@Test
-fun `byGithubOrg - returns org-level credential`() { }
-
-// CORRECT - Update test to use new method name
-@Test
-fun `findByOrgLogin - returns credential for org`() {
-    val result = repository.findByOrgLogin("test-org")
-}
-```
-
-| Situation | Wrong Approach | Correct Approach |
-|-----------|---------------|------------------|
-| Unused parameter | `@Suppress("UNUSED_PARAMETER")` | Remove the parameter |
-| Deprecated method | `@Suppress("DEPRECATION")` | Use the replacement |
-| Test failure | Skip or ignore test | Fix the test |
-| Missing data | Hardcode placeholder | Add proper handling |
-| API mismatch | Adapter/shim layer | Update all consumers |
+**Always**: understand root cause, fix actual problem, update all related code (call sites, tests, docs).
 
 ---
 
@@ -268,131 +138,26 @@ Convert String -> enum at boundaries (controllers). Use enum references everywhe
 
 ## Conversions
 
-### Pattern: Companion Object Factory Methods
-
-Put `companion object { fun from(entity) }` inside Response DTOs. **Never** create separate mapper files or private extension functions in managers.
+Put `companion object { fun from(entity) }` inside Response DTOs. **Never** create separate mapper files or private extension functions.
 
 ```kotlin
-// In module-client/response/...
-data class UserResponse(
-  val id: UUID,
-  val email: String,
-  val displayName: String,
-  val createdAt: Instant
-) {
+data class UserResponse(val id: UUID, val email: String, val displayName: String) {
   companion object {
-    fun from(entity: UserEntity): UserResponse {
-      return UserResponse(
-        id = entity.id,
-        email = entity.email,
-        displayName = entity.displayName ?: entity.email,
-        createdAt = entity.createdAt
-      )
-    }
+    fun from(entity: UserEntity) = UserResponse(
+      id = entity.id,
+      email = entity.email,
+      displayName = entity.displayName ?: entity.email
+    )
   }
 }
 ```
 
-### When Extra Data is Needed
+When extra data needed, pass as additional params: `fun from(entity, extraData, count)`.
+When extra data needs fetching, use a private manager helper that calls `Response.from()`.
 
-Pass extra data as additional parameters to `from()`:
+**Never do:** separate mapper files, private extension functions in managers, scattered inline mapping.
 
-```kotlin
-data class VoiceQueueResponse(
-  val id: UUID,
-  val displayName: String,
-  val overflowQueueName: String?,
-  val agentCount: Int
-) {
-  companion object {
-    fun from(
-      entity: VoiceQueueEntity,
-      overflowQueueName: String?,
-      agentCount: Int
-    ): VoiceQueueResponse {
-      return VoiceQueueResponse(
-        id = entity.id,
-        displayName = entity.displayName,
-        overflowQueueName = overflowQueueName,
-        agentCount = agentCount,
-      )
-    }
-  }
-}
-```
-
-### Manager Helper for Extra Data Fetching
-
-When extra data needs to be fetched, use a simple private helper that calls `Response.from()`:
-
-```kotlin
-class DefaultVoiceQueueAdminManager(...) {
-
-  private fun toResponse(entity: VoiceQueueEntity): VoiceQueueResponse {
-    val overflowName = entity.overflowQueueId?.let {
-      voiceQueueRepository.byId(it)?.displayName
-    }
-    val agentCount = agentQueueMappingRepository.byQueueId(entity.id).size
-    return VoiceQueueResponse.from(entity, overflowName, agentCount)
-  }
-
-  override suspend fun getQueue(id: UUID): Either<ClientException, VoiceQueueResponse> {
-    val queue = voiceQueueRepository.byId(id) ?: return ...
-    return toResponse(queue).right()
-  }
-}
-```
-
-### Shared Formatting Utilities
-
-For commonly used formatting, define private file-level functions in the response file:
-
-```kotlin
-private val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-private fun formatTime(time: LocalTime?): String? = time?.format(TIME_FORMATTER)
-
-data class ScheduleDayResponse(...) {
-  companion object {
-    fun from(entity: BusinessHoursDayEntity): ScheduleDayResponse {
-      return ScheduleDayResponse(
-        openTime = formatTime(entity.openTime),
-        closeTime = formatTime(entity.closeTime)
-      )
-    }
-  }
-}
-```
-
-### What NOT to Do
-
-```kotlin
-// DON'T create separate mapper files
-// mappers/UserMappers.kt
-fun UserEntity.toResponse(): UserResponse = ...
-
-// DON'T put conversion logic in Manager private extension functions
-class DefaultUserManager {
-  private fun UserEntity.toResponse(): UserResponse { ... }
-}
-
-// DON'T scatter conversion logic inline in multiple places
-override suspend fun getUser(id: UUID) = UserResponse(id = entity.id, email = entity.email, ...)
-override suspend fun listUsers() = users.map { UserResponse(id = it.id, email = it.email, ...) }
-```
-
-### File Location
-
-Response DTOs with factory methods go in `module-client`:
-```
-module-client/src/main/kotlin/com/yourcompany/client/
-+-- response/
-    +-- user/
-        +-- UserResponse.kt          # with companion object { fun from() }
-    +-- conversation/
-        +-- ConversationResponse.kt  # with companion object { fun from() }
-```
-
-`module-client` depends on `module-repository`, so Response DTOs can import Entity classes.
+**Location:** Response DTOs go in `module-client/response/`. `module-client` depends on `module-repository`.
 
 ---
 

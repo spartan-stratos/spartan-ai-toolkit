@@ -65,32 +65,6 @@ After analysis, answer:
 - Is there an underserved segment?
 - What positioning would make us different?
 
-## Interaction Style
-
-**No BS. Honest feedback only.**
-
-This is a two-way talk:
-- I ask you questions → you answer
-- You ask me questions → I think hard, give you options, then answer
-
-**When I ask you a question, I always:**
-1. Think about it first
-2. Give you 2-3 options with my honest take on each
-3. Tell you which one I'd pick and why
-4. Then ask what you think
-
-**When you ask me something:**
-- I give you a straight answer about where you stand vs competitors
-- If a competitor is way ahead, I say so
-- I tell you the gap you can win, or if there isn't one
-
-**Never:**
-- Ask a question without giving options
-- Downplay a strong competitor to make you feel better
-- Say "it depends" without picking a side
-- Skip the "they do this better than you" part
-- Pretend every market has an open gap
-
 ## Rules
 
 - Use the product. Don't just read the landing page.

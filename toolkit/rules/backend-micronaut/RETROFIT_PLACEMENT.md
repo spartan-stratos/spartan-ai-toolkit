@@ -4,11 +4,11 @@
 
 ---
 
-## 🎯 Core Rule
+## Core Rule
 
 **NEVER place Retrofit client interfaces in modules that have kapt enabled for Micronaut.**
 
-### ✅ Correct Pattern
+### Correct Pattern
 
 ```
 module-client/                    # NO kapt
@@ -31,7 +31,7 @@ module-client/                    # NO kapt
     }
 ```
 
-### ❌ Incorrect Pattern
+### Incorrect Pattern
 
 ```
 module-auth/                      # HAS kapt enabled
@@ -50,7 +50,7 @@ module-auth/                      # HAS kapt enabled
 
 ---
 
-## 🚨 Why This Fails
+## Why This Fails
 
 ### Kapt Limitations
 
@@ -73,7 +73,7 @@ module-auth/                      # HAS kapt enabled
 
 ---
 
-## 📋 Implementation Checklist
+## Implementation Checklist
 
 When adding new external service clients:
 
@@ -179,7 +179,7 @@ dependencies {
 
 ---
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Error: `@error.NonExistentClass()`
 
@@ -209,7 +209,7 @@ when (type) { ... }
 
 ---
 
-## 📐 Module Architecture
+## Module Architecture
 
 ```
 backend/
@@ -231,7 +231,7 @@ backend/
 
 ---
 
-## ✅ Benefits
+## Benefits
 
 1. **Clean Compilation**
    - Kapt only processes Micronaut beans
@@ -247,7 +247,7 @@ backend/
 
 ---
 
-## 📚 Related Rules
+## Related Rules
 
 - `.claude/rules/KOTLIN_CODING_STANDARDS.md` - No force unwraps
 - `.claude/rules/NAMING_CONVENTIONS.md` - Package naming

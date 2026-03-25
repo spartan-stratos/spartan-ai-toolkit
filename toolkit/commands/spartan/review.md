@@ -64,7 +64,7 @@ Provide review results as:
 ```
 ## PR Review Summary
 
-### ✅ Approved / ⚠️ Needs Changes / ❌ Blocked
+### Approved / Needs Changes / Blocked
 
 ### Critical Issues (must fix)
 - [issue with file:line reference]

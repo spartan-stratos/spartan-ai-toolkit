@@ -112,7 +112,7 @@ done
 ```markdown
 ## Frontend PR Review: [title]
 
-### ✅ Approved / ⚠️ Needs Changes / ❌ Blocked
+### Approved / Needs Changes / Blocked
 
 ### Critical Issues (must fix before merge)
 - [issue with file:line reference and suggested fix]

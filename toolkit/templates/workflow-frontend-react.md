@@ -1,6 +1,6 @@
 # Frontend Workflow: React + Next.js
 
-Stack-specific feature development workflow for the `frontend-react` pack.
+> **Prefer `/spartan:build frontend "feature"`** — it automates this workflow with gates and skill routing. Use this template as a manual reference when not using the Build workflow.
 
 **Rules enforced:** `FRONTEND.md`
 
