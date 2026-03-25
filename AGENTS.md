@@ -65,4 +65,4 @@ npx skills add spartan-stratos/spartan-ai-toolkit
 
 ## More Info
 
-See [README.md](README.md) for the full docs, packs, and all 44 commands.
+See [README.md](README.md) for the full docs, packs, and all 48 commands.
