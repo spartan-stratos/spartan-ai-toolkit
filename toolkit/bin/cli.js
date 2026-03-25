@@ -4,12 +4,12 @@
 // Usage:
 //   npx spartan-ai-toolkit@latest
 //   npx spartan-ai-toolkit@latest --agent=cursor
-//   npx spartan-ai-toolkit@latest --packs=backend,product
+//   npx spartan-ai-toolkit@latest --packs=backend-micronaut,product
 //   npx spartan-ai-toolkit@latest --all
 //   npx spartan-ai-toolkit@latest --local
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync, readdirSync } from 'node:fs';
-import { join, dirname, resolve } from 'node:path';
+import { join, dirname, resolve as pathResolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -17,14 +17,14 @@ import { fileURLToPath } from 'node:url';
 // ── Resolve package root (works from npx temp dir) ──────────────
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const PKG_ROOT = resolve(__dirname, '..');
+const PKG_ROOT = pathResolve(__dirname, '..');
 
 // ── Toolkit source paths ────────────────────────────────────────
 const SRC = {
   commands:   join(PKG_ROOT, 'commands'),
   commandsSub: join(PKG_ROOT, 'commands', 'spartan'),
   router:     join(PKG_ROOT, 'commands', 'spartan.md'),
-  rules:      join(PKG_ROOT, 'rules', 'project'),
+  rules:      join(PKG_ROOT, 'rules'),
   skills:     join(PKG_ROOT, 'skills'),
   agents:     join(PKG_ROOT, 'agents'),
   claudeMd:   join(PKG_ROOT, 'claude-md'),
@@ -46,9 +46,12 @@ function cyan(s) { return `${C.cyan}${s}${C.reset}`; }
 function dim(s) { return `${C.dim}${s}${C.reset}`; }
 function blue(s) { return `${C.blue}${s}${C.reset}`; }
 
-// ── Pack definitions ────────────────────────────────────────────
+// ── Pack definitions (loaded from YAML manifests) ───────────────
 import { PACKS, PACK_ORDER } from '../lib/packs.js';
 import { assembleCLAUDEmd } from '../lib/assembler.js';
+import { resolve as resolveDeps, resolveAliases, loadManifests } from '../lib/resolver.js';
+
+const manifests = loadManifests(join(PKG_ROOT, 'packs'));
 
 // ── Parse args ──────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -69,6 +72,23 @@ for (const arg of args) {
 }
 
 if (showHelp) {
+  // Group packs by category for help display
+  const categories = {};
+  for (const name of PACK_ORDER) {
+    const p = PACKS[name];
+    if (p.hidden) continue;
+    const cat = p.category || 'Other';
+    if (!categories[cat]) categories[cat] = [];
+    const items = [
+      p.commands.length ? `${p.commands.length} commands` : '',
+      p.rules.length ? `${p.rules.length} rules` : '',
+      p.skills.length ? `${p.skills.length} skills` : '',
+      p.agents.length ? `${p.agents.length} agents` : '',
+    ].filter(Boolean).join(', ');
+    const tag = p.comingSoon ? ` ${dim('(coming soon)')}` : '';
+    categories[cat].push(`    ${bold(name.padEnd(20))} ${p.description}${tag}${items ? dim(` (${items})`) : ''}`);
+  }
+
   console.log(`
   ${bold('Spartan AI Toolkit')} — installer
 
@@ -79,36 +99,28 @@ if (showHelp) {
     --agent=NAME    Agent to set up for (default: claude-code)
                     Choices: claude-code, cursor, windsurf, codex, copilot
     --packs=LIST    Comma-separated packs (claude-code only)
-                    Example: --packs=backend,product
+                    Example: --packs=backend-micronaut,product
     --all           Install all packs
     --global        Install to home dir (default for claude-code/codex)
     --local         Install to current project dir
     --help          Show this help
 
   ${bold('Packs:')}
-${PACK_ORDER.map(p => {
-  const d = PACKS[p];
-  const items = [
-    d.commands.length ? `${d.commands.length} commands` : '',
-    d.rules.length ? `${d.rules.length} rules` : '',
-    d.skills.length ? `${d.skills.length} skills` : '',
-    d.agents.length ? `${d.agents.length} agents` : '',
-  ].filter(Boolean).join(', ');
-  return `    ${bold(p.padEnd(14))} ${d.description}${items ? dim(` (${items})`) : ''}`;
-}).join('\n')}
+${Object.entries(categories).map(([cat, lines]) => `\n    ${bold(cat + ':')}
+${lines.join('\n')}`).join('\n')}
 
   ${bold('Examples:')}
     ${cyan('npx spartan-ai-toolkit@latest')}
       Interactive — pick agent and packs from menu
 
-    ${cyan('npx spartan-ai-toolkit@latest --packs=frontend,product')}
+    ${cyan('npx spartan-ai-toolkit@latest --packs=frontend-react,product')}
       Next.js app with product thinking tools
 
-    ${cyan('npx spartan-ai-toolkit@latest --packs=backend,project-mgmt')}
+    ${cyan('npx spartan-ai-toolkit@latest --packs=backend-micronaut,project-mgmt')}
       Kotlin APIs with full project lifecycle
 
     ${cyan('npx spartan-ai-toolkit@latest --all')}
-      Everything — 35 commands, 9 rules, 8 skills, 2 agents
+      Everything installed
 
     ${cyan('npx spartan-ai-toolkit@latest --agent=cursor')}
       Install rules for Cursor (rules + AGENTS.md only)
@@ -139,7 +151,7 @@ function closeRL() {
 // ── Version ─────────────────────────────────────────────────────
 const VERSION = existsSync(SRC.version)
   ? readFileSync(SRC.version, 'utf-8').trim()
-  : '4.1.0';
+  : '4.2.0';
 
 // ── Target directories based on agent + mode ────────────────────
 function getTargets() {
@@ -152,7 +164,7 @@ function getTargets() {
       base,
       commands:  join(base, 'commands', 'spartan'),
       router:    join(base, 'commands', 'spartan.md'),
-      rules:     join(base, 'rules', 'project'),
+      rules:     join(base, 'rules'),
       skills:    join(base, 'skills'),
       agents:    join(base, 'agents'),
       claudeMd:  mode === 'global' ? join(home, '.claude', 'CLAUDE.md') : join(cwd, 'CLAUDE.md'),
@@ -167,7 +179,7 @@ function getTargets() {
       base,
       commands:  join(base, 'commands', 'spartan'),
       router:    join(base, 'commands', 'spartan.md'),
-      rules:     join(base, 'rules', 'project'),
+      rules:     join(base, 'rules'),
       skills:    join(base, 'skills'),
       agents:    join(base, 'agents'),
       claudeMd:  mode === 'global' ? join(home, '.codex', 'CLAUDE.md') : join(cwd, 'CLAUDE.md'),
@@ -225,58 +237,75 @@ function gatherItems(selectedPacks, category) {
   return result;
 }
 
-// ── Pack selection ──────────────────────────────────────────────
+// ── Pack selection (grouped menu) ───────────────────────────────
 async function selectPacks(targets) {
-  // Always start with core
-  let selected = ['core'];
-
   // --all flag
-  if (installAll) return [...PACK_ORDER];
+  if (installAll) {
+    const all = PACK_ORDER.filter(p => !PACKS[p].hidden && !PACKS[p].comingSoon);
+    return resolveDeps(all, manifests);
+  }
 
   // --packs flag
   if (packsArg) {
-    const requested = packsArg.split(',').map(s => s.trim()).filter(Boolean);
-    for (const p of requested) {
-      if (PACKS[p] && p !== 'core' && !selected.includes(p)) {
-        selected.push(p);
-      }
-    }
-    return selected;
+    let requested = packsArg.split(',').map(s => s.trim()).filter(Boolean);
+    const { resolved: aliased, warnings } = resolveAliases(requested);
+    for (const w of warnings) console.log(`  ${yellow('!')} ${w}`);
+    return resolveDeps(aliased, manifests);
   }
 
   // Check saved packs
   if (existsSync(targets.packsFile)) {
-    const saved = readFileSync(targets.packsFile, 'utf-8').trim().split('\n').filter(Boolean);
+    let saved = readFileSync(targets.packsFile, 'utf-8').trim().split('\n').filter(Boolean);
+    const { resolved: aliased, warnings } = resolveAliases(saved);
+    for (const w of warnings) console.log(`  ${yellow('!')} ${w}`);
+    saved = aliased;
+
     if (saved.length > 0) {
-      console.log(`\n  ${cyan('Previously installed packs:')} ${saved.join(', ')}`);
+      console.log(`\n  ${cyan('Previously installed packs:')} ${saved.filter(p => !PACKS[p]?.hidden).join(', ')}`);
       const reuse = await ask('  Re-install same packs? [Y/n]: ');
       if (reuse !== 'n' && reuse !== 'N') {
-        return saved;
+        return resolveDeps(saved, manifests);
       }
     }
   }
 
-  // Interactive menu
+  // Interactive grouped menu
   console.log(`\n  ${bold('Choose your packs:')}\n`);
 
-  let i = 1;
-  for (const pack of PACK_ORDER) {
-    const def = PACKS[pack];
-    const tag = pack === 'core' ? ` ${green('(always included)')}` : '';
-    console.log(`  ${dim(`[${i}]`)} ${bold(pack)} — ${def.description}${tag}`);
-    i++;
+  const categories = {};
+  const selectablePacks = [];
+  for (const name of PACK_ORDER) {
+    const p = PACKS[name];
+    if (p.hidden) continue;
+    const cat = p.category || 'Other';
+    if (!categories[cat]) categories[cat] = [];
+    categories[cat].push(name);
   }
 
-  console.log('');
+  for (const [cat, packs] of Object.entries(categories)) {
+    console.log(`  ${bold(cat + ':')}`);
+    for (const name of packs) {
+      const p = PACKS[name];
+      const tag = name === 'core' ? ` ${green('(always included)')}`
+        : p.comingSoon ? ` ${dim('(coming soon)')}`
+        : '';
+      console.log(`    ${bold(name)} — ${p.description}${tag}`);
+      if (!p.comingSoon && name !== 'core') {
+        selectablePacks.push(name);
+      }
+    }
+    console.log('');
+  }
+
   const allChoice = await ask('  Install all packs? [Y/n]: ');
 
   if (allChoice !== 'n' && allChoice !== 'N') {
-    return [...PACK_ORDER];
+    return resolveDeps(selectablePacks, manifests);
   }
 
   // Ask about each optional pack
-  for (const pack of PACK_ORDER) {
-    if (pack === 'core') continue;
+  const selected = [];
+  for (const pack of selectablePacks) {
     const def = PACKS[pack];
     const choice = await ask(`  ${bold(pack)} — ${def.description}? [y/N]: `);
     if (choice === 'y' || choice === 'Y') {
@@ -284,7 +313,7 @@ async function selectPacks(targets) {
     }
   }
 
-  return selected;
+  return resolveDeps(selected, manifests);
 }
 
 // ── Install for claude-code / codex ─────────────────────────────
@@ -292,7 +321,14 @@ async function installFull() {
   const targets = getTargets();
   const selectedPacks = await selectPacks(targets);
 
-  console.log(`\n  ${green('Selected:')} ${bold(selectedPacks.join(' '))}\n`);
+  // Show user-facing packs (hide hidden deps)
+  const userPacks = selectedPacks.filter(p => !PACKS[p]?.hidden);
+  const hiddenPacks = selectedPacks.filter(p => PACKS[p]?.hidden);
+  console.log(`\n  ${green('Selected:')} ${bold(userPacks.join(' '))}`);
+  if (hiddenPacks.length > 0) {
+    console.log(`  ${dim('Auto-included:')} ${dim(hiddenPacks.join(' '))}`);
+  }
+  console.log('');
 
   // 1) Assemble & install CLAUDE.md
   console.log(`${blue('[1/5]')} ${bold('Assembling CLAUDE.md...')}`);
@@ -335,17 +371,18 @@ async function installFull() {
   }
   console.log(`  ${bold(cmdCount + ' commands')} installed\n`);
 
-  // 3) Rules
+  // 3) Rules (now with subdirectory structure)
   const selectedRules = gatherItems(selectedPacks, 'rules');
   if (selectedRules.length > 0) {
     console.log(`${blue('[3/5]')} ${bold('Installing rules...')}`);
-    ensureDir(targets.rules);
     let ruleCount = 0;
 
     for (const rule of selectedRules) {
+      // Rules now have subdir paths like "database/SCHEMA.md"
       const src = join(SRC.rules, rule);
+      const dest = join(targets.rules, rule);
       if (existsSync(src)) {
-        copyFile(src, join(targets.rules, rule));
+        copyFile(src, dest);
         console.log(`  ${green('+')} ${rule}`);
         ruleCount++;
       }
@@ -415,9 +452,9 @@ async function installRulesOnly() {
   // Ask which rule packs
   console.log(`  ${bold('Which rule packs do you need?')}\n`);
 
-  const rulePacks = PACK_ORDER.filter(p => PACKS[p].rules.length > 0);
+  const rulePacks = PACK_ORDER.filter(p => PACKS[p].rules.length > 0 && !PACKS[p].hidden);
   for (const pack of rulePacks) {
-    const ruleNames = PACKS[pack].rules.map(r => r.replace('.md', '')).join(', ');
+    const ruleNames = PACKS[pack].rules.map(r => r.replace(/.*\//, '').replace('.md', '')).join(', ');
     console.log(`  ${bold(pack)} — ${dim(ruleNames)}`);
   }
   console.log('');
@@ -426,15 +463,16 @@ async function installRulesOnly() {
   let selectedPacks;
 
   if (allChoice !== 'n' && allChoice !== 'N') {
-    selectedPacks = rulePacks;
+    selectedPacks = resolveDeps(rulePacks, manifests);
   } else {
-    selectedPacks = [];
+    const picks = [];
     for (const pack of rulePacks) {
       const choice = await ask(`  ${bold(pack)}? [y/N]: `);
       if (choice === 'y' || choice === 'Y') {
-        selectedPacks.push(pack);
+        picks.push(pack);
       }
     }
+    selectedPacks = resolveDeps(picks, manifests);
   }
 
   // Install rules
@@ -445,8 +483,9 @@ async function installRulesOnly() {
     let count = 0;
     for (const rule of selectedRules) {
       const src = join(SRC.rules, rule);
+      const dest = join(targets.rules, rule);
       if (existsSync(src)) {
-        copyFile(src, join(targets.rules, rule));
+        copyFile(src, dest);
         console.log(`  ${green('+')} ${rule}`);
         count++;
       }
@@ -459,7 +498,6 @@ async function installRulesOnly() {
   // Install AGENTS.md
   console.log(`${blue('[2/2]')} ${bold('Installing AGENTS.md...')}`);
 
-  // Build AGENTS.md from selected agent files
   const allAgents = gatherItems([...PACK_ORDER], 'agents');
   if (allAgents.length > 0 && targets.agentsMd) {
     let agentsContent = '# Spartan AI Toolkit — Agents\n\n';
@@ -517,11 +555,12 @@ async function main() {
   }
 
   // Success
+  const userPacks = selectedPacks.filter(p => !PACKS[p]?.hidden);
   console.log(`${bold(green('================================================'))}`);
   console.log(`${bold(green('          Setup done!'))}  ${dim(`v${VERSION}`)}`);
   console.log(`${bold(green('================================================'))}`);
   console.log('');
-  console.log(`  Installed packs: ${cyan(selectedPacks.join(', '))}`);
+  console.log(`  Installed packs: ${cyan(userPacks.join(', '))}`);
   console.log('');
 
   if (agent === 'claude-code' || agent === 'codex') {

@@ -1,0 +1,21 @@
+name: project-mgmt
+description: "Large multi-day projects (GSD)"
+category: Planning
+priority: 30
+hidden: false
+
+commands:
+  - project
+  - phase
+  - workstreams
+  - gsd-upgrade
+  - forensics
+  - brownfield
+  - map-codebase
+
+rules: []
+skills: []
+agents: []
+
+claude-sections:
+  - 30-project-mgmt.md

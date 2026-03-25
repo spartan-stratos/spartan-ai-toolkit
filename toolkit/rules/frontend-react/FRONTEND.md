@@ -1,8 +1,10 @@
 # Frontend Rules
 
+> Full guide: use `/ui-ux-pro-max` skill
+
 ## Build Check (CRITICAL)
 
-Run `cd tools/insight-admin && yarn build` before committing any `.tsx`/`.ts` changes.
+Run `yarn build` (or `npm run build`) before committing any `.tsx`/`.ts` changes.
 
 ### What This Catches
 
@@ -28,7 +30,7 @@ When you remove JSX that uses a component, state, or handler, also remove:
 
 ### When to Run
 
-- After ANY edit to `.tsx` or `.ts` files under `tools/insight-admin/`
+- After ANY edit to `.tsx` or `.ts` files
 - Before staging files for commit
 - If build fails, fix ALL errors before committing
 
@@ -38,7 +40,7 @@ When you remove JSX that uses a component, state, or handler, also remove:
 
 **Backend uses `snake_case`, frontend uses `camelCase`**. Always convert between them.
 
-### When creating/modifying API client files (`tools/insight-admin/src/api/*.ts`)
+### When creating/modifying API client files (`src/api/*.ts`)
 
 **Always**:
 ```typescript
@@ -73,36 +75,7 @@ Backend expects `{ "machine_box_id": "..." }` but frontend sends `{ "machineBoxI
 
 ### Reference Example
 
-See `tools/insight-admin/src/api/connectorClient.ts:77` for correct pattern.
-
----
-
-## Backend Startup for E2E Testing
-
-**Always use correct environment for local development**.
-
-```bash
-# CORRECT: Uses application-local.yml (port 5436)
-MICRONAUT_ENVIRONMENTS=local ./gradlew :app:api-application:run -Dmicronaut.environments=local
-
-# WRONG: Uses application.yml (port 5432)
-./gradlew :app:api-application:run
-```
-
-### Why This Matters
-
-Docker exposes PostgreSQL on port 5436 (mapped from container's 5432):
-- **Without `MICRONAUT_ENVIRONMENTS=local`**: Backend connects to `localhost:5432` -> fails
-- **With `MICRONAUT_ENVIRONMENTS=local`**: Backend uses `application-local.yml` -> connects to port 5436
-
-### Common Errors
-
-```
-Connection to localhost:5432 refused
-Backend startup failed: Bean definition could not be loaded
-```
-
-**Fix**: Always set `MICRONAUT_ENVIRONMENTS=local` when running backend for E2E tests.
+See your API client files for correct pattern.
 
 ---
 
@@ -220,8 +193,7 @@ test('feature-name - create item and verify', async ({ page }) => {
 
 ## Checklist: Before Running E2E Tests
 
-- [ ] Backend started with `MICRONAUT_ENVIRONMENTS=local`
-- [ ] Database running on port 5436 (`docker-compose ps`)
+- [ ] Backend running and connected to database
 - [ ] All POST requests in API clients use `keysToSnake()`
 - [ ] All response returns use `keysToCamel()`
 - [ ] Form submissions sync state after successful save
@@ -231,9 +203,8 @@ test('feature-name - create item and verify', async ({ page }) => {
 
 ## Related Files
 
-- API client example: `tools/insight-admin/src/api/connectorClient.ts`
-- Case conversion utilities: `tools/insight-admin/src/utils/caseConvert.ts`
-- Backend configuration: `app/api-application/src/main/resources/application-local.yml`
+- API client files: `src/api/*.ts`
+- Case conversion utility: `src/utils/caseConvert.ts`
 
 ---
 
@@ -281,3 +252,93 @@ const fetchTeams = useCallback(async () => {
 - Always show loading indicators during async operations
 - Disable form submit buttons while requests are in-flight
 - Use skeleton UIs for initial data loads
+
+---
+
+## Optimistic Updates Pattern
+
+### Avoid UI Flash/Reload After Mutations
+
+**Any mutation (create, update, delete) should use optimistic updates instead of full query invalidation.**
+
+#### Why This Is Critical
+- Prevents jarring UI flash/white screen during refetch
+- Provides instant feedback to users
+- Better perceived performance
+
+#### Bad Pattern (UI Flash)
+```typescript
+// BAD - Triggers full refetch, causing flash
+const mutation = useMutation({
+  mutationFn: (data) => api.create(data),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['feed'] })  // Flash!
+  },
+})
+```
+
+#### Good Pattern (Optimistic Update)
+```typescript
+// GOOD - Updates cache directly, no flash
+const mutation = useMutation({
+  mutationFn: (data) => api.create(data),
+  onSuccess: (newItem) => {
+    // Update cache directly by prepending new item
+    queryClient.setQueryData(['feed'], (oldData: any) => {
+      if (!oldData?.pages) return oldData
+      return {
+        ...oldData,
+        pages: oldData.pages.map((page: any, index: number) => {
+          if (index === 0) {
+            return { ...page, items: [newItem, ...(page.items || [])] }
+          }
+          return page
+        }),
+      }
+    })
+
+    // Invalidate related queries silently (no immediate refetch)
+    queryClient.invalidateQueries({ queryKey: ['related'], refetchType: 'none' })
+  },
+})
+```
+
+### Use placeholderData for Query Stability
+
+```typescript
+// GOOD - Keep previous data while refetching
+const { data } = useInfiniteQuery({
+  queryKey: ['feed'],
+  queryFn: fetchFeed,
+  placeholderData: (previousData) => previousData,  // No flash on refetch
+})
+```
+
+### Optimistic Delete with Rollback
+
+```typescript
+const deleteMutation = useMutation({
+  mutationFn: (id: string) => api.delete(id),
+  onMutate: async (id) => {
+    // Cancel outgoing refetches
+    await queryClient.cancelQueries({ queryKey: ['items'] })
+
+    // Save current state for rollback
+    const previousData = queryClient.getQueryData(['items'])
+
+    // Optimistically remove item
+    queryClient.setQueryData(['items'], (old: any) => ({
+      ...old,
+      items: old.items.filter((item: any) => item.id !== id),
+    }))
+
+    return { previousData }
+  },
+  onError: (_err, _id, context) => {
+    // Rollback on error
+    if (context?.previousData) {
+      queryClient.setQueryData(['items'], context.previousData)
+    }
+  },
+})
+```

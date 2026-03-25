@@ -3,9 +3,21 @@ name: security-checklist
 description: Security best practices for Micronaut/Kotlin backend including authentication, authorization, input validation, and OWASP prevention. Use when implementing auth, validating inputs, or reviewing security.
 ---
 
-# Security Checklist — Quick Reference
+# Security Checklist
 
-## Authentication
+Run a security audit against Micronaut/Kotlin backend code.
+
+## When to Use
+
+- Adding authentication or authorization to endpoints
+- Validating user inputs on new or changed endpoints
+- Reviewing code for security issues before merge
+- Checking for common vulnerabilities (SQL injection, XSS, IDOR)
+- Setting up secrets management
+
+## Process
+
+### 1. Check Authentication
 
 ```kotlin
 // Always use @Secured on controllers
@@ -18,7 +30,7 @@ val principal = SecurityUtils.currentPrincipal()
   ?: return AuthError.UNAUTHORIZED.asException().left()
 ```
 
-## Authorization Checks
+### 2. Check Authorization
 
 ```kotlin
 // Verify user has access to the resource
@@ -35,7 +47,7 @@ suspend fun getEmployee(id: UUID, requesterId: UUID): Either<ClientException, Em
 }
 ```
 
-## Input Validation
+### 3. Check Input Validation
 
 ```kotlin
 // Validate at controller boundary
@@ -53,7 +65,7 @@ data class CreateEmployeeRequest(
 )
 ```
 
-## SQL Injection Prevention
+### 4. Check SQL Injection Prevention
 
 ```kotlin
 // SAFE — Exposed ORM parameterizes automatically
@@ -64,7 +76,7 @@ UsersTable.selectAll()
 exec("SELECT * FROM users WHERE email = '$userInput'")  // NEVER DO THIS
 ```
 
-## Common Vulnerabilities to Check
+### 5. Check Common Vulnerabilities
 
 | Vulnerability | Prevention |
 |--------------|-----------|
@@ -77,14 +89,14 @@ exec("SELECT * FROM users WHERE email = '$userInput'")  // NEVER DO THIS
 | Sensitive data exposure | Never return passwords, tokens in responses |
 | Missing rate limiting | Add @RateLimiter for auth endpoints |
 
-## Secrets Management
+### 6. Check Secrets Management
 
 - NEVER hardcode secrets in code
 - Use environment variables: `DB_PASSWORD`, `JWT_SECRET`
 - Never log sensitive data (tokens, passwords, PII)
 - Never commit `.env` files
 
-## Response Sanitization
+### 7. Check Response Sanitization
 
 ```kotlin
 // Response DTO controls what's exposed — don't return raw entities
@@ -104,9 +116,28 @@ data class UserResponse(
 }
 ```
 
-## Review Checklist
+## Interaction Style
 
-When reviewing security-sensitive code:
+- Always checks all categories, doesn't skip any section
+- Flags the most dangerous issues first
+- Shows code examples for every fix, not just descriptions
+- Tells you what's wrong AND how to fix it
+
+## Rules
+
+- Every endpoint must have a @Secured annotation
+- Admin endpoints use OAuthSecurityRule.ADMIN
+- Users can only access their own resources (or admin can access all)
+- Input validated with @Valid and Jakarta annotations
+- No raw SQL queries with string concatenation
+- Sensitive fields excluded from response DTOs
+- Tokens/passwords never logged
+- Error messages don't leak internal details
+- Rate limiting on auth endpoints
+
+## Output
+
+Produces a checklist report with pass/fail for each category:
 
 - [ ] All endpoints have @Secured annotation
 - [ ] Admin endpoints use OAuthSecurityRule.ADMIN

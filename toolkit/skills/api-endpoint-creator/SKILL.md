@@ -13,59 +13,16 @@ allowed_tools:
 
 Creates complete REST API endpoints following strict layered architecture patterns.
 
-## What This Skill Does
+## When to Use
 
-Generates:
-1. **Controller** - Thin HTTP handler (@ExecuteOn, @Secured, delegates to Manager)
-2. **Manager Interface** - Business logic contract (returns `Either<ClientException, T>`)
-3. **Manager Implementation** - Business logic with transaction management
-4. **Response/Request Models** - In module-client (never inline in controllers)
-5. **Factory Bean** - DI registration
-6. **Retrofit Client** - For integration tests
-7. **Integration Tests** - Using Retrofit clients
+- Creating a new REST API endpoint from scratch
+- Adding CRUD operations for a new domain entity
+- Setting up the full stack: Controller → Manager → Repository → Tests
+- Need a Retrofit client for integration testing
 
-## Critical Rules
+## Process
 
-### RESTful API with Query Parameters (Not Path Params)
-
-This project uses **query parameters for all IDs** and RESTful endpoints:
-
-```
-GET  /api/v1/employees              # List employees (plural)
-GET  /api/v1/employee               # Get one employee (?id=xxx)
-POST /api/v1/employee               # Create employee
-POST /api/v1/employee/update        # Update employee
-POST /api/v1/employee/delete        # Delete employee (soft)
-```
-
-**Rules from API_RULES.md:**
-- NEVER use path parameters (`/{id}`)
-- Use query parameters: `@QueryValue id: UUID`
-- Singular nouns for single resource, plural for collections
-- Use verb sub-paths for actions (`/delete`, `/restore`)
-
-### Layered Architecture
-
-```
-HTTP Request → Controller → Manager → Repository → Database
-```
-
-**Controller**: Thin (just delegation), HTTP annotations, @ExecuteOn(TaskExecutors.IO), @Secured, unwrap Either with `.throwOrValue()`
-
-**Manager**: All business logic, returns `Either<ClientException, T>`, wraps DB operations in transactions, never throws exceptions
-
-**Repository**: Data access only (already exists)
-
-### NO !! Operator
-
-```kotlin
-val employee = employeeRepository.byId(id)
-  ?: return ClientError.EMPLOYEE_NOT_FOUND.asException().left()
-```
-
-## Workflow
-
-### Step 1: Create Response/Request Models
+### 1. Create Response/Request Models
 
 Location: `app/module-client/src/main/kotlin/insight/c0x12c/client/response/{domain}/`
 
@@ -122,7 +79,7 @@ data class Update{Domain}Request(
 
 **Key**: All models in module-client, never in controllers or managers.
 
-### Step 2: Create Controller
+### 2. Create Controller
 
 Location: `app/api-application/src/main/kotlin/insight/c0x12c/controller/{Domain}Controller.kt`
 
@@ -205,7 +162,7 @@ class {Domain}Controller(
 - Inject Manager only (never Repository)
 - NO inline data classes
 
-### Step 3: Create Manager Interface
+### 3. Create Manager Interface
 
 Location: `app/module-{domain}/module-api/src/main/kotlin/insight/c0x12c/{domain}/contract/{Domain}Manager.kt`
 
@@ -242,7 +199,7 @@ interface {Domain}Manager {
 }
 ```
 
-### Step 4: Create Manager Implementation
+### 4. Create Manager Implementation
 
 Location: `app/module-{domain}/module-impl/src/main/kotlin/insight/c0x12c/{domain}/impl/Default{Domain}Manager.kt`
 
@@ -331,7 +288,7 @@ class Default{Domain}Manager(
 - Return `Either.left()` for errors, `Either.right()` for success
 - NO `!!` operators
 
-### Step 5: Register Factory Bean
+### 5. Register Factory Bean
 
 Location: `app/module-{domain}/module-impl/src/main/kotlin/insight/c0x12c/runtime/factory/{Domain}ManagerFactory.kt`
 
@@ -358,7 +315,7 @@ class {Domain}ManagerFactory {
 }
 ```
 
-### Step 6: Create Retrofit Client
+### 6. Create Retrofit Client
 
 Location: `app/module-client/src/main/kotlin/insight/c0x12c/client/{Domain}Client.kt`
 
@@ -409,7 +366,7 @@ interface {Domain}Client {
 }
 ```
 
-### Step 7: Create Integration Test
+### 7. Create Integration Test
 
 Location: `app/api-application/src/test/kotlin/insight/c0x12c/{Domain}ControllerTest.kt`
 
@@ -520,22 +477,68 @@ class {Domain}ControllerTest : AbstractControllerTest() {
 }
 ```
 
-### Step 8: Run Tests
+### 8. Run Tests
 
 ```bash
 ./gradlew :app:api-application:test --tests "{Domain}ControllerTest"
 ./gradlew test
 ```
 
-## Error Handling Patterns
+## Interaction Style
 
-### Not Found
+- Always generates the full stack: models, controller, manager, factory, client, tests
+- Follows the project's exact patterns — no shortcuts or creative alternatives
+- Uses query parameters for all IDs, never path parameters
+- Asks which domain entity before starting if not clear from context
+
+## Rules
+
+### RESTful API with Query Parameters (Not Path Params)
+
+This project uses **query parameters for all IDs** and RESTful endpoints:
+
+```
+GET  /api/v1/employees              # List employees (plural)
+GET  /api/v1/employee               # Get one employee (?id=xxx)
+POST /api/v1/employee               # Create employee
+POST /api/v1/employee/update        # Update employee
+POST /api/v1/employee/delete        # Delete employee (soft)
+```
+
+**Rules from API_RULES.md:**
+- NEVER use path parameters (`/{id}`)
+- Use query parameters: `@QueryValue id: UUID`
+- Singular nouns for single resource, plural for collections
+- Use verb sub-paths for actions (`/delete`, `/restore`)
+
+### Layered Architecture
+
+```
+HTTP Request → Controller → Manager → Repository → Database
+```
+
+**Controller**: Thin (just delegation), HTTP annotations, @ExecuteOn(TaskExecutors.IO), @Secured, unwrap Either with `.throwOrValue()`
+
+**Manager**: All business logic, returns `Either<ClientException, T>`, wraps DB operations in transactions, never throws exceptions
+
+**Repository**: Data access only (already exists)
+
+### NO !! Operator
+
+```kotlin
+val employee = employeeRepository.byId(id)
+  ?: return ClientError.EMPLOYEE_NOT_FOUND.asException().left()
+```
+
+### Error Handling Patterns
+
+#### Not Found
 ```kotlin
 val entity = repository.byId(id)
   ?: return ClientError.{DOMAIN}_NOT_FOUND.asException().left()
 ```
 
-### Already Exists
+#### Already Exists
 ```kotlin
 val existing = repository.byEmail(email)
 if (existing != null) {
@@ -543,7 +546,7 @@ if (existing != null) {
 }
 ```
 
-## Success Criteria
+## Output
 
 - Controller is thin (just delegation)
 - Controller has `@ExecuteOn(TaskExecutors.IO)`

@@ -18,6 +18,7 @@ jobs:
           SHELLCHECK_OPTS: -x
         with:
           scandir: toolkit/scripts
+          ignore_paths: toolkit/scripts/validate-content.js toolkit/scripts/compile-packs.js
 
   structure:
     name: Validate Structure
@@ -40,14 +41,16 @@ jobs:
           done
 
           CMD_COUNT=$(ls toolkit/commands/spartan/*.md 2>/dev/null | wc -l)
-          RULE_COUNT=$(ls toolkit/rules/project/*.md 2>/dev/null | wc -l)
+          RULE_COUNT=$(find toolkit/rules -name '*.md' 2>/dev/null | wc -l)
           SKILL_COUNT=$(ls -d toolkit/skills/*/ 2>/dev/null | wc -l)
           AGENT_COUNT=$(ls toolkit/agents/*.md 2>/dev/null | wc -l)
+          PACK_COUNT=$(ls toolkit/packs/*.yaml 2>/dev/null | wc -l)
 
           echo "Commands: $CMD_COUNT"
           echo "Rules:    $RULE_COUNT"
           echo "Skills:   $SKILL_COUNT"
           echo "Agents:   $AGENT_COUNT"
+          echo "Packs:    $PACK_COUNT"
 
           if [ "$ERRORS" -gt 0 ]; then
             echo ""
@@ -65,9 +68,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install dependencies
+        run: cd toolkit && npm install
       - name: Check CLI runs
         run: node toolkit/bin/cli.js --help
       - name: Check package.json valid
         run: node -e "require('./toolkit/package.json')"
       - name: Check plugin.json valid
         run: node -e "require('./toolkit/.claude-plugin/plugin.json')"
+      - name: Run resolver tests
+        run: cd toolkit && node --test lib/resolver.test.js
+
+  content-check:
+    name: Validate Content
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: cd toolkit && npm install
+      - name: Check content format, naming, and pack sync
+        run: node toolkit/scripts/validate-content.js

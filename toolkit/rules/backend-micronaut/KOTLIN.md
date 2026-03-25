@@ -1,4 +1,4 @@
-# Core Kotlin Rules
+# Kotlin Rules
 
 > Full guide: use `/kotlin-best-practices` skill
 
@@ -384,7 +384,7 @@ override suspend fun listUsers() = users.map { UserResponse(id = it.id, email = 
 
 Response DTOs with factory methods go in `module-client`:
 ```
-app/module-client/src/main/kotlin/insight/c0x12c/client/
+module-client/src/main/kotlin/com/yourcompany/client/
 +-- response/
     +-- user/
         +-- UserResponse.kt          # with companion object { fun from() }
@@ -480,47 +480,4 @@ fun longFunctionName(
 ```bash
 ./gradlew ktlintCheck     # Check style
 ./gradlew ktlintFormat    # Auto-fix style
-```
-
----
-
-## Controller-Specific Rules (merged from KOTLIN_CODING_STANDARDS.md)
-
-### Controller Method Pattern
-```kotlin
-@Controller("/api/v1")
-@Secured(SecurityRule.IS_AUTHENTICATED)
-class UserController(private val userManager: UserManager) {
-
-    @Get("/users")
-    @ExecuteOn(TaskExecutors.BLOCKING)
-    suspend fun listUsers(
-        @QueryValue(defaultValue = "0") offset: Int,
-        @QueryValue(defaultValue = "20") limit: Int
-    ): List<UserResponse> = userManager.listUsers(offset, limit).getOrThrow()
-
-    @Get("/user")
-    @ExecuteOn(TaskExecutors.BLOCKING)
-    suspend fun getUser(@QueryValue id: UUID): UserResponse =
-        userManager.getUser(id).getOrThrow()
-
-    @Post("/user")
-    @ExecuteOn(TaskExecutors.BLOCKING)
-    suspend fun createUser(@Body request: CreateUserRequest): UserResponse =
-        userManager.createUser(request).getOrThrow()
-}
-```
-
-### Controller Rules
-- `@ExecuteOn(TaskExecutors.BLOCKING)` on ALL controller methods that call blocking code
-- `@Secured` annotation on controller class level (not individual methods unless mixed auth)
-- Controllers ONLY call Manager — never Repository or Service directly
-- Request validation happens in Manager, not Controller
-- Return types are response DTOs, never entities
-
-### Either Extension for Controllers
-```kotlin
-// Extension to convert Either to HTTP response
-fun <T> Either<ClientException, T>.getOrThrow(): T =
-    fold({ throw it }, { it })
 ```

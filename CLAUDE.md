@@ -1,7 +1,7 @@
 # Project: Spartan AI Toolkit
 
 ## About
-Spartan AI Toolkit is an engineering discipline layer for AI coding tools. It has 44 slash commands (7 packs), 9 coding rules, 18 skills, 4 agents, 13 frameworks, and 6 templates. Native integration with Claude Code (npx, plugin, setup script). All content is standard markdown — usable with any AI coding tool (Codex, Gemini, Copilot, Cursor, etc.). Includes a Telegram bridge for remote session control.
+Spartan AI Toolkit is an engineering discipline layer for AI coding tools. It has 44 slash commands (11 packs), 11 coding rules, 18 skills, 4 agents, 13 frameworks, and 6 templates. Native integration with Claude Code (npx, plugin, setup script). All content is standard markdown — usable with any AI coding tool (Codex, Gemini, Copilot, Cursor, etc.). Includes a Telegram bridge for remote session control.
 
 ## Tech Stack
 - **Primary language**: Markdown (commands, rules, skills, docs)
@@ -25,13 +25,15 @@ spartan-ai-toolkit/
 │   ├── commands/spartan.md      # Smart router (entry point)
 │   ├── skills/                  # 18 skill sets (each a directory with SKILL.md)
 │   ├── agents/                  # 4 agent definitions
-│   ├── rules/project/           # 9 coding standard files
+│   ├── rules/{pack}/            # 11 coding standard files (grouped by pack)
 │   ├── frameworks/              # 13 startup/product frameworks
 │   ├── templates/               # 6 reusable templates
 │   ├── claude-md/               # CLAUDE.md sections (assembled per pack)
 │   ├── .claude-plugin/          # Claude Code plugin manifest
+│   ├── packs/*.yaml             # Pack manifests (source of truth)
 │   ├── bin/cli.js               # npx installer (multi-agent)
-│   ├── lib/packs.js             # Pack definitions (source of truth)
+│   ├── lib/packs.js             # Loads from YAML manifests
+│   ├── lib/resolver.js          # Dependency resolution + cycle detection
 │   ├── lib/assembler.js         # CLAUDE.md assembly logic
 │   └── package.json             # npm package config
 ├── bridges/                     # Remote control (provider-based)
@@ -45,36 +47,40 @@ spartan-ai-toolkit/
 
 ## The Pack System
 
-Packs are how content gets grouped and installed. Defined in `toolkit/lib/packs.js`.
+Packs are how content gets grouped and installed. Defined in YAML manifests in `toolkit/packs/*.yaml`.
 
-**7 packs:**
+**11 packs** (with dependencies):
 
-| Pack | What's in it |
-|------|-------------|
-| `core` | Always installed. 11 workflow commands. |
-| `backend` | Kotlin + Micronaut. 4 commands, 8 rules, 7 skills, 2 agents. |
-| `frontend` | React + Next.js. 5 commands, 2 rules, 1 skill. |
-| `project-mgmt` | Large projects (GSD). 7 commands. |
-| `product` | Product thinking before building. 6 commands. |
-| `ops` | Deploy and infra. 2 commands. |
-| `research` | Startup pipeline. 9 commands, 10 skills, 2 agents. |
+| Pack | Category | Depends | What's in it |
+|------|----------|---------|-------------|
+| `core` | Core | -- | Always installed. 11 commands, NAMING_CONVENTIONS. |
+| `database` | Backend | -- | **Hidden.** 1 command, 3 rules, 2 skills. |
+| `shared-backend` | Backend | -- | **Hidden.** ARCHITECTURE rule. |
+| `backend-micronaut` | Backend | database, shared-backend | 3 commands, 5 rules, 5 skills, 2 agents. |
+| `backend-nodejs` | Backend | database, shared-backend | **Coming soon.** |
+| `backend-python` | Backend | database, shared-backend | **Coming soon.** |
+| `frontend-react` | Frontend | -- | 5 commands, 1 rule, 1 skill. |
+| `project-mgmt` | Planning | -- | 7 commands. |
+| `product` | Planning | -- | 6 commands. |
+| `ops` | Ship | -- | 2 commands. |
+| `research` | Research | product | 9 commands, 10 skills, 2 agents. |
 
-Each pack has: commands, rules, skills, agents, claudeSections.
-`PACK_ORDER` in packs.js controls install order.
+Hidden packs don't show in the CLI menu — they get pulled in as dependencies.
+"Coming soon" packs show in the menu but have no content yet.
 
 ### How Packs Work
 1. User picks packs during install (CLI or setup script)
-2. CLI collects all items from selected packs, dedupes
-3. Copies commands → `~/.claude/commands/spartan/`
-4. Copies rules → `~/.claude/rules/project/`
-5. Copies skills → `~/.claude/skills/` (as directories)
-6. Copies agents → `~/.claude/agents/`
-7. Assembles CLAUDE.md from pack sections (header + core + pack sections + footer)
+2. **Resolver** resolves dependencies (BFS) — e.g., `backend-micronaut` pulls in `database` + `shared-backend`
+3. CLI collects all items from resolved packs, dedupes
+4. Copies commands → `~/.claude/commands/spartan/`
+5. Copies rules → `~/.claude/rules/{pack-subdir}/` (e.g., `rules/database/SCHEMA.md`)
+6. Copies skills → `~/.claude/skills/` (as directories)
+7. Copies agents → `~/.claude/agents/`
+8. Assembles CLAUDE.md from pack sections (header + core + pack sections + footer)
 
-### Dual Source of Truth
-- `toolkit/lib/packs.js` — Node.js CLI uses this
-- `toolkit/scripts/packs.sh` — Bash setup script uses this
-- **Keep them in sync** when adding/removing content
+### Single Source of Truth
+YAML manifests in `toolkit/packs/*.yaml` are the source of truth. `toolkit/lib/packs.js` loads them.
+Backward-compatible aliases: `backend` → `backend-micronaut`, `frontend` → `frontend-react`.
 
 ---
 
@@ -155,16 +161,26 @@ color: blue
 
 ### Rule Format
 
-**Location:** `toolkit/rules/project/RULE_NAME.md`
+**Location:** `toolkit/rules/{pack-name}/RULE_NAME.md`
 
 **No frontmatter.** Plain markdown.
 
-- Filename: `UPPER_SNAKE_CASE.md`
+- Filename: `UPPER_SNAKE_CASE.md` inside a pack-named subdirectory
 - Start with `#` title
 - Optional: `> Full guide: use /skill-name skill`
 - Mark forbidden patterns in ALL CAPS with WRONG vs CORRECT examples
 - Include code before/after comparisons
 - End with quick reference table
+
+**Rule subdirectories:**
+```
+toolkit/rules/
+  core/                    # Cross-stack (NAMING_CONVENTIONS)
+  shared-backend/          # Shared arch concepts (ARCHITECTURE)
+  database/                # SCHEMA, ORM_AND_REPO, TRANSACTIONS
+  backend-micronaut/       # KOTLIN, CONTROLLERS, SERVICES_AND_BEANS, API_DESIGN, RETROFIT_PLACEMENT
+  frontend-react/          # FRONTEND
+```
 
 ### Claude-MD Section Format
 
@@ -183,12 +199,28 @@ color: blue
 
 ### Adding a New Pack
 
-1. Add pack object to `toolkit/lib/packs.js` with: commands, rules, skills, agents, claudeSections
-2. Add pack name to `PACK_ORDER` array
-3. Create claude-md section file (`toolkit/claude-md/{NN}-{pack}.md`)
-4. Update `toolkit/scripts/packs.sh` to match (keep dual source in sync)
-5. Update `toolkit/package.json` files array if adding new top-level directories
-6. Update counts in this CLAUDE.md and toolkit/README.md
+1. Create `toolkit/packs/{pack-name}.yaml` manifest with: name, description, category, priority, hidden, depends, commands, rules, skills, agents, claude-sections
+2. Create rule files in `toolkit/rules/{pack-name}/` if the pack has rules
+3. Create claude-md section file (`toolkit/claude-md/{NN}-{pack}.md`) if the pack has visible content
+4. Run `make validate` to check everything links up
+5. Update counts in this CLAUDE.md and toolkit/README.md
+
+### Pack Manifest Format
+
+```yaml
+name: my-pack
+description: "What this pack does"
+category: Backend       # for CLI menu grouping
+priority: 15            # controls install/display order
+hidden: false           # hidden packs don't show in menu
+depends: [database]     # auto-installed dependencies
+
+commands: [my-command]
+rules: [my-pack/MY_RULE.md]
+skills: [my-skill]
+agents: [my-agent.md]
+claude-sections: [15-my-pack.md]
+```
 
 ### Naming Rules
 
@@ -228,9 +260,9 @@ These 4 files must have the same version:
 - Superpowers needs manual install in Claude Code (plugin marketplace)
 
 ## Testing
-- No automated tests (this is a config distribution toolkit)
+- `cd toolkit && node --test lib/resolver.test.js` — 13 tests for dependency resolver
+- `make validate` — checks file structure, content format, naming, manifests
 - Verification: run `/spartan` in Claude Code after install
-- `make validate` checks file structure is correct
 
 ## Current Focus
 Preparing for public GitHub release and npm publish.

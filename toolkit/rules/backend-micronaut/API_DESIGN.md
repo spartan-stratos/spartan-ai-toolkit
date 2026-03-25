@@ -1,4 +1,4 @@
-# API & Testing Rules
+# API Design Rules
 
 > Full guide: use `/backend-api-design` or `/testing-strategies` skill
 
@@ -149,7 +149,7 @@ data class EmployeeListResponse(
 **NEVER duplicate request or response models across modules.**
 
 ```
-app/module-client/src/main/kotlin/insight/c0x12c/client/
+module-client/src/main/kotlin/com/yourcompany/client/
 ├── request/           # API request models
 │   ├── conversation/
 │   ├── message/
@@ -166,12 +166,12 @@ app/module-client/src/main/kotlin/insight/c0x12c/client/
 ```kotlin
 // WRONG:
 // module-communication/module-api/model/response/ConversationResponse.kt
-package insight.c0x12c.communication.model.response
+package com.yourcompany.communication.model.response
 data class ConversationResponse(...)  // DON'T DO THIS
 
 // CORRECT:
 // module-client/response/conversation/ConversationResponse.kt
-package insight.c0x12c.client.response.conversation
+package com.yourcompany.client.response.conversation
 data class ConversationResponse(...)  // PUT IT HERE
 ```
 
@@ -179,15 +179,15 @@ data class ConversationResponse(...)  // PUT IT HERE
 
 ```kotlin
 // In ConversationManager.kt or any other file
-import insight.c0x12c.client.response.conversation.ConversationResponse
-import insight.c0x12c.client.request.conversation.CreateConversationRequest
+import com.yourcompany.client.response.conversation.ConversationResponse
+import com.yourcompany.client.request.conversation.CreateConversationRequest
 ```
 
 ### Add module-client dependency
 
 ```gradle
 dependencies {
-  implementation(project(":app:module-client"))
+  implementation(project(":module-client"))
 }
 ```
 
@@ -206,165 +206,6 @@ Why this matters:
 - No sync issues between duplicates
 - Clear ownership
 - Easier refactoring
-
----
-
-## Testing
-
-### ALWAYS Use Retrofit Clients for API Tests
-
-**Never construct raw HttpRequest objects for API endpoint testing.**
-
-Use the Retrofit clients in `module-client` instead of building HTTP requests by hand.
-
-Why:
-- **Type safety**: Retrofit clients give compile-time type checking
-- **Single source of truth**: API contracts are defined once in client interfaces
-- **Consistency**: Tests use the same client code as production consumers
-- **Maintainability**: API changes only need updates in one place
-- **Discoverability**: IDE autocomplete shows all available endpoints
-
-#### Bad - Raw HttpRequest Construction
-```kotlin
-// DON'T DO THIS
-@Test
-fun `should get conversation`() {
-  val request = HttpRequest.GET<Any>("/api/v1/conversations/by-id?id=$conversationId")
-    .bearerAuth(token.removePrefix("Bearer "))
-    .accept(MediaType.APPLICATION_JSON)
-
-  val response = client.toBlocking().exchange(request, ConversationResponse::class.java)
-  // assertions
-}
-```
-
-#### Good - Retrofit Client Usage
-```kotlin
-// DO THIS
-@Test
-fun `should get conversation`() = runTest {
-  val response = conversationClient.getConversation(
-    authorization = "Bearer $token",
-    id = conversationId
-  )
-
-  assertThat(response.id).isEqualTo(conversationId)
-}
-```
-
-### Client Location
-
-All Retrofit clients are in `app/module-client/src/main/kotlin/insight/c0x12c/client/`:
-
-```
-module-client/
-├── ConversationClient.kt    # Conversation API endpoints
-├── ContactClient.kt         # Contact API endpoints
-├── UserClient.kt            # User API endpoints
-└── ...
-```
-
-### Test Setup with Retrofit Clients
-
-```kotlin
-@MicronautTest(environments = ["test"])
-class ConversationControllerTest {
-
-  @Inject
-  lateinit var conversationClient: ConversationClient
-
-  @Test
-  fun `should list conversations`() = runTest {
-    val response = conversationClient.listConversations(
-      authorization = bearerToken(testUser),
-      request = ListConversationsRequest(/* ... */)
-    )
-
-    assertThat(response.items).isNotEmpty()
-  }
-}
-```
-
-### When Raw HttpRequest Is Acceptable
-
-Raw HttpRequest is ONLY acceptable for:
-
-1. **SSE/WebSocket connections** - Streaming protocols not supported by Retrofit
-2. **Testing error responses** - When you need to test malformed requests
-3. **Testing authentication failures** - When testing without/with invalid tokens
-4. **Non-standard HTTP behaviors** - Testing edge cases Retrofit abstracts away
-
-```kotlin
-// Acceptable: SSE connection test
-@Test
-fun `should establish SSE connection`() {
-  val request = HttpRequest.GET<Any>("/api/v1/realtime/sse")
-    .bearerAuth(token)
-    .accept(MediaType.TEXT_EVENT_STREAM)  // SSE not supported by Retrofit
-  // ...
-}
-
-// Acceptable: Testing invalid request format
-@Test
-fun `should return 400 for malformed request`() {
-  val request = HttpRequest.POST("/api/v1/conversations", """{"invalid": "json"}""")
-    .bearerAuth(token)
-  // ...
-}
-```
-
-### Adding New Endpoints
-
-When adding a new API endpoint:
-
-1. **Add to Retrofit client FIRST** in `module-client`
-2. **Write tests using the client**
-3. **Implement the controller**
-
-This makes sure the client contract is defined before the implementation.
-
-### Test Naming Convention
-```kotlin
-@Test
-fun `{action} - {expected outcome}`() { }
-
-// Examples:
-fun `createConversation - returns conversation with correct channel`() { }
-fun `getMessages - returns empty list for new conversation`() { }
-fun `sendMessage - fails with 404 for non-existent conversation`() { }
-```
-
-### Test Structure (AAA Pattern)
-```kotlin
-@Test
-fun `should create conversation successfully`() = runTest {
-  // Arrange
-  val contact = createTestContact()
-  val request = CreateConversationRequest(contactId = contact.id)
-
-  // Act
-  val response = conversationClient.createConversation(
-    authorization = bearerToken(testUser),
-    request = request
-  )
-
-  // Assert
-  assertThat(response.contactId).isEqualTo(contact.id)
-}
-```
-
-### Quick Reference
-
-| Scenario | Use Retrofit Client | Use Raw HttpRequest |
-|----------|:------------------:|:------------------:|
-| Standard API calls | Yes | No |
-| SSE/WebSocket | No | Yes |
-| Testing malformed requests | No | Yes |
-| Testing auth failures | No | Yes |
-| Integration tests | Yes | No |
-| E2E tests | Yes | No |
-
-**Default to Retrofit clients. Only use raw HttpRequest when technically needed.**
 
 ---
 

@@ -1,0 +1,34 @@
+name: backend-micronaut
+description: "Kotlin + Micronaut backend"
+category: Backend
+priority: 11
+hidden: false
+depends:
+  - database
+  - shared-backend
+
+commands:
+  - kotlin-service
+  - review
+  - testcontainer
+
+rules:
+  - backend-micronaut/KOTLIN.md
+  - backend-micronaut/CONTROLLERS.md
+  - backend-micronaut/SERVICES_AND_BEANS.md
+  - backend-micronaut/API_DESIGN.md
+  - backend-micronaut/RETROFIT_PLACEMENT.md
+
+skills:
+  - api-endpoint-creator
+  - backend-api-design
+  - kotlin-best-practices
+  - testing-strategies
+  - security-checklist
+
+agents:
+  - micronaut-backend-expert.md
+  - solution-architect-cto.md
+
+claude-sections:
+  - 11-backend-micronaut.md

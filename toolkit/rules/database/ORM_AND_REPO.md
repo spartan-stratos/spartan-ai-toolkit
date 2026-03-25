@@ -1,58 +1,6 @@
-# Database Rules
+# Exposed ORM and Repository Patterns
 
-> Full guide: use `/database-patterns` or `/database-table-creator` skill
-
-## Core Principles
-1. **Simplicity First** — Keep it simple, avoid over-engineering
-2. **No Foreign Keys** — Handle relationships at application level
-3. **No CASCADE** — Handle deletions in application
-4. **Consistent Data Types** — Use TEXT instead of VARCHAR
-
-## Schema Rules
-
-### Table Design
-- **No REFERENCES** — Never use foreign key constraints
-- **No ON DELETE CASCADE** — Handle deletions in application
-- **TEXT not VARCHAR** — Always use TEXT for strings
-- **UUID primary keys** — `uuid_generate_v4()`
-- **Soft delete** — Use `deleted_at TIMESTAMP`, never hard delete records
-- Standard columns: `id`, `created_at`, `updated_at`, `deleted_at`
-
-### Data Type Standards
-- Strings: TEXT (not VARCHAR)
-- IDs: UUID
-- Dates: TIMESTAMP
-- Booleans: BOOLEAN
-- Flexible data: JSONB
-- IP addresses: INET
-
-### Naming Conventions
-- Tables: plural, snake_case (users, user_sessions)
-- Columns: snake_case (user_id, created_at)
-- Indexes: idx_tablename_column (idx_users_email)
-- Unique indexes: idx_tablename_column_unique
-
-### Required Features
-- Add indexes for frequently queried columns
-- Add indexes for foreign key columns (even without constraints)
-- Use triggers for updated_at automation
-- Keep migrations simple and focused
-
-### What NOT to Include
-- No audit logs unless specifically asked
-- No 2FA unless specifically asked
-- No complex features unless needed
-- No foreign key constraints
-- No cascading deletes
-
-### Application-Level Handling
-Since we don't use database constraints, the application must:
-- Validate foreign key relationships
-- Handle cascading deletes
-- Make sure data stays consistent
-- Manage transactions properly
-
----
+> Full guide: use /database-patterns skill
 
 ## Exposed ORM Patterns (CRITICAL)
 
@@ -204,8 +152,8 @@ fun insert(entity: MyEntity): MyEntity {
 ### Field Names Must Match Entity/Table Exactly
 
 When writing repositories, ALWAYS cross-reference the Table and Entity files:
-- Table file: `app/module-repository/.../table/MyTable.kt` — defines column names
-- Entity file: `app/module-repository/.../entity/MyEntity.kt` — defines property names
+- Table file: `module-repository/.../table/MyTable.kt` — defines column names
+- Entity file: `module-repository/.../entity/MyEntity.kt` — defines property names
 
 **Common mistakes to avoid:**
 - Using field names from a different service (e.g., `triggeredBy` when the table uses `deployedBy`)
@@ -243,73 +191,6 @@ data class StartRequest(
   // empty body
 )
 ```
-
----
-
-## Kotlin Code Synchronization Rules
-
-### When Adding a New Table
-You MUST create:
-1. **SQL migration** in `database-migration/sql/`
-2. **Table object** in `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/table/`
-   - Extend `SoftDeleteTable`
-   - Use `text()` for strings (not varchar)
-   - Don't re-declare `createdAt`, `updatedAt`, `deletedAt` (inherited)
-3. **Entity data class** in `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/entity/`
-   - Implement `Entity<Instant>` interface
-   - Match all table columns
-   - Use proper Kotlin types (String for TEXT, UUID for ids, Instant for timestamps)
-4. **Constants/Enums** in `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/constant/` if needed
-   - Create enums for status fields
-   - Create constants for roles/types
-5. **Repository** in `module-repository/repository/` with soft delete support
-
-### When Modifying a Table
-You MUST update:
-1. **Table object** — Add/remove/modify column definitions
-2. **Entity data class** — Add/remove/modify properties to match
-3. **Constants/Enums** — Update if column values changed
-
-### When Deleting a Table
-You MUST delete:
-1. **Table object** file
-2. **Entity data class** file
-3. **Related constants/enums** if no longer used
-
-### File Naming Conventions
-- Tables: `{TableName}Table.kt` (e.g., `UsersTable.kt`)
-- Entities: `{TableName}Entity.kt` (e.g., `UserEntity.kt`)
-- Constants: `{FieldName}.kt` (e.g., `UserStatus.kt`, `UserRole.kt`)
-
-### Package Structure
-```
-app/module-repository/src/main/kotlin/
-├── insight/c0x12c/postgresql/
-│   ├── table/          # Exposed table definitions
-│   ├── entity/         # Data class entities
-│   └── constant/       # Enums and constants
-└── spartan/exposed/codegen/
-    └── Entity.kt       # Base Entity interface
-```
-
-### Example Synchronization
-When SQL migration adds:
-```sql
-CREATE TABLE products (
-    id UUID PRIMARY KEY,
-    name TEXT NOT NULL,
-    status TEXT DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP,
-    deleted_at TIMESTAMP
-);
-```
-
-You MUST create:
-1. `ProductsTable.kt` with all columns
-2. `ProductEntity.kt` implementing Entity<Instant>
-3. `ProductStatus.kt` enum for status values
-4. `ProductRepository.kt` with CRUD operations
 
 ---
 
@@ -374,7 +255,7 @@ Every repository MUST have test coverage following these rules:
 1. **Test Class Structure**
    - Extend `AbstractRepositoryTest` base class
    - Name: `Default{TableName}RepositoryTest`
-   - Location: `app/module-repository/src/test/kotlin/insight/c0x12c/postgresql/repository/`
+   - Location: `module-repository/src/test/kotlin/com/yourcompany/postgresql/repository/`
    - Clean database state in `@BeforeEach` method
 
 2. **Required Test Coverage**
@@ -429,13 +310,13 @@ Every repository MUST have test coverage following these rules:
 7. **Running Tests**
    ```bash
    # Run all repository tests
-   ./gradlew :app:module-repository:test
+   ./gradlew :module-repository:test
 
    # Run specific test class
-   ./gradlew :app:module-repository:test --tests "ai.insight.postgresql.repository.DefaultUserRepositoryTest"
+   ./gradlew :module-repository:test --tests "com.yourcompany.postgresql.repository.DefaultUserRepositoryTest"
 
    # Run with detailed output
-   ./gradlew :app:module-repository:test --info
+   ./gradlew :module-repository:test --info
    ```
 
 8. **Test Verification Rule**
@@ -510,29 +391,3 @@ fun `byEmail - returns null when soft deleted`() {
 - [ ] Map ALL fields in `toEntity()` including `createdAt`, `updatedAt`, `deletedAt`
 - [ ] Use `db.primary` for writes, `db.replica` for reads
 - [ ] Always use braces for if/else blocks (ktlint)
-
----
-
-## Additional Standards (merged from DATABASE_DESIGN.md)
-
-### UUID Generation
-- **Always use `uuid_generate_v4()`** — NOT `gen_random_uuid()`
-- Ensure consistency across all migrations
-
-### Trigger Functions
-- **Reuse existing `update_updated_at()` function** from `000-init.sql`
-- Do NOT create duplicate trigger functions in each migration
-
-### Index Strategy for Soft Deletes
-- Create **partial indexes** for active record queries:
-  ```sql
-  CREATE INDEX idx_table_active ON table_name(column) WHERE deleted_at IS NULL;
-  ```
-- Create **separate index** for cleanup queries:
-  ```sql
-  CREATE INDEX idx_table_deleted ON table_name(deleted_at) WHERE deleted_at IS NOT NULL;
-  ```
-
-### Exposed ORM Compatibility
-- Use `TEXT` for flexible data fields (contains JSON) — Exposed reads as String
-- JSONB columns use `text()` in Exposed Table definition, serialize/deserialize in Entity

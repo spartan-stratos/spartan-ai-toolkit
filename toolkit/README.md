@@ -1,10 +1,35 @@
 # Spartan AI Toolkit
 
-> AI workflow for Engineering Managers — **35 commands in 6 packs**, full-stack Kotlin + Next.js.
+> Engineering discipline layer for AI coding tools — commands, rules, skills, agents, and packs.
 
 ---
 
-## Quick Start
+## Install
+
+Three ways to install. Pick one.
+
+### Option 1: npx (recommended)
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest
+```
+
+Interactive menu — pick your AI tool and packs. Works out of the box.
+
+```bash
+# Or specify packs directly
+npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,product
+
+# Install everything
+npx @c0x12c/spartan-ai-toolkit@latest --all
+
+# Install for Cursor instead of Claude Code
+npx @c0x12c/spartan-ai-toolkit@latest --agent=cursor
+```
+
+**Supported agents:** `claude-code` (default), `cursor`, `windsurf`, `codex`, `copilot`
+
+### Option 2: Setup script
 
 ```bash
 git clone https://github.com/spartan-stratos/spartan-ai-toolkit.git
@@ -13,164 +38,259 @@ chmod +x scripts/setup.sh
 ./scripts/setup.sh --global
 ```
 
-After setup, open any project, run `claude`, then:
+### Option 3: Claude Code plugin
 
-```
-/spartan
-```
+Search for **"Spartan AI Toolkit"** in the Claude Code plugin marketplace.
 
-The smart router will ask what you need and route to the right command.
+### Global vs Local
 
----
+- `--global` installs to `~/.claude/` — works across all projects (default)
+- `--local` installs to `./.claude/` — only this project
 
-## Why Spartan?
-
-**Commands are pre-built, high-quality prompts** for workflows where free-form chat leads to missed steps.
-
-Example: `/spartan:pr-ready` checks 6 steps (rebase, tests, lint, architecture, security, PR description) — devs typically forget 3 of those 6.
-
-**Not everything needs a command.** Talk to Claude directly for explanations, small code changes (< 30 min), or brainstorming. Use commands for structured workflows with checklists.
+After install, open any project, run `claude`, then type `/spartan`.
 
 ---
 
-## 3 Layers
+## Pick Your Packs
 
+Packs group commands, rules, skills, and agents by use case. **Core is always installed.** Pick the rest based on what you're building.
+
+### "I'm building a Kotlin + Micronaut backend"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  Layer 1: Superpowers  (always on, automatic)                │
-│  "help me plan X"   → brainstorm → spec → plan             │
-│  "debug this"       → 4-phase root cause investigation      │
-│  "review this"      → two-stage code review                 │
-├─────────────────────────────────────────────────────────────┤
-│  Layer 2: Spartan Commands  (on-demand, precision tools)     │
-│  /spartan            → smart router: asks what you need     │
-│  /spartan:quickplan  → spec+plan+branch in one shot         │
-│  /spartan:pr-ready   → full checklist before creating PR    │
-│  ... 35 commands total (6 packs)                             │
-├─────────────────────────────────────────────────────────────┤
-│  Layer 3: GSD v5  (for large multi-session projects)        │
-│  /spartan:project new → decompose → plan → wave-execute     │
-│  Agent memory: .memory/ — persistent project knowledge      │
-│  Wave execution: parallel work across Claude Code tabs      │
-└─────────────────────────────────────────────────────────────┘
+
+This pulls in `backend-micronaut` + its dependencies (`database` and `shared-backend` auto-included). You get migration commands, API design rules, Kotlin coding standards, test patterns, and two expert agents.
+
+### "I'm building a React + Next.js frontend"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=frontend-react
+```
+
+You get Next.js scaffolding, Figma-to-code, E2E testing setup, frontend review, and the UI/UX design skill.
+
+### "Full-stack Kotlin + Next.js"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,frontend-react
+```
+
+### "I'm running a multi-week project"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,project-mgmt
+```
+
+Adds project lifecycle, phases, workstreams, and GSD v5 wave execution on top of your backend tools.
+
+### "I'm exploring startup ideas"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=research
+```
+
+Research pack pulls in `product` as a dependency. You get brainstorming, validation, market research, competitor teardowns, pitch materials, and investor outreach.
+
+### "Give me everything"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --all
 ```
 
 ---
 
-## 3 Journeys
+## All Packs
 
-### 🟢 New Project → [Journey A]
-```
-/spartan:init-project → kotlin-service / next-app → gsd-upgrade → [daily tasks]
-```
+| Pack | Category | Depends on | What you get |
+|------|----------|------------|--------------|
+| **core** | Core | — | Always installed. quickplan, debug, pr-ready, daily, init-project, safety commands |
+| **backend-micronaut** | Backend | database, shared-backend | Kotlin service scaffold, code review, testcontainers, API/DB/Kotlin rules, 5 skills, 2 agents |
+| **backend-nodejs** | Backend | database, shared-backend | Coming soon |
+| **backend-python** | Backend | database, shared-backend | Coming soon |
+| **frontend-react** | Frontend | — | Next.js app/feature scaffold, Figma-to-code, E2E, frontend review, UI/UX skill |
+| **project-mgmt** | Planning | — | Project lifecycle, phases, workstreams, GSD upgrade, forensics, brownfield, codebase mapping |
+| **product** | Planning | — | Think-before-build, validate, teardown, interview, lean canvas, brainstorm |
+| **ops** | Ship | — | Deploy + env-setup |
+| **research** | Research | product | Full startup pipeline — kickoff to investor outreach, 10 skills, 2 agents |
 
-### 🔵 Existing Project → [Journey B]
-```
-/spartan:brownfield → init-project → [daily tasks]
-```
-
-### 🟡 Daily Tasks → [Journey C] (most used)
-```
-daily → quickplan → [code with Superpowers] → pr-ready → deploy
-```
-
-Details: see the **[README](../README.md)** for full command table and pack examples.
+Hidden packs (`database`, `shared-backend`) get pulled in as dependencies — you don't pick them directly.
 
 ---
 
-## 35 Commands
+## Commands
 
-### Start (project setup)
-| Command | When to use |
-|---|---|
-| `/spartan` | **Not sure which command** → smart router asks + routes |
-| `/spartan:project [action]` | Large project lifecycle: `new`, `status`, `milestone-new`, `milestone-complete`, `milestone-summary`, `manager` |
-| `/spartan:phase [action] [N]` | Phase lifecycle: `discuss`, `plan`, `execute`, `verify` |
-| `/spartan:init-project [name]` | Auto-generate CLAUDE.md from codebase scan |
-| `/spartan:brownfield [svc]` | Entering unfamiliar codebase — map before touching |
-| `/spartan:kotlin-service [name]` | Scaffold new Micronaut microservice |
-| `/spartan:next-app [name]` | Scaffold new Next.js app |
-| `/spartan:gsd-upgrade [mode]` | Upgrade GSD v5 (memory + waves) |
-| `/spartan:workstreams [action]` | Parallel workstreams: `list`, `create`, `switch`, `progress`, `complete` |
-| `/spartan:forensics "problem"` | Post-mortem investigation for failed workflows |
+All commands start with `/spartan:` (e.g., `/spartan:quickplan "task"`).
 
-### Build (daily task work)
-| Command | When to use |
-|---|---|
-| `/spartan:quickplan "task"` | Task < 1 day — spec+plan+branch |
-| `/spartan:next-feature [name]` | Add feature to existing Next.js app |
-| `/spartan:debug "symptom"` | Bug with unclear root cause |
-| `/spartan:figma-to-code [url]` | Figma MCP → production React |
-| `/spartan:migration "desc"` | Create Flyway migration |
+Type `/spartan` to get the smart router — it asks what you need and picks the right command.
 
-### Ship (review + deploy)
-| Command | When to use |
-|---|---|
-| `/spartan:pr-ready` | Before creating any PR (don't skip) |
-| `/spartan:review` | PR review with Kotlin/Micronaut conventions |
-| `/spartan:fe-review` | PR review with Next.js conventions |
-| `/spartan:deploy [svc] [target]` | Deploy + verify |
+### Core (always installed)
+| Command | What it does |
+|---------|-------------|
+| `quickplan "task"` | Task < 1 day — spec + plan + branch in one shot |
+| `daily` | Standup summary from git history |
+| `debug "symptom"` | 4-phase root cause investigation |
+| `pr-ready` | Full checklist before creating any PR |
+| `init-project` | Auto-generate CLAUDE.md from codebase scan |
+| `context-save` | Save session state to resume later |
+| `update` | Check for toolkit updates |
+| `careful` | Warn before destructive ops |
+| `freeze <dir>` | Lock edits to one directory |
+| `unfreeze` | Remove directory lock |
+| `guard <dir>` | careful + freeze combined |
 
-### Setup (integration, as-needed)
-| Command | When to use |
-|---|---|
-| `/spartan:e2e [feature]` | Setup Playwright E2E testing |
-| `/spartan:testcontainer [type]` | Setup Testcontainers |
-| `/spartan:env-setup [svc]` | Audit env vars |
+### Backend (backend-micronaut pack)
+| Command | What it does |
+|---------|-------------|
+| `kotlin-service "name"` | Scaffold new Micronaut microservice |
+| `review` | PR review with Kotlin/Micronaut conventions |
+| `testcontainer "type"` | Setup Testcontainers integration testing |
+| `migration "desc"` | Create Flyway database migration |
 
-### Ops (routine)
-| Command | When to use |
-|---|---|
-| `/spartan:daily` | Standup summary |
-| `/spartan:context-save` | Save session → resume later |
-| `/spartan:update` | Check for updates + upgrade toolkit |
+### Frontend (frontend-react pack)
+| Command | What it does |
+|---------|-------------|
+| `next-app "name"` | Scaffold new Next.js app |
+| `next-feature "name"` | Add feature to existing Next.js app |
+| `fe-review` | PR review with Next.js conventions |
+| `figma-to-code "url"` | Figma design to production React |
+| `e2e "feature"` | Setup Playwright E2E testing |
 
-### Safety (guardrails)
-| Command | When to use |
-|---|---|
-| `/spartan:careful` | Warn before destructive ops (rm, DROP, force-push) |
-| `/spartan:freeze <dir>` | Lock edits to one directory only |
-| `/spartan:unfreeze` | Remove directory lock |
-| `/spartan:guard <dir>` | Careful + freeze combined. Max safety. |
+### Planning (project-mgmt pack)
+| Command | What it does |
+|---------|-------------|
+| `project [action]` | Large project lifecycle (new, status, milestone) |
+| `phase [action]` | Phase lifecycle (discuss, plan, execute, verify) |
+| `workstreams [action]` | Parallel work tracks |
+| `gsd-upgrade` | Upgrade to GSD v5 with memory + waves |
+| `forensics "problem"` | Post-mortem for failed workflows |
+| `brownfield "svc"` | Map unfamiliar codebase before touching it |
+| `map-codebase` | Deep codebase analysis with parallel agents |
+
+### Product (product pack)
+| Command | What it does |
+|---------|-------------|
+| `think` | Guided thinking before coding |
+| `validate` | Score an idea — GO / TEST MORE / KILL |
+| `teardown` | Deep competitor analysis |
+| `interview` | Mom Test interview questions |
+| `lean-canvas` | Fill out a 9-block Lean Canvas |
+| `brainstorm` | Generate and rank ideas |
+
+### Ship (ops pack)
+| Command | What it does |
+|---------|-------------|
+| `deploy "svc" "target"` | Deploy + verify |
+| `env-setup "svc"` | Audit env vars across environments |
+
+### Research (research pack)
+| Command | What it does |
+|---------|-------------|
+| `kickoff` | Start new idea — brainstorm + validate |
+| `deep-dive` | Market research + competitor teardowns |
+| `full-run` | Full pipeline from brainstorm to outreach |
+| `fundraise` | Pitch materials + investor outreach |
+| `research` | Deep research with source checking |
+| `pitch` | Investor-facing materials |
+| `outreach` | Draft investor emails |
+| `content` | Turn ideas into platform-native content |
+| `write` | Write blog posts and articles |
 
 ---
 
-## Stack
+## Skills
+
+Skills give Claude deeper knowledge in specific areas. They're loaded automatically when you use related commands.
+
+| Skill | Pack | What it does |
+|-------|------|-------------|
+| `api-endpoint-creator` | backend-micronaut | Generate Controller → Manager → Repository stack |
+| `database-table-creator` | database | SQL migration → Table → Entity → Repository → Tests |
+| `backend-api-design` | backend-micronaut | RPC-style API design patterns |
+| `database-patterns` | database | Schema design, migrations, Exposed ORM |
+| `kotlin-best-practices` | backend-micronaut | Null safety, Either, coroutines |
+| `testing-strategies` | backend-micronaut | Integration test patterns for Micronaut |
+| `security-checklist` | backend-micronaut | Auth, validation, OWASP prevention |
+| `ui-ux-pro-max` | frontend-react | Design intelligence — styles, palettes, font pairings, stacks |
+| `brainstorm` | research | Idea generation and ranking |
+| `idea-validation` | research | Score ideas with structured checklist |
+| `market-research` | research | Market sizing, trends, opportunities |
+| `competitive-teardown` | research | Deep competitor analysis |
+| `deep-research` | research | Multi-source research with citations |
+| `investor-materials` | research | Pitch deck, one-pager, financial model |
+| `investor-outreach` | research | Investor targeting and outreach |
+| `article-writing` | research | Long-form content creation |
+| `content-engine` | research | Content strategy and production |
+| `startup-pipeline` | research | Full startup research pipeline |
+
+---
+
+## Agents
+
+| Agent | Pack | What it does |
+|-------|------|-------------|
+| `micronaut-backend-expert` | backend-micronaut | Micronaut framework, database design, API architecture |
+| `solution-architect-cto` | backend-micronaut | System design, scalability, tech decisions |
+| `idea-killer` | research | Stress-test ideas, find weaknesses |
+| `research-planner` | research | Plan and coordinate research workflows |
+
+---
+
+## Rules
+
+Rules are enforced automatically every session. No action needed — they're active as long as the pack is installed.
+
+| Rule | Pack |
+|------|------|
+| `NAMING_CONVENTIONS` | core |
+| `ARCHITECTURE` | shared-backend |
+| `SCHEMA` | database |
+| `ORM_AND_REPO` | database |
+| `TRANSACTIONS` | database |
+| `KOTLIN` | backend-micronaut |
+| `CONTROLLERS` | backend-micronaut |
+| `SERVICES_AND_BEANS` | backend-micronaut |
+| `API_DESIGN` | backend-micronaut |
+| `RETROFIT_PLACEMENT` | backend-micronaut |
+| `FRONTEND` | frontend-react |
+
+---
+
+## Using with Other AI Tools
+
+All content is standard markdown. The npx installer supports multiple agents:
+
+```bash
+# Cursor — installs rules to .cursor/rules/
+npx @c0x12c/spartan-ai-toolkit@latest --agent=cursor
+
+# Windsurf — installs rules to .windsurf/rules/
+npx @c0x12c/spartan-ai-toolkit@latest --agent=windsurf
+
+# Codex — installs to .codex/
+npx @c0x12c/spartan-ai-toolkit@latest --agent=codex
+
+# Copilot — installs to .github/copilot/
+npx @c0x12c/spartan-ai-toolkit@latest --agent=copilot
+```
+
+For other tools, copy the rule files from `toolkit/rules/` into your tool's config directory.
+
+---
+
+## Target Stack
+
+Rules and skills are tuned for this stack, but the command framework works with anything:
 
 | Layer | Technology |
-|---|---|
+|-------|-----------|
 | Backend | Kotlin + Micronaut |
-| Frontend | React + Next.js + TypeScript (App Router) |
-| Container | Docker |
-| Orchestration | Kubernetes |
-| IaC | Terraform |
-| Platforms | Railway (staging) · AWS (production) · GCP |
+| Frontend | React + Next.js + TypeScript |
+| Database | PostgreSQL |
 | CI/CD | GitHub Actions |
 
----
-
-## Files
-
-```
-toolkit/
-├── CLAUDE.md                      ← Workflow brain (Claude reads this)
-├── scripts/setup.sh               ← One-command installer (8 steps)
-├── rules/project/                 ← Company rules (synced to all projects)
-│   ├── CORE_RULES.md             ← !! banned, Either, null safety
-│   ├── ARCHITECTURE_RULES.md     ← Controller → Manager → Repo
-│   ├── API_RULES.md              ← Query params only, RPC-style
-│   ├── DATABASE_RULES.md         ← No FK, TEXT, soft deletes
-│   ├── FRONTEND_RULES.md         ← Build check, cleanup imports
-│   ├── CONTROLLER_TEST_STANDARDS ← @MicronautTest patterns
-│   ├── NAMING_CONVENTIONS.md     ← snake_case DB, camelCase Kotlin
-│   ├── RETROFIT_CLIENT_PLACEMENT ← Kapt conflict rules
-│   └── TRANSACTION_RULES.md      ← Multi-table transaction pattern
-├── skills/                        ← Company skills (8 sets)
-├── agents/                        ← Expert agents (2)
-└── .claude/commands/
-    ├── spartan.md                 ← Smart router (entry point)
-    └── spartan/                   ← 34 slash commands
-```
+> **Different stack?** Fork the repo, edit the rules and skills, run the installer. Commands work with any language or framework.
 
 ---
 

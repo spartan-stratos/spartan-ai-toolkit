@@ -1,7 +1,7 @@
 {
-  "name": "spartan-ai-toolkit",
-  "version": "4.1.0",
-  "description": "Engineering discipline layer for AI coding agents — 35 commands, 9 rules, 8 skills, 2 agents",
+  "name": "@c0x12c/spartan-ai-toolkit",
+  "version": "4.2.0",
+  "description": "Engineering discipline layer for AI coding agents — commands, rules, skills, agents, and packs for Claude Code",
   "type": "module",
   "bin": {
     "spartan-ai-toolkit": "./bin/cli.js"
@@ -16,7 +16,7 @@
     "claude-md/",
     "frameworks/",
     "templates/",
-    "scripts/packs.sh",
+    "packs/",
     "VERSION",
     ".claude-plugin/"
   ],
@@ -35,7 +35,14 @@
     "type": "git",
     "url": "https://github.com/spartan-stratos/spartan-ai-toolkit"
   },
+  "scripts": {
+    "test": "node --test lib/resolver.test.js",
+    "prepublishOnly": "node scripts/compile-packs.js"
+  },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.1"
   }
 }

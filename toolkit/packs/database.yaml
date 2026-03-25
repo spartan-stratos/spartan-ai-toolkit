@@ -1,0 +1,21 @@
+name: database
+description: "Database patterns, migrations, Exposed ORM"
+category: Backend
+priority: 5
+hidden: true
+
+commands:
+  - migration
+
+rules:
+  - database/SCHEMA.md
+  - database/ORM_AND_REPO.md
+  - database/TRANSACTIONS.md
+
+skills:
+  - database-patterns
+  - database-table-creator
+
+agents: []
+claude-sections:
+  - 05-database.md

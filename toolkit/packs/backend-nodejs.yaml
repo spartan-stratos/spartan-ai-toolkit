@@ -1,0 +1,15 @@
+name: backend-nodejs
+description: "Node.js backend (coming soon)"
+category: Backend
+priority: 12
+hidden: false
+coming-soon: true
+depends:
+  - database
+  - shared-backend
+
+commands: []
+rules: []
+skills: []
+agents: []
+claude-sections: []

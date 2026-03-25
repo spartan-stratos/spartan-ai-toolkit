@@ -8,9 +8,9 @@
   "plugins": [
     {
       "name": "spartan-ai-toolkit",
-      "description": "35 commands, 9 rules, 8 skills, 2 agents — organized in 6 packs (core, backend, frontend, project-mgmt, product, ops)",
+      "description": "44 commands, 11 rules, 18 skills, 4 agents — organized in 11 packs with dependencies",
       "source": "./",
-      "version": "4.1.0"
+      "version": "4.2.0"
     }
   ]
 }

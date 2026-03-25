@@ -3,12 +3,13 @@
   <p align="center">
     <strong>Engineering discipline layer for AI coding tools</strong>
     <br />
-    44 commands &middot; 7 packs &middot; 18 skills &middot; 4 agents &middot; 9 rules &middot; 13 frameworks &middot; 6 templates
+    Commands &middot; Rules &middot; Skills &middot; Agents &middot; Packs
   </p>
   <p align="center">
-    <a href="#quick-start">Quick Start</a> &middot;
-    <a href="#packs">Packs</a> &middot;
-    <a href="#compatibility">Compatibility</a> &middot;
+    <a href="#install">Install</a> &middot;
+    <a href="#pick-your-packs">Pick Your Packs</a> &middot;
+    <a href="#what-to-do-first">First Steps</a> &middot;
+    <a href="#which-command-do-i-use">Command Guide</a> &middot;
     <a href="CONTRIBUTING.md">Contributing</a>
   </p>
 </p>
@@ -25,19 +26,33 @@ Spartan fixes this. It's a set of **commands, rules, skills, and workflows** tha
 |----------------|-------------|
 | "Create a PR" &rarr; pushes without tests or description | `/spartan:pr-ready` &rarr; rebase, tests, lint, security, auto PR description |
 | "Debug this" &rarr; guesses a fix, hopes for the best | `/spartan:debug` &rarr; reproduce, isolate, root-cause, verify |
-| Team of 5 devs &rarr; each gets different code style | 9 rule files &rarr; same standards for everyone, every session |
+| Team of 5 devs &rarr; each gets different code style | Rule files &rarr; same standards for everyone, every session |
 | 3-week feature &rarr; no plan, lost context | `/spartan:project new` &rarr; roadmap, phases, wave execution, persistent memory |
 
 > Not everything needs a command. Questions, small code changes (&lt; 30 min) &mdash; just talk to your AI directly. Commands are for **structured workflows where missing steps cause real problems**.
 
 ---
 
-## Quick Start
+## Install
+
+Three ways to install. Pick one.
 
 ### Option 1: npx (recommended)
 
 ```bash
-npx spartan-ai-toolkit@latest
+npx @c0x12c/spartan-ai-toolkit@latest
+```
+
+This opens an interactive menu. Pick your AI tool and packs. Done in 30 seconds.
+
+You can also skip the menu:
+
+```bash
+# Pick specific packs
+npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,frontend-react
+
+# Install everything
+npx @c0x12c/spartan-ai-toolkit@latest --all
 ```
 
 ### Option 2: Setup script
@@ -50,140 +65,235 @@ chmod +x scripts/setup.sh && ./scripts/setup.sh --global
 
 ### Option 3: Claude Code plugin
 
-Search for "Spartan AI Toolkit" in the Claude Code plugin marketplace.
+Search for **"Spartan AI Toolkit"** in the Claude Code plugin marketplace.
 
-After install, open any project and type `/spartan`. The smart router asks what you need and routes to the right command.
+### Global vs Local
 
----
+- **`--global`** (default) &mdash; installs to `~/.claude/`, works across all your projects
+- **`--local`** &mdash; installs to `./.claude/` in current project only
 
-## Packs
+### Not using Claude Code?
 
-Pick what fits your project. Core is always installed.
-
-| Pack | Commands | Rules | Skills | Agents | Best for |
-|------|----------|-------|--------|--------|----------|
-| **core** | 11 | &mdash; | &mdash; | &mdash; | Everyone |
-| **backend** | 4 | 8 | 7 | 2 | Kotlin + Micronaut |
-| **frontend** | 5 | 2 | 1 | &mdash; | React + Next.js |
-| **project-mgmt** | 7 | &mdash; | &mdash; | &mdash; | Multi-day projects |
-| **product** | 6 | &mdash; | &mdash; | &mdash; | Product thinking |
-| **ops** | 2 | &mdash; | &mdash; | &mdash; | Deploy & infra |
-| **research** | 9 | &mdash; | 10 | 2 | Startup pipeline |
+The installer supports 5 AI tools:
 
 ```bash
-# Pick from menu
-./scripts/setup.sh --global
-
-# Specify packs
-./scripts/setup.sh --global --packs=backend,product
-
-# Install everything
-./scripts/setup.sh --global --all
+npx @c0x12c/spartan-ai-toolkit@latest --agent=claude-code  # default
+npx @c0x12c/spartan-ai-toolkit@latest --agent=cursor
+npx @c0x12c/spartan-ai-toolkit@latest --agent=windsurf
+npx @c0x12c/spartan-ai-toolkit@latest --agent=codex
+npx @c0x12c/spartan-ai-toolkit@latest --agent=copilot
 ```
 
----
-
-## Commands (44)
-
-All commands are prefixed with `/spartan:` (e.g., `/spartan:quickplan "task"`).
-
-| Pack | Commands |
-|------|----------|
-| **core** | `quickplan`, `daily`, `debug`, `pr-ready`, `init-project`, `context-save`, `update`, `careful`, `freeze`, `unfreeze`, `guard` |
-| **backend** | `kotlin-service`, `migration`, `review`, `testcontainer` |
-| **frontend** | `next-app`, `next-feature`, `fe-review`, `figma-to-code`, `e2e` |
-| **project-mgmt** | `project`, `phase`, `workstreams`, `gsd-upgrade`, `forensics`, `brownfield`, `map-codebase` |
-| **product** | `think`, `validate`, `teardown`, `interview`, `lean-canvas`, `brainstorm` |
-| **ops** | `deploy`, `env-setup` |
-| **research** | `kickoff`, `deep-dive`, `full-run`, `fundraise`, `research`, `pitch`, `outreach`, `content`, `write` |
+All content is standard markdown &mdash; it works with any AI coding tool.
 
 ---
 
-## Skills (18)
+## Pick Your Packs
 
-| Skill | Pack | What it does |
-|-------|------|-------------|
-| `api-endpoint-creator` | backend | Generate Controller &rarr; Manager &rarr; Repository stack |
-| `database-table-creator` | backend | SQL migration &rarr; Table &rarr; Entity &rarr; Repository &rarr; Tests |
-| `backend-api-design` | backend | RPC-style API design patterns |
-| `database-patterns` | backend | Schema design, migrations, Exposed ORM |
-| `kotlin-best-practices` | backend | Null safety, Either, coroutines |
-| `testing-strategies` | backend | Integration test patterns for Micronaut |
-| `security-checklist` | backend | Auth, validation, OWASP prevention |
-| `ui-ux-pro-max` | frontend | Design system: 67 styles, 96 palettes, 13 stacks |
-| `brainstorm` | research | Idea generation and ranking |
-| `idea-validation` | research | Score ideas &mdash; GO / TEST MORE / KILL |
-| `market-research` | research | Market sizing, trends, opportunities |
-| `competitive-teardown` | research | Deep competitor analysis |
-| `deep-research` | research | Multi-source research with citations |
-| `investor-materials` | research | Pitch deck, one-pager, financial model |
-| `investor-outreach` | research | Investor targeting and outreach |
-| `article-writing` | research | Long-form content creation |
-| `content-engine` | research | Content strategy and production |
-| `startup-pipeline` | research | Full startup research pipeline |
+Packs group commands, rules, skills, and agents by use case. **Core is always installed.** You pick the rest.
 
----
+Don't overthink it &mdash; find your situation below and copy the command.
 
-## Agents (4)
+### "I build Kotlin + Micronaut backends"
 
-| Agent | Expertise |
-|-------|-----------|
-| `micronaut-backend-expert` | Micronaut framework, database design, API architecture |
-| `solution-architect-cto` | System design, scalability, tech decisions |
-| `idea-killer` | Stress-test ideas, find weaknesses |
-| `research-planner` | Plan and coordinate research workflows |
-
----
-
-## Rules (9)
-
-Enforced automatically every session.
-
-| Rule | What it enforces |
-|------|-----------------|
-| `CORE_RULES` | No `!!`, Either error handling, null safety |
-| `ARCHITECTURE_RULES` | Controller &rarr; Manager &rarr; Repository layers |
-| `API_RULES` | RPC-style APIs, query params only |
-| `DATABASE_RULES` | No foreign keys, TEXT not VARCHAR, soft deletes |
-| `FRONTEND_RULES` | Build check, cleanup imports, null safety |
-| `CONTROLLER_TEST_STANDARDS` | @MicronautTest integration patterns |
-| `NAMING_CONVENTIONS` | snake_case DB/JSON, camelCase code |
-| `RETROFIT_CLIENT_PLACEMENT` | No Retrofit in kapt modules |
-| `TRANSACTION_RULES` | Multi-table ops must use transactions |
-
----
-
-## Frameworks & Templates
-
-**13 frameworks** in `toolkit/frameworks/` &mdash; Lean Canvas, Design Sprint, Jobs To Be Done, Mom Test, Value Proposition Canvas, and more. Used by research and product commands.
-
-**6 templates** in `toolkit/templates/` &mdash; Competitor analysis, idea canvas, PRD, user interview, validation checklist, project readme.
-
----
-
-## Compatibility
-
-**Native support:** Claude Code &mdash; slash commands, skills, agents, rules, npx installer, plugin marketplace.
-
-**Works with any AI tool:** All content is standard markdown. Rules, frameworks, templates, and skill definitions can be added to any AI coding tool's system instructions &mdash; Codex, Gemini, Copilot, Cursor, Windsurf, etc.
-
----
-
-## Telegram Bridge
-
-Control your AI coding sessions from your phone. Provider-based architecture &mdash; currently supports Telegram.
-
-```
-Phone (Telegram) <-> Bridge (Node.js) <-> Claude Agent SDK <-> Claude API
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut
 ```
 
-See [`bridges/`](bridges/) for setup and docs.
+You get: service scaffolding, migration commands, PR review with Kotlin conventions, testcontainers setup, plus 9 rule files (API design, database, Kotlin standards, etc.), 7 skills (endpoint creator, test patterns, security), and 2 expert agents.
+
+Dependencies `database` and `shared-backend` are pulled in automatically.
+
+### "I build React + Next.js frontends"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=frontend-react
+```
+
+You get: Next.js app/feature scaffolding, Figma-to-code, Playwright E2E setup, frontend PR review, UI/UX design skill, and a frontend rule file.
+
+### "I do full-stack (Kotlin + Next.js)"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,frontend-react
+```
+
+Both packs, all their rules and skills. Most common setup for our team.
+
+### "I'm running a multi-week project"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,project-mgmt
+```
+
+Add `project-mgmt` to your stack pack. You get project lifecycle, milestone tracking, phases, parallel workstreams, and GSD v5 wave execution.
+
+### "I'm exploring startup ideas"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=research
+```
+
+Research pulls in `product` as a dependency. You get the full pipeline: brainstorm &rarr; validate &rarr; market research &rarr; competitor teardowns &rarr; pitch materials &rarr; investor outreach.
+
+### "Just give me everything"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --all
+```
+
+### All Packs at a Glance
+
+| Pack | Category | Auto-pulls | What's inside |
+|------|----------|------------|---------------|
+| **core** | Core | &mdash; | Always installed. Daily workflow commands + safety guardrails |
+| **backend-micronaut** | Backend | database, shared-backend | Kotlin + Micronaut: commands, rules, skills, agents |
+| **backend-nodejs** | Backend | database, shared-backend | Coming soon |
+| **backend-python** | Backend | database, shared-backend | Coming soon |
+| **frontend-react** | Frontend | &mdash; | React + Next.js: commands, rules, skills |
+| **project-mgmt** | Planning | &mdash; | Project lifecycle, phases, workstreams |
+| **product** | Planning | &mdash; | Product thinking before building |
+| **ops** | Ship | &mdash; | Deploy + environment management |
+| **research** | Research | product | Full startup pipeline: idea to investor |
+
+---
+
+## What to Do First
+
+You installed the toolkit. Now what?
+
+### Step 1: Open a project and test it
+
+```
+cd your-project
+claude
+```
+
+Then type:
+
+```
+/spartan
+```
+
+The smart router will ask what you need and route you to the right command. If you don't know which command to use, always start here.
+
+### Step 2: Generate your project's CLAUDE.md
+
+```
+/spartan:init-project
+```
+
+This scans your codebase and generates a CLAUDE.md file with your stack, conventions, and domain context. Claude reads this every session so it knows your project.
+
+### Step 3: Start your day
+
+```
+/spartan:daily
+```
+
+Generates a standup summary from your recent git history. Good way to pick up where you left off.
+
+### Step 4: Plan a task
+
+```
+/spartan:quickplan "add user profile endpoint"
+```
+
+Creates a spec + plan + git branch in one shot. Good for tasks under a day.
+
+For bigger work (multi-day), use `/spartan:project new` instead.
+
+---
+
+## Which Command Do I Use?
+
+Don't memorize the list. Use `/spartan` and it'll figure it out. But if you want to go direct:
+
+### "I need to start a task"
+
+| What you're doing | Command |
+|-------------------|---------|
+| Small task (< 1 day) | `/spartan:quickplan "task"` |
+| Big project (multi-day) | `/spartan:project new` |
+| New Kotlin microservice | `/spartan:kotlin-service "name"` |
+| New Next.js app | `/spartan:next-app "name"` |
+| New feature in existing Next.js | `/spartan:next-feature "name"` |
+| New database migration | `/spartan:migration "description"` |
+| Joining unfamiliar codebase | `/spartan:brownfield "service"` |
+
+### "I need to fix something"
+
+| What you're doing | Command |
+|-------------------|---------|
+| Bug with unclear cause | `/spartan:debug "symptom"` |
+| Something broke in workflow | `/spartan:forensics "problem"` |
+
+### "I need to ship"
+
+| What you're doing | Command |
+|-------------------|---------|
+| Ready to create PR | `/spartan:pr-ready` |
+| Review a backend PR | `/spartan:review` |
+| Review a frontend PR | `/spartan:fe-review` |
+| Deploy a service | `/spartan:deploy "service" "target"` |
+
+### "I need to think before building"
+
+| What you're doing | Command |
+|-------------------|---------|
+| Think through a problem first | `/spartan:think` |
+| Validate an idea | `/spartan:validate` |
+| Analyze a competitor | `/spartan:teardown` |
+| Interview users | `/spartan:interview` |
+| Build a lean canvas | `/spartan:lean-canvas` |
+
+### "I need to research"
+
+| What you're doing | Command |
+|-------------------|---------|
+| Deep research on a topic | `/spartan:research` |
+| Full startup pipeline | `/spartan:full-run` |
+| Market research + competitors | `/spartan:deep-dive` |
+| Create pitch materials | `/spartan:pitch` |
+| Write investor emails | `/spartan:outreach` |
+
+### "I need to manage a project"
+
+| What you're doing | Command |
+|-------------------|---------|
+| Run a project phase | `/spartan:phase discuss/plan/execute/verify` |
+| Manage workstreams | `/spartan:workstreams list/create/switch` |
+| Upgrade to GSD v5 | `/spartan:gsd-upgrade` |
+| Map an entire codebase | `/spartan:map-codebase` |
+
+### "I need safety"
+
+| What you're doing | Command |
+|-------------------|---------|
+| Warn before destructive ops | `/spartan:careful` |
+| Lock edits to one directory | `/spartan:freeze src/api` |
+| Remove the lock | `/spartan:unfreeze` |
+| Max safety (both combined) | `/spartan:guard src/api` |
+
+---
+
+## What Gets Installed
+
+Spartan installs four types of content:
+
+**Commands** &mdash; slash commands like `/spartan:quickplan`. Pre-built prompts for structured workflows.
+
+**Rules** &mdash; coding standards enforced every session. Things like "no `!!` in Kotlin", "TEXT not VARCHAR", "Controller &rarr; Manager &rarr; Repository layers". You don't call these &mdash; they're always active.
+
+**Skills** &mdash; deep knowledge in specific areas. API endpoint patterns, database design, test strategies, UI/UX design intelligence. Claude loads them when relevant.
+
+**Agents** &mdash; expert personas. A Micronaut backend expert, a CTO for architecture decisions, an idea-killer for stress-testing, a research planner for coordinating research.
 
 ---
 
 ## Target Stack
 
-Rules and skills are tuned for this stack, but the command framework works with anything:
+Rules and skills are tuned for:
 
 | Layer | Technology |
 |-------|-----------|
@@ -192,7 +302,19 @@ Rules and skills are tuned for this stack, but the command framework works with 
 | Database | PostgreSQL |
 | CI/CD | GitHub Actions |
 
-> **Using a different stack?** Fork the repo, edit the rules and skills, run `setup.sh --global`. The command framework works with any language or framework.
+> **Different stack?** Fork the repo, edit the rules and skills, run the installer. The command framework works with any language or framework.
+
+---
+
+## Telegram Bridge
+
+Control your AI coding sessions from your phone. Provider-based &mdash; currently supports Telegram.
+
+```
+Phone (Telegram) <-> Bridge (Node.js) <-> Claude Agent SDK <-> Claude API
+```
+
+See [`bridges/`](bridges/) for setup.
 
 ---
 

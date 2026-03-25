@@ -1,0 +1,14 @@
+name: shared-backend
+description: "Shared backend architecture concepts"
+category: Backend
+priority: 6
+hidden: true
+
+commands: []
+
+rules:
+  - shared-backend/ARCHITECTURE.md
+
+skills: []
+agents: []
+claude-sections: []

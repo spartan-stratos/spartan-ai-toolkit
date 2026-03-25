@@ -1,0 +1,25 @@
+name: core
+description: "Core workflow (always installed)"
+category: Core
+priority: 0
+hidden: false
+
+commands:
+  - quickplan
+  - daily
+  - context-save
+  - update
+  - debug
+  - pr-ready
+  - init-project
+  - careful
+  - freeze
+  - unfreeze
+  - guard
+
+rules:
+  - core/NAMING_CONVENTIONS.md
+
+skills: []
+agents: []
+claude-sections: []

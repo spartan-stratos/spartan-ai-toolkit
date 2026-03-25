@@ -1,4 +1,4 @@
-# Transaction Rules for Database Operations
+# Transaction Rules
 
 ## CRITICAL: Multi-Table Operations Must Use Transactions
 
@@ -30,10 +30,10 @@ class DefaultSomeManager(
       try {
         // Operation 1 on table 1
         val result1 = repository1.insert(entity1)
-        
+
         // Operation 2 on table 2
         val result2 = repository2.insert(entity2)
-        
+
         // Return success
         Result.right()
       } catch (e: Exception) {
@@ -309,93 +309,3 @@ Before implementing any balance update, ask:
 - [ ] Am I updating multiple records in a loop?
 
 If ANY answer is YES → **USE ATOMIC SQL OPERATIONS**
-
----
-
-## Frontend: Optimistic Updates Pattern
-
-### 13. Avoid UI Flash/Reload After Mutations
-
-**Any mutation (create, update, delete) should use optimistic updates instead of full query invalidation.**
-
-#### Why This Is Critical
-- Prevents jarring UI flash/white screen during refetch
-- Provides instant feedback to users
-- Better perceived performance
-
-#### Bad Pattern (UI Flash)
-```typescript
-// BAD - Triggers full refetch, causing flash
-const mutation = useMutation({
-  mutationFn: (data) => api.create(data),
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['feed'] })  // Flash!
-  },
-})
-```
-
-#### Good Pattern (Optimistic Update)
-```typescript
-// GOOD - Updates cache directly, no flash
-const mutation = useMutation({
-  mutationFn: (data) => api.create(data),
-  onSuccess: (newItem) => {
-    // Update cache directly by prepending new item
-    queryClient.setQueryData(['feed'], (oldData: any) => {
-      if (!oldData?.pages) return oldData
-      return {
-        ...oldData,
-        pages: oldData.pages.map((page: any, index: number) => {
-          if (index === 0) {
-            return { ...page, items: [newItem, ...(page.items || [])] }
-          }
-          return page
-        }),
-      }
-    })
-
-    // Invalidate related queries silently (no immediate refetch)
-    queryClient.invalidateQueries({ queryKey: ['related'], refetchType: 'none' })
-  },
-})
-```
-
-### 14. Use placeholderData for Query Stability
-
-```typescript
-// GOOD - Keep previous data while refetching
-const { data } = useInfiniteQuery({
-  queryKey: ['feed'],
-  queryFn: fetchFeed,
-  placeholderData: (previousData) => previousData,  // No flash on refetch
-})
-```
-
-### 15. Optimistic Delete with Rollback
-
-```typescript
-const deleteMutation = useMutation({
-  mutationFn: (id: string) => api.delete(id),
-  onMutate: async (id) => {
-    // Cancel outgoing refetches
-    await queryClient.cancelQueries({ queryKey: ['items'] })
-
-    // Save current state for rollback
-    const previousData = queryClient.getQueryData(['items'])
-
-    // Optimistically remove item
-    queryClient.setQueryData(['items'], (old: any) => ({
-      ...old,
-      items: old.items.filter((item: any) => item.id !== id),
-    }))
-
-    return { previousData }
-  },
-  onError: (_err, _id, context) => {
-    // Rollback on error
-    if (context?.previousData) {
-      queryClient.setQueryData(['items'], context.previousData)
-    }
-  },
-})
-```

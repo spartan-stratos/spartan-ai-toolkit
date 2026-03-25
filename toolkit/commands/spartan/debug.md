@@ -146,3 +146,11 @@ fix([scope]): [root cause description]
 - Add regression test: [test name]
 - Checked [N] similar patterns
 ```
+
+## Rules
+
+- Follow the 4 phases in order — don't skip to fixing
+- Never guess — every hypothesis must have evidence
+- Write a failing test before writing the fix
+- Change as little as possible — minimal fix, not refactor
+- Check for similar patterns in the codebase after fixing

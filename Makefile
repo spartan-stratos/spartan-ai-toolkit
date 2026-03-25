@@ -1,4 +1,4 @@
-.PHONY: setup validate lint bridge-dev bridge-start help
+.PHONY: setup validate validate-structure validate-content lint bridge-dev bridge-start help
 
 # ── Setup ──────────────────────────────────────────────
 
@@ -12,7 +12,9 @@ setup-local: ## Run the toolkit installer (local mode)
 
 # ── Validation ─────────────────────────────────────────
 
-validate: ## Check all toolkit files are in place
+validate: validate-structure validate-content ## Run all validation checks
+
+validate-structure: ## Check all toolkit files are in place
 	@echo "Checking toolkit structure..."
 	@ERRORS=0; \
 	for f in toolkit/claude-md/00-header.md \
@@ -24,7 +26,7 @@ validate: ## Check all toolkit files are in place
 	  fi; \
 	done; \
 	CMD_COUNT=$$(ls toolkit/commands/spartan/*.md 2>/dev/null | wc -l | tr -d ' '); \
-	RULE_COUNT=$$(ls toolkit/rules/project/*.md 2>/dev/null | wc -l | tr -d ' '); \
+	RULE_COUNT=$$(find toolkit/rules -name '*.md' 2>/dev/null | wc -l | tr -d ' '); \
 	SKILL_COUNT=$$(ls -d toolkit/skills/*/ 2>/dev/null | wc -l | tr -d ' '); \
 	AGENT_COUNT=$$(ls toolkit/agents/*.md 2>/dev/null | wc -l | tr -d ' '); \
 	echo "  Commands: $$CMD_COUNT"; \
@@ -37,6 +39,9 @@ validate: ## Check all toolkit files are in place
 	  exit 1; \
 	fi; \
 	echo "  All good."
+
+validate-content: ## Check content format, naming, pack sync
+	@node toolkit/scripts/validate-content.js
 
 # ── Linting ────────────────────────────────────────────
 

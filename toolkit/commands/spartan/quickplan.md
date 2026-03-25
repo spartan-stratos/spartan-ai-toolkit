@@ -112,3 +112,11 @@ Execute each task in sequence:
 
 After all tasks: run full test suite, then say:
 "All tasks complete. Ready for `/spartan:pr-ready` to prep the PR."
+
+## Rules
+
+- Max 4 tasks — if you need more, the scope is too big for quickplan
+- Every task must be one commit
+- Test first (TDD) — write the failing test before the implementation
+- Don't skip the spec approval step unless auto mode is on
+- Keep the spec under 30 lines — if it's longer, use `/spartan:phase` instead

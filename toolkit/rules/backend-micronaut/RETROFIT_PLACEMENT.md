@@ -1,7 +1,6 @@
 # Retrofit Client Placement Rules
 
-**Last Updated:** February 13, 2026
-**Reason:** Prevent kapt compilation errors with Retrofit clients
+> Full guide: use `/kotlin-best-practices` skill
 
 ---
 
@@ -14,7 +13,7 @@
 ```
 module-client/                    # NO kapt
 ├── src/main/kotlin/
-│   └── com/forge/client/
+│   └── com/yourcompany/client/
 │       ├── TemplateServiceClient.kt    ✅ Retrofit @GET/@POST
 │       ├── TerraformServiceClient.kt   ✅ Retrofit interfaces
 │       └── dto/
@@ -37,7 +36,7 @@ module-client/                    # NO kapt
 ```
 module-auth/                      # HAS kapt enabled
 ├── src/main/kotlin/
-│   └── com/forge/auth/
+│   └── com/yourcompany/auth/
 │       ├── client/
 │       │   ├── TemplateServiceClient.kt    ❌ WILL FAIL
 │       │   └── TerraformServiceClient.kt   ❌ kapt can't process
@@ -81,10 +80,10 @@ When adding new external service clients:
 ### 1. Create Client Interface in module-client
 
 ```kotlin
-package com.forge.client
+package com.yourcompany.client
 
 import arrow.core.Either
-import com.c0x12c.retrofit.ErrorResponse
+import com.yourcompany.retrofit.ErrorResponse
 import retrofit2.Call
 import retrofit2.http.*
 
@@ -98,14 +97,14 @@ interface MyServiceClient {
 ```
 
 **Key Points:**
-- ✅ Package: `com.forge.client` (NOT `com.forge.auth.client`)
+- ✅ Package: `com.yourcompany.client` (NOT `com.yourcompany.auth.client`)
 - ✅ Use full type: `Call<Either<ErrorResponse, T>>` (NOT `EitherCall<T>`)
-- ✅ Explicit imports (NOT wildcard `import com.forge.client.dto.*`)
+- ✅ Explicit imports (NOT wildcard `import com.yourcompany.client.dto.*`)
 
 ### 2. Create DTOs in module-client
 
 ```kotlin
-package com.forge.client.dto.myservice
+package com.yourcompany.client.dto.myservice
 
 // NO Micronaut annotations! ❌ @Serdeable
 data class ResourceDto(
@@ -124,14 +123,14 @@ data class CreateRequestDto(
 - ✅ Plain Kotlin data classes
 - ✅ NO `@Serdeable` annotation
 - ✅ Jackson handles serialization automatically
-- ✅ Package: `com.forge.client.dto.*`
+- ✅ Package: `com.yourcompany.client.dto.*`
 
 ### 3. Create Client Factory in module-auth
 
 ```kotlin
-package com.forge.auth.config
+package com.yourcompany.auth.config
 
-import com.forge.client.MyServiceClient
+import com.yourcompany.client.MyServiceClient
 import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
 
@@ -161,11 +160,11 @@ class MyServiceConfig(
 ### 4. Update module-auth Dependencies
 
 ```groovy
-// backend/app/module-auth/build.gradle
+// module-auth/build.gradle
 
 dependencies {
   // Client module (contains Retrofit interfaces)
-  implementation(project(":app:module-client"))
+  implementation(project(":module-client"))
 
   // Retrofit runtime (needed for creating clients in factories)
   implementation(libs.networking.retrofit)
@@ -213,7 +212,7 @@ when (type) { ... }
 ## 📐 Module Architecture
 
 ```
-forge-service/backend/
+backend/
 ├── app/
 │   ├── module-auth/              # Micronaut controllers/services
 │   │   ├── build.gradle          # HAS kapt

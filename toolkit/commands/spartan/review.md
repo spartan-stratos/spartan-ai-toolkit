@@ -4,14 +4,16 @@ description: Perform a thorough PR review following Spartan Kotlin + Micronaut c
 argument-hint: "[optional: branch name or PR description]"
 ---
 
+# Code Review: {{ args[0] | default: "current changes" }}
+
 Perform a comprehensive code review of the current changes. Use the `git diff` tool to inspect
 all modified files. Analyze the changes systematically.
 
 **Before reviewing, reference these company rules:**
-- `rules/project/CORE_RULES.md` — Null safety, Either, coroutines
-- `rules/project/ARCHITECTURE_RULES.md` — Controller → Manager → Service/Repository
-- `rules/project/API_RULES.md` — Query params only, RPC-style URLs
-- `rules/project/DATABASE_RULES.md` — No FK, TEXT not VARCHAR, soft deletes
+- `rules/backend-micronaut/KOTLIN.md` — Null safety, Either, coroutines
+- `rules/backend-micronaut/CONTROLLERS.md` — Controller → Manager → Service/Repository
+- `rules/backend-micronaut/API_DESIGN.md` — Query params only, RPC-style URLs
+- `rules/database/SCHEMA.md` — No FK, TEXT not VARCHAR, soft deletes
 
 ## Review Checklist
 
@@ -79,14 +81,22 @@ Provide review results as:
 
 ### Stage 6: Documentation Gap Analysis (from pr-reviewer agent)
 After reviewing code, check if any patterns found should be documented:
-- [ ] New architectural pattern used? → Update `rules/project/ARCHITECTURE_RULES.md`
-- [ ] New error handling pattern? → Update `rules/project/CORE_RULES.md`
-- [ ] New database pattern? → Update `rules/project/DATABASE_RULES.md`
+- [ ] New architectural pattern used? → Update `rules/shared-backend/ARCHITECTURE.md`
+- [ ] New error handling pattern? → Update `rules/backend-micronaut/KOTLIN.md`
+- [ ] New database pattern? → Update `rules/database/SCHEMA.md`
 - [ ] Recurring PR feedback theme? → Create new rule or update existing
 - [ ] New convention established? → Update CLAUDE.md or `.memory/patterns/`
 
 If documentation updates needed, list them at the end of the review:
 ```
-### 📝 Documentation Updates Needed
+### Documentation Updates Needed
 - [file]: [what to add/update and why]
 ```
+
+## Rules
+
+- Always use `git diff` to inspect actual changes — don't guess from filenames
+- Reference the company rules files before checking code
+- Every finding must include file:line reference
+- Separate "must fix" from "nice to have" — don't block PRs on style nits
+- Praise good code — reviews aren't just for finding problems

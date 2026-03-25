@@ -1,0 +1,15 @@
+name: backend-python
+description: "Python backend (coming soon)"
+category: Backend
+priority: 13
+hidden: false
+coming-soon: true
+depends:
+  - database
+  - shared-backend
+
+commands: []
+rules: []
+skills: []
+agents: []
+claude-sections: []

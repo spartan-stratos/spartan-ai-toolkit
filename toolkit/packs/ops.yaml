@@ -1,0 +1,16 @@
+name: ops
+description: "Deploy & infrastructure"
+category: Ship
+priority: 50
+hidden: false
+
+commands:
+  - deploy
+  - env-setup
+
+rules: []
+skills: []
+agents: []
+
+claude-sections:
+  - 50-ops.md

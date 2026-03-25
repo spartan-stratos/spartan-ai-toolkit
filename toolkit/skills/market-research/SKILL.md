@@ -15,17 +15,18 @@ Make research that helps decisions, not research for show.
 - Checking investor fit before outreach
 - Testing a thesis before building
 
-## Research Rules
+## Process
 
-1. Every big claim needs a source.
-2. Use recent data. Flag old data.
-3. Include the bad news too. Show risks.
-4. End with a decision, not just a summary.
-5. Keep facts, guesses, and suggestions separate.
+### 1. Pick the Research Type
 
-## Research Types
+Figure out which kind of research the user needs:
+- Investor / Fund Check
+- Competitor Check
+- Market Size
+- Tech / Tool Research
 
-### Investor / Fund Check
+### 2. Run Investor / Fund Check
+
 Get:
 - Fund size, stage, check size
 - Portfolio companies that matter
@@ -33,7 +34,8 @@ Get:
 - Why they fit or don't fit
 - Red flags
 
-### Competitor Check
+### 3. Run Competitor Check
+
 Get:
 - What the product really does (not marketing fluff)
 - Funding and investors
@@ -41,21 +43,24 @@ Get:
 - How they get users and what they charge
 - Strengths, weaknesses, gaps
 
-### Market Size
+### 4. Run Market Size
+
 Use:
 - Top-down from reports
 - Bottom-up from real customer numbers
 - Show your math. Every guess should be clear.
 
-### Tech / Tool Research
+### 5. Run Tech / Tool Research
+
 Get:
 - How it works
 - Trade-offs and who's using it
 - How hard to set up
 - Lock-in, security, and risk
 
-## Output Format
+### 6. Write It Up
 
+Structure every deliverable as:
 1. Quick summary (2-3 sentences)
 2. Key findings
 3. What this means
@@ -89,14 +94,20 @@ This is a two-way talk:
 - Present numbers without saying what they mean for your decision
 - Skip the risks section
 
-## Before You Deliver
+## Rules
 
-- All numbers have sources or are marked as guesses
-- Old data is flagged
-- The suggestion follows from the facts
-- Risks are included
-- Someone can make a decision from this
+- Every big claim needs a source.
+- Use recent data. Flag old data.
+- Include the bad news too. Show risks.
+- End with a decision, not just a summary.
+- Keep facts, guesses, and suggestions separate.
+- All numbers have sources or are marked as guesses.
+- Old data is flagged.
+- The suggestion follows from the facts.
+- Someone can make a decision from this.
 
-## Save Output
+## Output
 
 Save to the project's `02-research/` folder.
+
+Format each deliverable with: quick summary, key findings, what this means, risks and caveats, next steps, and sources.

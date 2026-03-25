@@ -82,6 +82,4 @@ This is a two-way talk:
 
 Save to the project's `01-brainstorm/` folder.
 
-## After Brainstorm
-
-Suggest: "Want me to run /validate on any of these?"
+After delivering, suggest: "Want me to run /validate on any of these?"

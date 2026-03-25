@@ -1,8 +1,8 @@
-# Naming Conventions - Forge Platform
+# Naming Conventions
 
 ## Overview
 
-This document defines the naming conventions used across different layers of the Forge Platform. Consistent naming reduces bugs, improves maintainability, and makes the codebase easier to understand.
+This document defines the naming conventions used across different layers of the stack. Consistent naming reduces bugs, makes the codebase easier to understand, and helps everyone move faster.
 
 ## Convention Summary
 
@@ -20,7 +20,7 @@ This document defines the naming conventions used across different layers of the
 **Jackson ObjectMapper** is configured globally with `SNAKE_CASE` naming strategy:
 
 ```kotlin
-// core/module-jackson/src/main/kotlin/com/c0x12c/jackson/ObjectMapperConfiguration.kt
+// In your Jackson configuration module
 fun ObjectMapper.configured(): ObjectMapper {
   propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
   // ... other configuration
@@ -59,13 +59,13 @@ data class CreateRecognitionRequest(
 **Axios interceptors** automatically convert between conventions:
 
 ```typescript
-// frontend/src/lib/case-converter.ts
+// src/lib/case-converter.ts
 export function toSnakeCase<T>(obj: T): T    // camelCase -> snake_case
 export function toCamelCase<T>(obj: T): T    // snake_case -> camelCase
 ```
 
 ```typescript
-// frontend/src/lib/api.ts
+// src/lib/api.ts
 // Request interceptor: Convert camelCase to snake_case before sending
 api.interceptors.request.use((config) => {
   if (config.data && typeof config.data === 'object') {
@@ -197,32 +197,6 @@ data class GoogleTokenResponse(
   val idToken: String?
 )
 ```
-
-## Troubleshooting
-
-### 400 Bad Request on POST
-
-If you get 400 Bad Request when posting data, check:
-
-1. **Backend receiving null for required fields** - likely case mismatch
-2. **Request body not being converted** - check interceptor is applied
-3. **Manual conversion overriding interceptor** - remove manual conversion
-
-### Fields Not Mapping Correctly
-
-1. **Check Jackson configuration** is using `SNAKE_CASE`
-2. **Check interceptors** are applied to the axios instance
-3. **Check for typos** in property names
-4. **Check nested objects** - conversion should be recursive
-
-## Files Reference
-
-| File | Purpose |
-|------|---------|
-| `backend/core/module-jackson/ObjectMapperConfiguration.kt` | Jackson SNAKE_CASE config |
-| `backend/app/api-application/src/main/resources/application.yml` | Micronaut serde config |
-| `frontend/src/lib/case-converter.ts` | Case conversion utilities |
-| `frontend/src/lib/api.ts` | Axios interceptors for auto-conversion |
 
 ## Code Review Checklist
 

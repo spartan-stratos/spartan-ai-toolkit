@@ -16,13 +16,13 @@ Thanks for your interest in contributing! This guide covers what you need to kno
 
 | Type | Location | Description |
 |------|----------|-------------|
-| **Commands** | `commands/spartan/` | Slash commands for structured workflows |
-| **Rules** | `rules/project/` | Coding standards Claude enforces automatically |
-| **Skills** | `skills/` | Reusable prompt templates for common tasks |
-| **Agents** | `agents/` | Expert agent definitions for specialized guidance |
-| **Telegram Bridge** | `claude-telegram-bridge/` | Remote control features |
+| **Commands** | `toolkit/commands/spartan/` | Slash commands for structured workflows |
+| **Rules** | `toolkit/rules/project/` | Coding standards Claude enforces automatically |
+| **Skills** | `toolkit/skills/` | Reusable prompt templates for common tasks |
+| **Agents** | `toolkit/agents/` | Expert agent definitions for specialized guidance |
+| **Telegram Bridge** | `bridges/telegram/` | Remote control features |
 | **Docs** | `docs/` (root) and `README.md` | Guides, cheatsheet, first-run walkthrough |
-| **Setup Script** | `scripts/setup.sh` | Installer improvements |
+| **Setup Script** | `toolkit/scripts/setup.sh` | Installer improvements |
 
 ---
 
@@ -59,7 +59,51 @@ Thanks for your interest in contributing! This guide covers what you need to kno
 - **Include decision frameworks** — how should the agent approach problems?
 - **Keep focused** — an agent that does everything well does nothing well
 
-### Telegram Bridge (`claude-telegram-bridge/`)
+---
+
+## Content Templates
+
+Before creating new content, copy the right template from `toolkit/templates/content/`:
+
+| Type | Template | Target Lines |
+|------|----------|-------------|
+| Command | `COMMAND_TEMPLATE.md` | 30-150 |
+| Skill | `SKILL_TEMPLATE.md` | 60-200 |
+| Agent | `AGENT_TEMPLATE.md` | 50-80 |
+| Rule | `RULE_TEMPLATE.md` | 50-150 |
+
+### Token Budget
+
+Every file gets loaded into Claude's context. Shorter = cheaper = faster. Rules:
+
+1. Every line must change Claude's behavior. If it doesn't, cut it.
+2. No emoji in headers — `## Core Rule` not `## 🎯 Core Rule`
+3. No "Benefits" or "Why This Matters" sections
+4. No "Last Updated" dates — git has this
+5. No ASCII art diagrams — use tables or inline flow: `Controller → Manager → Repository`
+6. Code examples: show the pattern, not a full implementation
+7. Skills with heavy code: split into `examples.md` or `patterns.md` supporting files
+
+---
+
+## Validation
+
+Run before every PR:
+
+```bash
+make validate
+```
+
+This checks:
+- All files in packs.js exist on disk
+- Frontmatter has the right fields
+- Naming follows conventions (kebab-case, UPPER_SNAKE_CASE)
+- packs.js and packs.sh are in sync
+- Warns about bloated files and emoji headers
+
+---
+
+### Telegram Bridge (`bridges/telegram/`)
 
 - **Node.js, ES modules** — `import` not `require`
 - **Security first** — never expose secrets, always validate chat ID
