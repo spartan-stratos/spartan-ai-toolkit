@@ -1,6 +1,7 @@
 name: Publish to npm
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ["Auto Release"]
     types: [completed]
