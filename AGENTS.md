@@ -1,6 +1,6 @@
 # Spartan AI Toolkit
 
-Engineering discipline layer for AI coding agents. Provides rules, skills, and workflows.
+Engineering discipline layer for AI coding tools. Provides rules, skills, workflows, and agents.
 
 ## Rules
 
@@ -17,7 +17,9 @@ Coding standards in `toolkit/rules/project/`. Apply these to your project:
 
 ## Skills
 
-Available in `toolkit/skills/`. Each follows the Agent Skills spec:
+Available in `toolkit/skills/`. Each skill is a directory with a `SKILL.md` definition.
+
+### Backend
 
 - `api-endpoint-creator` — Generate Controller → Manager → Repository stack
 - `backend-api-design` — RPC-style API design patterns
@@ -26,18 +28,41 @@ Available in `toolkit/skills/`. Each follows the Agent Skills spec:
 - `kotlin-best-practices` — Null safety, Either, coroutines quick reference
 - `security-checklist` — Auth, validation, OWASP prevention
 - `testing-strategies` — Integration test patterns for Micronaut
+
+### Frontend
+
 - `ui-ux-pro-max` — Design system with 67 styles, 96 palettes, 13 stacks
+
+### Research
+
+- `brainstorm` — Idea generation and ranking
+- `idea-validation` — Score ideas, GO / TEST MORE / KILL
+- `market-research` — Market sizing, trends, opportunities
+- `competitive-teardown` — Deep competitor analysis
+- `deep-research` — Multi-source research with citations
+- `investor-materials` — Pitch deck, one-pager, financial model
+- `investor-outreach` — Investor targeting and outreach
+- `article-writing` — Long-form content creation
+- `content-engine` — Content strategy and production
+- `startup-pipeline` — Full startup research pipeline
+
+## Agents
+
+- `micronaut-backend-expert` — Micronaut framework, database design, API architecture
+- `solution-architect-cto` — System design, scalability, tech decisions
+- `idea-killer` — Stress-test ideas, find weaknesses
+- `research-planner` — Plan and coordinate research workflows
 
 ## Install
 
 ```bash
-# Claude Code (full toolkit with commands + packs)
+# Full toolkit (commands + packs + rules + skills + agents)
 npx spartan-ai-toolkit@latest
 
-# Any agent (skills only)
+# Skills only (works with any AI agent)
 npx skills add spartan-stratos/spartan-ai-toolkit
 ```
 
 ## More Info
 
-See `toolkit/CLAUDE.md` for the full workflow brain (Claude Code specific).
+See [README.md](README.md) for the full docs, packs, and all 44 commands.

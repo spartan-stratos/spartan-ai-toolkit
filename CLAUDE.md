@@ -1,7 +1,7 @@
 # Project: Spartan AI Toolkit
 
 ## About
-Spartan AI Toolkit is a Claude Code workflow system for Engineering Managers. It has 44 slash commands (7 packs), 9 coding rules, 18 skills, 4 agents, 13 frameworks, and 6 templates — installable via npx, Claude Code plugin, or setup script. Includes a standalone Telegram bridge for remote Claude Code control.
+Spartan AI Toolkit is an engineering discipline layer for AI coding tools. It has 44 slash commands (7 packs), 9 coding rules, 18 skills, 4 agents, 13 frameworks, and 6 templates. Native integration with Claude Code (npx, plugin, setup script). All content is standard markdown — usable with any AI coding tool (Codex, Gemini, Copilot, Cursor, etc.). Includes a Telegram bridge for remote session control.
 
 ## Tech Stack
 - **Primary language**: Markdown (commands, rules, skills, docs)

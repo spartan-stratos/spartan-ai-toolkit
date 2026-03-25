@@ -1,15 +1,15 @@
 <p align="center">
   <h1 align="center">Spartan AI Toolkit</h1>
   <p align="center">
-    <strong>Turn Claude Code from a smart assistant into a disciplined engineering team</strong>
+    <strong>Engineering discipline layer for AI coding tools</strong>
     <br />
-    35 commands &middot; 9 coding rules &middot; 8 skills &middot; 2 expert agents &middot; 6 packs
+    44 commands &middot; 7 packs &middot; 18 skills &middot; 4 agents &middot; 9 rules &middot; 13 frameworks &middot; 6 templates
   </p>
   <p align="center">
     <a href="#quick-start">Quick Start</a> &middot;
-    <a href="#30-second-quick-start">Quick Start</a> &middot;
-    <a href="#packs--pick-what-you-need">Packs</a> &middot;
-    <a href="docs/ROADMAP.md">Roadmap</a>
+    <a href="#packs">Packs</a> &middot;
+    <a href="#compatibility">Compatibility</a> &middot;
+    <a href="CONTRIBUTING.md">Contributing</a>
   </p>
 </p>
 
@@ -17,589 +17,188 @@
 
 ## Why Spartan?
 
-Claude Code is powerful. It can write code, debug issues, and answer complex questions. But if you've used it on real projects, you've seen the pattern:
+AI coding tools are powerful. But on real projects, they write code without tests, push PRs without rebasing, edit files you didn't ask about, and forget decisions from 20 minutes ago. Every developer on your team gets different code style from the same AI.
 
-**Claude is like a brilliant junior dev who knows everything but follows no process.**
+Spartan fixes this. It's a set of **commands, rules, skills, and workflows** that make AI coding tools consistent and reliable for production work.
 
-It writes code without tests. It pushes PRs without rebasing. It "helpfully" edits files you didn't ask it to touch. It forgets decisions from 20 minutes ago. And every developer on your team gets different code style from the same AI.
+| Without Spartan | With Spartan |
+|----------------|-------------|
+| "Create a PR" &rarr; pushes without tests or description | `/spartan:pr-ready` &rarr; rebase, tests, lint, security, auto PR description |
+| "Debug this" &rarr; guesses a fix, hopes for the best | `/spartan:debug` &rarr; reproduce, isolate, root-cause, verify |
+| Team of 5 devs &rarr; each gets different code style | 9 rule files &rarr; same standards for everyone, every session |
+| 3-week feature &rarr; no plan, lost context | `/spartan:project new` &rarr; roadmap, phases, wave execution, persistent memory |
 
-Spartan fixes this. It's an **engineering discipline layer** &mdash; slash commands, coding rules, and persistent memory that make Claude Code reliable for production work.
-
-### Before & After
-
-| Scenario | Claude Code alone | With Spartan |
-|----------|------------------|-------------|
-| **"Create a PR"** | Pushes code. Forgets to rebase, skips tests, no PR description. | `/spartan:pr-ready` &rarr; 6-step checklist: rebase, tests, lint, architecture check, security scan, auto-generated PR description. |
-| **"Debug this error"** | Guesses a fix, applies it, hopes for the best. | `/spartan:debug` &rarr; 4-phase investigation: reproduce, isolate, root-cause, verify fix. Produces a Debug Report. |
-| **Long coding session** | Loses context after 30 min. Forgets earlier decisions. Repeats questions. | Auto-compacts context. Saves decisions to `.memory/`. Resumes perfectly in new sessions. |
-| **Team of 5 devs using Claude** | Each gets different code style, different patterns, different conventions. | 9 rule files enforce the same standards for everyone. Every Claude session reads the same rules. |
-| **"Fix the login bug"** | Edits the auth module, the user model, the API client, the config file... | `/spartan:freeze auth/` &rarr; Claude can only edit files in that directory. No scope creep. |
-| **3-week feature** | Chaos. No plan, no tracking, context lost between sessions. | `/spartan:project new` &rarr; Roadmap, phases, wave execution across parallel Claude tabs, persistent memory. |
-| **"Add a new API endpoint"** | Writes a controller. No manager layer, no tests, inconsistent naming. | `/api-endpoint-creator` &rarr; Full stack: Controller + Manager + Repository + Tests, following your team's conventions. |
-
-### What Spartan is NOT
-
-Spartan doesn't replace Claude &mdash; it makes Claude **consistent and reliable**.
-
-> Not everything needs a command. Questions, explanations, small code changes (&lt; 30 min) &mdash; just talk to Claude directly. Commands are for **structured workflows where missing steps cause real problems**.
+> Not everything needs a command. Questions, small code changes (&lt; 30 min) &mdash; just talk to your AI directly. Commands are for **structured workflows where missing steps cause real problems**.
 
 ---
 
-## How It Works
+## Quick Start
 
-Spartan integrates three open-source tools into a single unified workflow. Each tool is powerful alone, but **they don't know about each other** &mdash; Spartan connects them.
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Layer 1: Superpowers  (always on, automatic)               │
-│  "debug this" → 4-phase root cause investigation            │
-│  "review this" → two-stage code review                      │
-├─────────────────────────────────────────────────────────────┤
-│  Layer 2: Spartan Commands  (on-demand, 35 commands)        │
-│  /spartan            → smart router: asks what you need     │
-│  /spartan:quickplan  → spec + plan + branch in one shot     │
-│  /spartan:pr-ready   → full checklist before creating PR    │
-├─────────────────────────────────────────────────────────────┤
-│  Layer 3: GSD v5  (multi-session projects > 3 days)         │
-│  Decompose → Plan → Wave-execute → Verify                  │
-│  Agent memory (.memory/) persists across all sessions       │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Why Not Just Use Each Tool Separately?
-
-| | Superpowers alone | GSD alone | OpenSpec alone | **Spartan (all combined)** |
-|---|---|---|---|---|
-| **Auto-trigger skills** | Yes &mdash; "review this" triggers review | No | No | Yes &mdash; Superpowers handles it |
-| **Coding rules enforcement** | No | No | No | **9 rule files enforced every session** |
-| **Project lifecycle** | No | Yes &mdash; phases, milestones | No | Yes &mdash; GSD under the hood |
-| **Persistent memory** | No | Yes &mdash; `.memory/` | No | Yes &mdash; GSD memory + Spartan context save |
-| **Fast-forward planning** | No | No | Yes &mdash; spec-first | Yes &mdash; `/spartan:quickplan` (inspired by OpenSpec) |
-| **Safety guardrails** | No | No | No | **freeze, careful, guard modes** |
-| **Team consistency** | No | No | No | **Same rules + skills for everyone** |
-| **Context management** | No | No | No | **Auto-compact, session handoff** |
-| **Scaffolding** | No | No | No | **Kotlin/Next.js service generators** |
-
-**The gap when using tools separately:**
-
-- **Superpowers** auto-triggers skills, but doesn't enforce coding rules, has no project lifecycle, and doesn't manage context. Your team of 5 devs each gets different code style.
-- **GSD** manages phases and milestones, but doesn't know your stack conventions, doesn't enforce TDD, and doesn't have pre-PR checklists. You still forget to rebase before PRs.
-- **OpenSpec** gives you spec-first thinking, but stops at the spec. No execution plan, no wave parallelism, no memory between sessions.
-
-**Spartan fills the gaps:** It wires Superpowers' auto-triggers to follow your team's coding rules. It wraps GSD's lifecycle with your stack-specific conventions (TDD, layered architecture, soft deletes). It takes OpenSpec's fast-forward concept and extends it into a full quickplan &rarr; execute &rarr; PR pipeline. And it adds what none of them have: safety guardrails, context management, and team-wide consistency via shared rules.
-
----
-
-## 30-Second Quick Start
+### Option 1: npx (recommended)
 
 ```bash
-git clone git@github.com:spartan-stratos/spartan-ai-toolkit.git
-cd spartan-ai-toolkit/toolkit
-chmod +x scripts/setup.sh && ./scripts/setup.sh --global
+npx spartan-ai-toolkit@latest
 ```
 
-Then open any project, run `claude`, and type `/spartan`. That's it.
-
----
-
-## What Gets Installed Where?
-
-The setup script copies everything into `~/.claude/` — Claude reads these files automatically in every project.
-
-```
-~/.claude/
-├── CLAUDE.md              ← The "brain" — Claude reads this every session
-│                            (workflow rules, conventions, principles)
-├── commands/
-│   ├── spartan.md         ← Smart router entry point (/spartan)
-│   └── spartan/           ← 25 subcommands (/spartan:quickplan, etc.)
-├── rules/project/         ← 9 coding rule files (enforced automatically)
-├── skills/                ← 8 skill sets (slash commands like /api-endpoint-creator)
-└── agents/                ← 2 expert agents (micronaut-backend-expert, etc.)
-```
-
-**Key file:** `~/.claude/CLAUDE.md` is the instructions file. Claude reads it at the start of every session. This is where all workflow rules, conventions, and routing logic live. To customize Spartan for your team, edit this file.
-
----
-
-## Full Install Details
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) >= 18
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (`npm install -g @anthropic-ai/claude-code`)
-
-### Install
+### Option 2: Setup script
 
 ```bash
 git clone https://github.com/spartan-stratos/spartan-ai-toolkit.git
 cd spartan-ai-toolkit/toolkit
-chmod +x scripts/setup.sh
-./scripts/setup.sh --global
+chmod +x scripts/setup.sh && ./scripts/setup.sh --global
 ```
 
-The setup script runs 9 steps:
+### Option 3: Claude Code plugin
 
-1. Check prerequisites (node, npm, git, claude)
-2. Guide Superpowers plugin install
-3. Install GSD via npx
-4. Copy `CLAUDE.md` to `~/.claude/`
-5. Install selected slash commands to `~/.claude/commands/`
-6. Install 9 coding rule files to `~/.claude/rules/`
-7. Install 8 skills to `~/.claude/skills/`
-8. Install 2 expert agents to `~/.claude/agents/`
-9. Configure auto-save context hook (saves state when context gets full)
+Search for "Spartan AI Toolkit" in the Claude Code plugin marketplace.
 
-### Verify
-
-Open any project and run:
-
-```bash
-claude
-```
-
-Then type:
-
-```
-/spartan
-```
-
-The smart router asks what you need and routes to the right command. If it responds, everything is working.
+After install, open any project and type `/spartan`. The smart router asks what you need and routes to the right command.
 
 ---
 
-## Commands
+## Packs
 
-### Routing: Command or Chat?
+Pick what fits your project. Core is always installed.
 
-```
-What do you need?
-│
-├─ Question / explanation / brainstorm        → Just ask Claude
-├─ Small code change (< 30 min, ≤ 3 files)   → Just ask Claude
-├─ Structured workflow with checklist         → /spartan:command
-└─ Not sure which command                     → /spartan (smart router)
-```
-
-### All 35 Commands
-
-| Phase | Command | Purpose |
-|-------|---------|---------|
-| **Start** | `/spartan` | Smart router — asks what you need, routes to right command |
-| | `/spartan:project [action]` | Large project lifecycle: `new`, `status`, `milestone-new`, `milestone-complete` |
-| | `/spartan:phase [action] [N]` | Phase lifecycle: `discuss`, `plan`, `execute`, `verify` |
-| | `/spartan:init-project` | Scan codebase, generate project CLAUDE.md |
-| | `/spartan:brownfield` | Quick overview of unfamiliar codebase (1 file) |
-| | `/spartan:map-codebase` | Deep codebase analysis with 4 parallel agents (7 files) |
-| | `/spartan:kotlin-service` | Scaffold Kotlin + Micronaut microservice |
-| | `/spartan:next-app` | Scaffold Next.js app (App Router, Vitest, Docker, CI) |
-| | `/spartan:gsd-upgrade` | Upgrade GSD to v5 (agent memory + wave execution) |
-| **Build** | `/spartan:quickplan "task"` | Spec + plan + branch in one shot (tasks < 1 day) |
-| | `/spartan:next-feature` | Add feature to existing Next.js app |
-| | `/spartan:debug "symptom"` | 4-phase root cause investigation |
-| | `/spartan:figma-to-code` | Figma MCP to production React components |
-| | `/spartan:migration "desc"` | Create versioned Flyway database migration |
-| **Ship** | `/spartan:pr-ready` | Pre-PR checklist: rebase, tests, lint, security, PR description |
-| | `/spartan:review` | PR review with Kotlin/Micronaut conventions |
-| | `/spartan:fe-review` | PR review with Next.js App Router conventions |
-| | `/spartan:deploy [svc]` | Deploy guide with pre-flight checks |
-| **Setup** | `/spartan:e2e` | Scaffold Playwright E2E testing |
-| | `/spartan:testcontainer` | Setup Testcontainers (Postgres/Kafka/Redis) |
-| | `/spartan:env-setup` | Audit env vars, generate `.env.example` |
-| **Ops** | `/spartan:daily` | Standup summary from git log + project status |
-| | `/spartan:context-save` | Save session state, resume in new session |
-| **Product** | `/spartan:think "idea"` | 6-phase guided thinking before coding |
-| | `/spartan:validate "idea"` | Score idea on 7 areas — GO / TEST MORE / KILL |
-| | `/spartan:teardown "competitor"` | Deep competitor analysis |
-| | `/spartan:interview "product"` | Generate Mom Test interview script |
-| | `/spartan:lean-canvas "product"` | Fill out 9-block Lean Canvas |
-| | `/spartan:brainstorm "theme"` | Generate ideas, filter, rank top 3 |
-| **Safety** | `/spartan:careful` | Warn before destructive ops (rm, DROP, force-push) |
-| | `/spartan:freeze <dir>` | Lock file edits to one directory only |
-| | `/spartan:unfreeze` | Remove directory lock |
-| | `/spartan:guard <dir>` | Careful + freeze combined (maximum safety) |
-
----
-
-## Packs — Pick What You Need
-
-Spartan is modular. You don't have to install everything. Pick the packs that fit your project.
-
-### Install with packs
+| Pack | Commands | Rules | Skills | Agents | Best for |
+|------|----------|-------|--------|--------|----------|
+| **core** | 11 | &mdash; | &mdash; | &mdash; | Everyone |
+| **backend** | 4 | 8 | 7 | 2 | Kotlin + Micronaut |
+| **frontend** | 5 | 2 | 1 | &mdash; | React + Next.js |
+| **project-mgmt** | 7 | &mdash; | &mdash; | &mdash; | Multi-day projects |
+| **product** | 6 | &mdash; | &mdash; | &mdash; | Product thinking |
+| **ops** | 2 | &mdash; | &mdash; | &mdash; | Deploy & infra |
+| **research** | 9 | &mdash; | 10 | 2 | Startup pipeline |
 
 ```bash
-# Interactive — pick from a menu
+# Pick from menu
 ./scripts/setup.sh --global
 
-# Or specify packs directly
+# Specify packs
 ./scripts/setup.sh --global --packs=backend,product
 
-# Or install everything
+# Install everything
 ./scripts/setup.sh --global --all
-
-# Or via npx (after npm publish)
-npx spartan-ai-toolkit@latest
-```
-
-### What's in each pack
-
-| Pack | Commands | Rules | Skills | Best for |
-|------|----------|-------|--------|----------|
-| **core** (always) | quickplan, daily, debug, pr-ready, init-project, context-save, update, safety (4) | — | — | Everyone |
-| **backend** | kotlin-service, migration, review, testcontainer | 8 Kotlin/DB rules | 7 backend skills + 2 agents | Kotlin + Micronaut APIs |
-| **frontend** | next-app, next-feature, fe-review, figma-to-code, e2e | 2 frontend rules | ui-ux-pro-max | React + Next.js apps |
-| **project-mgmt** | project, phase, workstreams, gsd-upgrade, forensics, brownfield, map-codebase | — | — | Multi-day projects with milestones |
-| **product** | think, validate, teardown, interview, lean-canvas, brainstorm | — | — | Product thinking before building |
-| **ops** | deploy, env-setup | — | — | Deploy & infrastructure |
-
-### Example setups
-
-**Solo founder building a Next.js SaaS:**
-```bash
-./scripts/setup.sh --global --packs=frontend,product
-# Gets: 22 commands, 2 rules, 1 skill, product thinking workflow
-```
-
-**Backend team working on Kotlin microservices:**
-```bash
-./scripts/setup.sh --global --packs=backend,project-mgmt
-# Gets: 22 commands, 8 rules, 7 skills, 2 agents, full project lifecycle
-```
-
-**Full-stack team, big project:**
-```bash
-./scripts/setup.sh --global --all
-# Gets: everything — 35 commands, 9 rules, 8 skills, 2 agents
-```
-
-**Just want product thinking tools:**
-```bash
-./scripts/setup.sh --global --packs=product
-# Gets: 17 commands (core + product), no rules, no skills
-# brainstorm → validate → think → build
 ```
 
 ---
 
-## Coding Rules
+## Commands (44)
 
-9 rule files are installed to `~/.claude/rules/project/` and enforced automatically in every project:
+All commands are prefixed with `/spartan:` (e.g., `/spartan:quickplan "task"`).
 
-| Rule File | What It Enforces |
-|-----------|-----------------|
-| `CORE_RULES` | `!!` operator banned, Either error handling, null safety patterns |
-| `ARCHITECTURE_RULES` | Layered architecture: Controller &rarr; Manager &rarr; Service/Repository |
-| `API_RULES` | RPC-style API design, query parameters only (no path params) |
-| `DATABASE_RULES` | No foreign keys, TEXT not VARCHAR, soft deletes, UUID primary keys |
-| `FRONTEND_RULES` | Build check before commit, cleanup imports, API response null safety |
-| `CONTROLLER_TEST_STANDARDS` | `@MicronautTest` patterns, AbstractControllerTest, Retrofit clients |
-| `NAMING_CONVENTIONS` | snake_case for DB/JSON, camelCase for Kotlin/TypeScript |
-| `RETROFIT_CLIENT_PLACEMENT` | Never place Retrofit interfaces in kapt-enabled modules |
-| `TRANSACTION_RULES` | Multi-table operations must use `transaction(db.primary) {}` |
+| Pack | Commands |
+|------|----------|
+| **core** | `quickplan`, `daily`, `debug`, `pr-ready`, `init-project`, `context-save`, `update`, `careful`, `freeze`, `unfreeze`, `guard` |
+| **backend** | `kotlin-service`, `migration`, `review`, `testcontainer` |
+| **frontend** | `next-app`, `next-feature`, `fe-review`, `figma-to-code`, `e2e` |
+| **project-mgmt** | `project`, `phase`, `workstreams`, `gsd-upgrade`, `forensics`, `brownfield`, `map-codebase` |
+| **product** | `think`, `validate`, `teardown`, `interview`, `lean-canvas`, `brainstorm` |
+| **ops** | `deploy`, `env-setup` |
+| **research** | `kickoff`, `deep-dive`, `full-run`, `fundraise`, `research`, `pitch`, `outreach`, `content`, `write` |
 
 ---
 
-## Skills
+## Skills (18)
 
-8 skill sets installed to `~/.claude/skills/`:
-
-| Skill | Description |
-|-------|-------------|
-| `/api-endpoint-creator` | Generate full Controller &rarr; Manager &rarr; Repository stack |
-| `/database-table-creator` | SQL migration &rarr; Exposed Table &rarr; Entity &rarr; Repository &rarr; Tests |
-| `/backend-api-design` | RPC-style API design patterns and reference |
-| `/database-patterns` | Schema design, migrations, Exposed ORM patterns |
-| `/kotlin-best-practices` | Null safety, Either, coroutines quick reference |
-| `/testing-strategies` | Integration test patterns for Micronaut |
-| `/security-checklist` | Authentication, authorization, input validation, OWASP |
-| `/ui-ux-pro-max` | Design system: 67 styles, 96 palettes, 57 font pairings, 13 stacks |
+| Skill | Pack | What it does |
+|-------|------|-------------|
+| `api-endpoint-creator` | backend | Generate Controller &rarr; Manager &rarr; Repository stack |
+| `database-table-creator` | backend | SQL migration &rarr; Table &rarr; Entity &rarr; Repository &rarr; Tests |
+| `backend-api-design` | backend | RPC-style API design patterns |
+| `database-patterns` | backend | Schema design, migrations, Exposed ORM |
+| `kotlin-best-practices` | backend | Null safety, Either, coroutines |
+| `testing-strategies` | backend | Integration test patterns for Micronaut |
+| `security-checklist` | backend | Auth, validation, OWASP prevention |
+| `ui-ux-pro-max` | frontend | Design system: 67 styles, 96 palettes, 13 stacks |
+| `brainstorm` | research | Idea generation and ranking |
+| `idea-validation` | research | Score ideas &mdash; GO / TEST MORE / KILL |
+| `market-research` | research | Market sizing, trends, opportunities |
+| `competitive-teardown` | research | Deep competitor analysis |
+| `deep-research` | research | Multi-source research with citations |
+| `investor-materials` | research | Pitch deck, one-pager, financial model |
+| `investor-outreach` | research | Investor targeting and outreach |
+| `article-writing` | research | Long-form content creation |
+| `content-engine` | research | Content strategy and production |
+| `startup-pipeline` | research | Full startup research pipeline |
 
 ---
 
-## Expert Agents
-
-2 agents installed to `~/.claude/agents/`:
+## Agents (4)
 
 | Agent | Expertise |
 |-------|-----------|
-| `micronaut-backend-expert` | Deep Micronaut framework knowledge, database design, API architecture |
-| `solution-architect-cto` | Strategic tech decisions, system design, scalability planning |
+| `micronaut-backend-expert` | Micronaut framework, database design, API architecture |
+| `solution-architect-cto` | System design, scalability, tech decisions |
+| `idea-killer` | Stress-test ideas, find weaknesses |
+| `research-planner` | Plan and coordinate research workflows |
+
+---
+
+## Rules (9)
+
+Enforced automatically every session.
+
+| Rule | What it enforces |
+|------|-----------------|
+| `CORE_RULES` | No `!!`, Either error handling, null safety |
+| `ARCHITECTURE_RULES` | Controller &rarr; Manager &rarr; Repository layers |
+| `API_RULES` | RPC-style APIs, query params only |
+| `DATABASE_RULES` | No foreign keys, TEXT not VARCHAR, soft deletes |
+| `FRONTEND_RULES` | Build check, cleanup imports, null safety |
+| `CONTROLLER_TEST_STANDARDS` | @MicronautTest integration patterns |
+| `NAMING_CONVENTIONS` | snake_case DB/JSON, camelCase code |
+| `RETROFIT_CLIENT_PLACEMENT` | No Retrofit in kapt modules |
+| `TRANSACTION_RULES` | Multi-table ops must use transactions |
+
+---
+
+## Frameworks & Templates
+
+**13 frameworks** in `toolkit/frameworks/` &mdash; Lean Canvas, Design Sprint, Jobs To Be Done, Mom Test, Value Proposition Canvas, and more. Used by research and product commands.
+
+**6 templates** in `toolkit/templates/` &mdash; Competitor analysis, idea canvas, PRD, user interview, validation checklist, project readme.
+
+---
+
+## Compatibility
+
+**Native support:** Claude Code &mdash; slash commands, skills, agents, rules, npx installer, plugin marketplace.
+
+**Works with any AI tool:** All content is standard markdown. Rules, frameworks, templates, and skill definitions can be added to any AI coding tool's system instructions &mdash; Codex, Gemini, Copilot, Cursor, Windsurf, etc.
+
+---
+
+## Telegram Bridge
+
+Control your AI coding sessions from your phone. Provider-based architecture &mdash; currently supports Telegram.
+
+```
+Phone (Telegram) <-> Bridge (Node.js) <-> Claude Agent SDK <-> Claude API
+```
+
+See [`bridges/`](bridges/) for setup and docs.
 
 ---
 
 ## Target Stack
 
-Spartan is designed for teams using:
+Rules and skills are tuned for this stack, but the command framework works with anything:
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Kotlin + Micronaut (coroutines, Either, Exposed ORM) |
-| Frontend | React + Next.js + TypeScript (App Router) |
+| Backend | Kotlin + Micronaut |
+| Frontend | React + Next.js + TypeScript |
 | Database | PostgreSQL |
-| Container | Docker |
-| Orchestration | Kubernetes |
-| IaC | Terraform |
-| Platforms | Railway (staging) &middot; AWS (production) &middot; GCP |
 | CI/CD | GitHub Actions |
 
-> **Using a different stack?** Fork the repo, edit `CLAUDE.md` and the files in `rules/project/`, then run `setup.sh --global`. The command framework works with any language or framework.
-
----
-
-## Daily Workflow
-
-```
-/spartan:daily                      ← Standup summary
-       ↓
-/spartan:quickplan "task"           ← Spec + plan + branch (< 1 day)
-       ↓
-  [Code — Superpowers auto-triggers TDD, debug, review]
-       ↓
-/spartan:pr-ready                   ← Pre-PR checklist + create PR
-       ↓
-/spartan:deploy [svc] [target]      ← Deploy + verify
-```
-
-### Task Size Routing
-
-| Size | Approach |
-|------|----------|
-| < 30 min, ≤ 3 files | Just ask Claude (no command needed) |
-| < 1 day | `/spartan:quickplan "task"` |
-| 1–3 days | `/spartan:project new` |
-| > 3 days, multi-session | `/spartan:project new` with GSD v5 wave execution |
-
----
-
-## GSD v5: Multi-Session Projects
-
-For projects spanning multiple days/sessions, GSD v5 provides:
-
-**Decompose** &mdash; Break requirements into work units (max 3 files, max half-day each), grouped into dependency waves.
-
-**Wave Execution** &mdash; Wave 1 runs in parallel (multiple Claude Code tabs). Wave 2 starts after Wave 1 passes tests. Repeat until done.
-
-**Agent Memory** (`.memory/`) &mdash; Persistent project knowledge: architectural decisions, discovered patterns, domain facts, known blockers. Survives all sessions.
-
-```
-/spartan:project new                ← Create PROJECT.md + ROADMAP.md
-/spartan:phase discuss N            ← Requirements (3 forcing questions first)
-/spartan:phase plan N               ← Wave-parallel execution plan
-/spartan:phase execute N            ← Execute with TDD, atomic commits
-/spartan:phase verify N             ← UAT + capture learnings to .memory/
-```
-
----
-
-## Safety Guardrails
-
-Three levels of protection, activated on-demand:
-
-| Level | Command | Protection |
-|-------|---------|-----------|
-| Warn | `/spartan:careful` | Confirm before `rm -rf`, `DROP TABLE`, `git push --force` |
-| Lock | `/spartan:freeze <dir>` | File edits restricted to one directory only |
-| Max | `/spartan:guard <dir>` | Careful + freeze combined |
-
-Careful mode overrides auto mode &mdash; destructive operations always require confirmation.
-
----
-
-## Telegram Bridge — Control Claude from Your Phone
-
-Away from your desk but need to check something, run a command, or debug an issue? The Telegram bridge lets you control Claude Code remotely from your phone.
-
-```
-Phone (Telegram) ←→ Bridge (Node.js) ←→ Claude Agent SDK ←→ Claude API
-```
-
-Built on the [Claude Agent SDK](https://docs.anthropic.com/en/docs/claude-code/sdk) &mdash; no CLI spawning, real streaming responses.
-
-### Quick Setup (5 min)
-
-**1. Create a Telegram bot:** Open Telegram &rarr; find `@BotFather` &rarr; `/newbot` &rarr; copy the **token**
-
-**2. Get your chat ID:** Find `@userinfobot` in Telegram &rarr; `/start` &rarr; copy your **Id**
-
-**3. Configure and run:**
-
-```bash
-cd claude-telegram-bridge
-cp .env.example .env
-# Edit .env: set TELEGRAM_TOKEN and MY_CHAT_ID
-npm install && node bridge.js
-```
-
-**4. Add projects from your phone:**
-
-Send `/scan` in Telegram &mdash; the bridge lists all folders in your workspace. Reply with a number to add a project. Done.
-
-### What You Can Do From Your Phone
-
-| Command | Action |
-|---------|--------|
-| Type any text | Send query to Claude in the active project |
-| `/scan` | Discover and add projects |
-| `/sessions` | List all sessions with status and cost |
-| `/1` `/2` `/3` | Quick switch between projects |
-| `/cancel` | Abort current query |
-| `/permissions` | Toggle approve/deny tool use from phone |
-| `/cost` | See cost breakdown per project |
-
-### Permission Relay — Approve/Deny from Phone
-
-By default, the bridge auto-allows all tools (bypass mode). Turn on interactive permissions to approve or deny each tool action from your phone:
-
-```
-/permissions on     ← Enable: Claude asks before Write, Edit, Bash, Task
-/permissions off    ← Disable: auto-allow everything (default)
-/permissions        ← Toggle
-```
-
-When enabled, Claude sends an inline keyboard for each dangerous action:
-
-```
-[session] Permission
-Claude wants to run: git push origin main
-
-[Allow]  [Deny]  [Always Allow]
-```
-
-- **Allow** &mdash; approve this one action
-- **Deny** &mdash; reject (Claude gets "Denied by user" message)
-- **Always Allow** &mdash; approve + don't ask again for this tool pattern
-- Safe tools (Read, Glob, Grep, WebSearch, WebFetch) are always auto-allowed
-- Unanswered prompts auto-deny after 5 min (configurable via `PERMISSION_TIMEOUT` env var)
-
-Set `PERMISSION_MODE=interactive` in `.env` to start with interactive mode by default.
-
-### Features
-
-- **Multi-project sessions** &mdash; switch between projects with one tap
-- **Permission relay** &mdash; approve/deny Claude's tool use from your phone
-- **Real-time streaming** &mdash; responses update live as Claude generates output
-- **Cost tracking** &mdash; per-project and total cost breakdown
-- **Secret redaction** &mdash; API keys, tokens, passwords auto-redacted before reaching Telegram
-- **Session persistence** &mdash; sessions survive bridge restarts (resume via session ID)
-- **Security** &mdash; hard rejects all messages not from your chat ID
-
-For background running with pm2, advanced config, and troubleshooting, see [`claude-telegram-bridge/README.md`](claude-telegram-bridge/README.md).
-
----
-
-## Project Structure
-
-```
-spartan-ai-toolkit/
-├── docs/
-│   └── ROADMAP.md                       # Development roadmap
-├── .claude/
-│   └── settings.json                    # Project-level Claude Code config
-├── toolkit/                             # Distribution content (installed to ~/.claude/)
-│   ├── claude-md/                       # CLAUDE.md sections (assembled per pack)
-│   ├── README.md                        # Toolkit-specific README
-│   ├── scripts/
-│   │   └── setup.sh                     # One-command installer (10 steps)
-│   ├── rules/project/                   # 9 coding standard files
-│   │   ├── CORE_RULES.md
-│   │   ├── ARCHITECTURE_RULES.md
-│   │   ├── API_RULES.md
-│   │   ├── DATABASE_RULES.md
-│   │   ├── FRONTEND_RULES.md
-│   │   ├── CONTROLLER_TEST_STANDARDS.md
-│   │   ├── NAMING_CONVENTIONS.md
-│   │   ├── RETROFIT_CLIENT_PLACEMENT.md
-│   │   └── TRANSACTION_RULES.md
-│   ├── skills/                       # 8 Claude Code skill sets
-│   │   ├── api-endpoint-creator/
-│   │   ├── backend-api-design/
-│   │   ├── database-patterns/
-│   │   ├── database-table-creator/
-│   │   ├── kotlin-best-practices/
-│   │   ├── security-checklist/
-│   │   ├── testing-strategies/
-│   │   └── ui-ux-pro-max/
-│   ├── agents/                       # 2 expert agent definitions
-│   │   ├── micronaut-backend-expert.md
-│   │   └── solution-architect-cto.md
-│   └── commands/                     # 35 slash command prompts
-│       ├── spartan.md                # Smart router (entry point)
-│       └── spartan/                  # 25 subcommands
-│           ├── quickplan.md
-│           ├── pr-ready.md
-│           ├── debug.md
-│           └── ... (22 more)
-├── claude-telegram-bridge/           # Remote control via Telegram
-│   ├── bridge.js
-│   ├── package.json
-│   └── README.md
-├── Makefile                             # Dev shortcuts (setup, validate, lint)
-├── .claudeignore                        # Reduce Claude context noise
-├── CLAUDE.md                            # Project-level AI context
-├── CONTRIBUTING.md                      # Contribution guidelines
-├── README.md                            # This file
-├── LICENSE                              # MIT License
-└── .gitignore
-```
-
----
-
-## Customization
-
-### For Your Team
-
-1. Fork this repo
-2. Edit `toolkit/CLAUDE.md` &mdash; change stack conventions
-3. Edit files in `toolkit/rules/project/` &mdash; change coding rules
-4. Add/replace skills and commands
-5. Share the fork &mdash; everyone runs `setup.sh --global`
-
-### Per-Project Overrides
-
-Each project can have its own `CLAUDE.md` in its root directory. Claude reads both: global toolkit rules + project-specific context. Project-level overrides global when there's a conflict.
-
-Generate one automatically:
-
-```
-/spartan:init-project
-```
-
----
-
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| This README | Quick start, commands, packs, examples |
-| [Roadmap](docs/ROADMAP.md) | Future plans and workstreams |
-| [Contributing](CONTRIBUTING.md) | How to add commands, skills, rules |
+> **Using a different stack?** Fork the repo, edit the rules and skills, run `setup.sh --global`. The command framework works with any language or framework.
 
 ---
 
 ## Contributing
 
-We welcome contributions! Before submitting a PR, please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
-
-- How to structure commands, rules, skills, and agents
-- Testing your changes (there's no automated test suite &mdash; manual verification required)
-- Commit message conventions
-- What makes a good PR
-
-**Quick rules:**
-1. Every command must work standalone &mdash; no hidden dependencies between commands
-2. Rules must be enforceable &mdash; if Claude can't follow it consistently, don't add it
-3. Test with `setup.sh --global` on a clean `~/.claude/` before submitting
-4. Keep `CLAUDE.md` under 200 lines of actionable content &mdash; Claude reads it every session
-
----
-
-## Built On
-
-Spartan stands on the shoulders of three excellent open-source projects:
-
-- **[Superpowers](https://github.com/obra/superpowers)** by Jesse Vincent &mdash; Auto-triggering skill layer. Spartan uses it as Layer 1 for always-on capabilities (review, debug, plan).
-- **[GSD](https://github.com/gsd-build/get-shit-done)** by TACHES &mdash; Project lifecycle engine. Spartan wraps it as Layer 3 for phases, milestones, wave execution, and persistent memory.
-- **[OpenSpec](https://github.com/Fission-AI/OpenSpec)** by Fission AI &mdash; Spec-first fast-forward concept. Inspired `/spartan:quickplan` (spec &rarr; plan &rarr; branch in one shot).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add commands, skills, rules, and agents.
 
 ---
 
