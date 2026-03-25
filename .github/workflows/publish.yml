@@ -10,7 +10,7 @@ jobs:
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: read
       id-token: write
@@ -22,6 +22,10 @@ jobs:
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        working-directory: toolkit
+        run: npm install
 
       - name: Verify version matches
         run: |
