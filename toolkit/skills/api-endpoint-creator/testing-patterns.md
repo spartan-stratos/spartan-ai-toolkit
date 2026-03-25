@@ -1,6 +1,6 @@
 # API Endpoint Testing Patterns
 
-How to write integration tests for API endpoints in the Insight platform.
+How to write integration tests for API endpoints in the platform.
 
 ---
 
@@ -59,14 +59,14 @@ class ProjectControllerTest : AbstractControllerTest() {
 
 ## Retrofit Client
 
-**File**: `app/module-client/src/main/kotlin/insight/c0x12c/client/ProjectClient.kt`
+**File**: `app/module-client/src/main/kotlin/com/yourcompany/client/ProjectClient.kt`
 
 ```kotlin
-package insight.c0x12c.client
+package com.yourcompany.client
 
-import insight.c0x12c.client.request.insight.CreateProjectRequest
-import insight.c0x12c.client.response.insight.ProjectResponse
-import insight.c0x12c.client.response.insight.ProjectListResponse
+import com.yourcompany.client.request.{domain}.CreateProjectRequest
+import com.yourcompany.client.response.{domain}.ProjectResponse
+import com.yourcompany.client.response.{domain}.ProjectListResponse
 import retrofit2.http.*
 import java.util.UUID
 

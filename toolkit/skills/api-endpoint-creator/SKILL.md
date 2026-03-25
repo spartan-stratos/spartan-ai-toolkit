@@ -24,12 +24,12 @@ Creates complete REST API endpoints following strict layered architecture patter
 
 ### 1. Create Response/Request Models
 
-Location: `app/module-client/src/main/kotlin/insight/c0x12c/client/response/{domain}/`
+Location: `app/module-client/src/main/kotlin/com/yourcompany/client/response/{domain}/`
 
 ```kotlin
-package insight.c0x12c.client.response.{domain}
+package com.yourcompany.client.response.{domain}
 
-import insight.c0x12c.postgresql.entity.{Domain}Entity
+import com.yourcompany.postgresql.entity.{Domain}Entity
 import java.time.Instant
 import java.util.UUID
 
@@ -60,10 +60,10 @@ data class {Domain}ListResponse(
 )
 ```
 
-Location: `app/module-client/src/main/kotlin/insight/c0x12c/client/request/{domain}/`
+Location: `app/module-client/src/main/kotlin/com/yourcompany/client/request/{domain}/`
 
 ```kotlin
-package insight.c0x12c.client.request.{domain}
+package com.yourcompany.client.request.{domain}
 
 data class Create{Domain}Request(
   val name: String,
@@ -81,17 +81,17 @@ data class Update{Domain}Request(
 
 ### 2. Create Controller
 
-Location: `app/api-application/src/main/kotlin/insight/c0x12c/controller/{Domain}Controller.kt`
+Location: `app/api-application/src/main/kotlin/com/yourcompany/controller/{Domain}Controller.kt`
 
 ```kotlin
-package insight.c0x12c.controller
+package com.yourcompany.controller
 
-import insight.c0x12c.{domain}.contract.{Domain}Manager
-import insight.c0x12c.client.request.{domain}.Create{Domain}Request
-import insight.c0x12c.client.request.{domain}.Update{Domain}Request
-import insight.c0x12c.client.response.{domain}.{Domain}Response
-import insight.c0x12c.client.response.{domain}.{Domain}ListResponse
-import insight.c0x12c.exception.throwOrValue
+import com.yourcompany.{domain}.contract.{Domain}Manager
+import com.yourcompany.client.request.{domain}.Create{Domain}Request
+import com.yourcompany.client.request.{domain}.Update{Domain}Request
+import com.yourcompany.client.response.{domain}.{Domain}Response
+import com.yourcompany.client.response.{domain}.{Domain}ListResponse
+import com.yourcompany.exception.throwOrValue
 import io.micronaut.http.annotation.*
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
@@ -164,17 +164,17 @@ class {Domain}Controller(
 
 ### 3. Create Manager Interface
 
-Location: `app/module-{domain}/module-api/src/main/kotlin/insight/c0x12c/{domain}/contract/{Domain}Manager.kt`
+Location: `app/module-{domain}/module-api/src/main/kotlin/com/yourcompany/{domain}/contract/{Domain}Manager.kt`
 
 ```kotlin
-package insight.c0x12c.{domain}.contract
+package com.yourcompany.{domain}.contract
 
 import arrow.core.Either
-import insight.c0x12c.client.request.{domain}.Create{Domain}Request
-import insight.c0x12c.client.request.{domain}.Update{Domain}Request
-import insight.c0x12c.client.response.{domain}.{Domain}Response
-import insight.c0x12c.client.response.{domain}.{Domain}ListResponse
-import insight.c0x12c.exception.ClientException
+import com.yourcompany.client.request.{domain}.Create{Domain}Request
+import com.yourcompany.client.request.{domain}.Update{Domain}Request
+import com.yourcompany.client.response.{domain}.{Domain}Response
+import com.yourcompany.client.response.{domain}.{Domain}ListResponse
+import com.yourcompany.exception.ClientException
 import java.util.UUID
 
 interface {Domain}Manager {
@@ -201,24 +201,24 @@ interface {Domain}Manager {
 
 ### 4. Create Manager Implementation
 
-Location: `app/module-{domain}/module-impl/src/main/kotlin/insight/c0x12c/{domain}/impl/Default{Domain}Manager.kt`
+Location: `app/module-{domain}/module-impl/src/main/kotlin/com/yourcompany/{domain}/impl/Default{Domain}Manager.kt`
 
 ```kotlin
-package insight.c0x12c.{domain}.impl
+package com.yourcompany.{domain}.impl
 
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.c0x12c.database.DatabaseContext
-import insight.c0x12c.{domain}.contract.{Domain}Manager
-import insight.c0x12c.client.request.{domain}.Create{Domain}Request
-import insight.c0x12c.client.request.{domain}.Update{Domain}Request
-import insight.c0x12c.client.response.{domain}.{Domain}Response
-import insight.c0x12c.client.response.{domain}.{Domain}ListResponse
-import insight.c0x12c.exception.ClientError
-import insight.c0x12c.exception.ClientException
-import insight.c0x12c.postgresql.entity.{Domain}Entity
-import insight.c0x12c.postgresql.repository.{Domain}Repository
+import com.yourcompany.database.DatabaseContext
+import com.yourcompany.{domain}.contract.{Domain}Manager
+import com.yourcompany.client.request.{domain}.Create{Domain}Request
+import com.yourcompany.client.request.{domain}.Update{Domain}Request
+import com.yourcompany.client.response.{domain}.{Domain}Response
+import com.yourcompany.client.response.{domain}.{Domain}ListResponse
+import com.yourcompany.exception.ClientError
+import com.yourcompany.exception.ClientException
+import com.yourcompany.postgresql.entity.{Domain}Entity
+import com.yourcompany.postgresql.repository.{Domain}Repository
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
 
@@ -290,15 +290,15 @@ class Default{Domain}Manager(
 
 ### 5. Register Factory Bean
 
-Location: `app/module-{domain}/module-impl/src/main/kotlin/insight/c0x12c/runtime/factory/{Domain}ManagerFactory.kt`
+Location: `app/module-{domain}/module-impl/src/main/kotlin/com/yourcompany/runtime/factory/{Domain}ManagerFactory.kt`
 
 ```kotlin
-package insight.c0x12c.runtime.factory
+package com.yourcompany.runtime.factory
 
-import com.c0x12c.database.DatabaseContext
-import insight.c0x12c.{domain}.impl.Default{Domain}Manager
-import insight.c0x12c.{domain}.contract.{Domain}Manager
-import insight.c0x12c.postgresql.repository.{Domain}Repository
+import com.yourcompany.database.DatabaseContext
+import com.yourcompany.{domain}.impl.Default{Domain}Manager
+import com.yourcompany.{domain}.contract.{Domain}Manager
+import com.yourcompany.postgresql.repository.{Domain}Repository
 import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
 
@@ -317,15 +317,15 @@ class {Domain}ManagerFactory {
 
 ### 6. Create Retrofit Client
 
-Location: `app/module-client/src/main/kotlin/insight/c0x12c/client/{Domain}Client.kt`
+Location: `app/module-client/src/main/kotlin/com/yourcompany/client/{Domain}Client.kt`
 
 ```kotlin
-package insight.c0x12c.client
+package com.yourcompany.client
 
-import insight.c0x12c.client.request.{domain}.Create{Domain}Request
-import insight.c0x12c.client.request.{domain}.Update{Domain}Request
-import insight.c0x12c.client.response.{domain}.{Domain}Response
-import insight.c0x12c.client.response.{domain}.{Domain}ListResponse
+import com.yourcompany.client.request.{domain}.Create{Domain}Request
+import com.yourcompany.client.request.{domain}.Update{Domain}Request
+import com.yourcompany.client.response.{domain}.{Domain}Response
+import com.yourcompany.client.response.{domain}.{Domain}ListResponse
 import retrofit2.http.*
 import java.util.UUID
 
@@ -368,7 +368,7 @@ interface {Domain}Client {
 
 ### 7. Create Integration Test
 
-Location: `app/api-application/src/test/kotlin/insight/c0x12c/{Domain}ControllerTest.kt`
+Location: `app/api-application/src/test/kotlin/com/yourcompany/{Domain}ControllerTest.kt`
 
 > See `testing-patterns.md` for complete test examples.
 

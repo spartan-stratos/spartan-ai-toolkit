@@ -163,6 +163,56 @@ When extra data needs fetching, use a private manager helper that calls `Respons
 
 ## Style
 
+### No Magic Numbers
+
+Never hardcode durations, timeouts, limits. Put them in `application.yml` and inject via config class.
+
+```kotlin
+// WRONG
+val expiresAt = Instant.now().plus(7, ChronoUnit.DAYS)
+val maxRetries = 3
+
+// CORRECT
+val expiresAt = Instant.now().plusSeconds(tokenConfig.refreshTokenExpirationSeconds)
+val maxRetries = appConfig.maxRetries
+```
+
+### No Inline Fully-Qualified Imports
+
+Always use `import` at the top. Never write fully-qualified class names inline.
+
+```kotlin
+// WRONG
+val token = java.util.UUID.randomUUID().toString()
+
+// CORRECT
+import java.util.UUID
+val token = UUID.randomUUID().toString()
+```
+
+### Config Objects Over Individual Fields
+
+Inject the config object. Don't unpack fields into separate constructor params.
+
+```kotlin
+// WRONG — too many params, fragile
+class AuthManager(
+  private val refreshTokenExpirationSeconds: Long,
+  private val passwordResetExpirationSeconds: Long,
+  private val emailVerificationExpirationSeconds: Long
+)
+
+// CORRECT — one config object
+class AuthManager(
+  private val tokenExpirationConfig: TokenExpirationConfig
+)
+```
+
+### JSON Naming
+
+Backend uses `snake_case` for all JSON. Jackson does this automatically.
+Kotlin code stays `camelCase` — Jackson converts at serialization time.
+
 ### Named Arguments
 Use named arguments for 2+ parameters:
 ```kotlin

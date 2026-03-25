@@ -110,10 +110,10 @@ Verify success before proceeding.
 
 ### Step 3: Create Kotlin Table Object
 
-Location: `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/table/{TableName}Table.kt`
+Location: `app/module-repository/src/main/kotlin/com/yourcompany/postgresql/table/{TableName}Table.kt`
 
 ```kotlin
-package insight.c0x12c.postgresql.table
+package com.yourcompany.postgresql.table
 
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.javatime.timestamp
@@ -145,10 +145,10 @@ object {TableName}Table : UUIDTable("{table_name}") {  // ✓ MUST extend UUIDTa
 
 ### Step 4: Create Entity Data Class
 
-Location: `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/entity/{TableName}Entity.kt`
+Location: `app/module-repository/src/main/kotlin/com/yourcompany/postgresql/entity/{TableName}Entity.kt`
 
 ```kotlin
-package insight.c0x12c.postgresql.entity
+package com.yourcompany.postgresql.entity
 
 import java.time.Instant
 import java.util.UUID
@@ -177,10 +177,10 @@ data class {TableName}Entity(
 
 ### Step 5: Create Constants/Enums (if needed)
 
-Location: `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/constant/`
+Location: `app/module-repository/src/main/kotlin/com/yourcompany/postgresql/constant/`
 
 ```kotlin
-package insight.c0x12c.postgresql.constant
+package com.yourcompany.postgresql.constant
 
 enum class {TableName}Status {
   ACTIVE,
@@ -193,12 +193,12 @@ Create enums for status, type, or role columns.
 
 ### Step 6: Create Repository Interface
 
-Location: `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/repository/{TableName}Repository.kt`
+Location: `app/module-repository/src/main/kotlin/com/yourcompany/postgresql/repository/{TableName}Repository.kt`
 
 ```kotlin
-package insight.c0x12c.postgresql.repository
+package com.yourcompany.postgresql.repository
 
-import insight.c0x12c.postgresql.entity.{TableName}Entity
+import com.yourcompany.postgresql.entity.{TableName}Entity
 import java.util.UUID
 
 interface {TableName}Repository {
@@ -213,14 +213,14 @@ interface {TableName}Repository {
 
 ### Step 7: Create Repository Implementation
 
-Location: `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/repository/Default{TableName}Repository.kt`
+Location: `app/module-repository/src/main/kotlin/com/yourcompany/postgresql/repository/Default{TableName}Repository.kt`
 
 ```kotlin
-package insight.c0x12c.postgresql.repository
+package com.yourcompany.postgresql.repository
 
-import com.c0x12c.database.DatabaseContext
-import insight.c0x12c.postgresql.entity.{TableName}Entity
-import insight.c0x12c.postgresql.table.{TableName}Table
+import com.yourcompany.database.DatabaseContext
+import com.yourcompany.postgresql.entity.{TableName}Entity
+import com.yourcompany.postgresql.table.{TableName}Table
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -353,7 +353,7 @@ class Default{TableName}Repository(
 
 ### Step 8: Register Factory Bean
 
-Edit `app/module-repository/src/main/kotlin/insight/c0x12c/runtime/factory/RepositoryFactory.kt`:
+Edit `app/module-repository/src/main/kotlin/com/yourcompany/runtime/factory/RepositoryFactory.kt`:
 
 ```kotlin
 @Factory
@@ -368,14 +368,14 @@ class RepositoryFactory {
 
 ### Step 9: Write Repository Tests
 
-Location: `app/module-repository/src/test/kotlin/insight/c0x12c/postgresql/repository/Default{TableName}RepositoryTest.kt`
+Location: `app/module-repository/src/test/kotlin/com/yourcompany/postgresql/repository/Default{TableName}RepositoryTest.kt`
 
 ```kotlin
-package insight.c0x12c.postgresql.repository
+package com.yourcompany.postgresql.repository
 
 import assertk.assertThat
 import assertk.assertions.*
-import insight.c0x12c.postgresql.entity.{TableName}Entity
+import com.yourcompany.postgresql.entity.{TableName}Entity
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.junit.jupiter.api.BeforeEach

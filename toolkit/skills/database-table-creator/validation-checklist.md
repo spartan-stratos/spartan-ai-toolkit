@@ -72,7 +72,7 @@ Use this checklist to validate every database table implementation. **ALL items 
 - [ ] Has `deletedAt = timestamp("deleted_at").nullable()`
 
 ### File Location
-- [ ] Located in `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/table/`
+- [ ] Located in `app/module-repository/src/main/kotlin/com/yourcompany/postgresql/table/`
 - [ ] File name is `{TableName}Table.kt`
 
 ---
@@ -103,7 +103,7 @@ Use this checklist to validate every database table implementation. **ALL items 
 - [ ] Required database columns do NOT have `?` in Kotlin
 
 ### File Location
-- [ ] Located in `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/entity/`
+- [ ] Located in `app/module-repository/src/main/kotlin/com/yourcompany/postgresql/entity/`
 - [ ] File name is `{TableName}Entity.kt`
 
 ---
@@ -123,7 +123,7 @@ Use this checklist to validate every database table implementation. **ALL items 
 - [ ] Custom query methods follow naming pattern: `by{Column}(value)`
 
 ### File Location
-- [ ] Located in `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/repository/`
+- [ ] Located in `app/module-repository/src/main/kotlin/com/yourcompany/postgresql/repository/`
 - [ ] File name is `{TableName}Repository.kt`
 
 ---
@@ -171,7 +171,7 @@ Use this checklist to validate every database table implementation. **ALL items 
 - [ ] Delete/restore return affected entity or null
 
 ### File Location
-- [ ] Located in `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/repository/`
+- [ ] Located in `app/module-repository/src/main/kotlin/com/yourcompany/postgresql/repository/`
 - [ ] File name is `Default{TableName}Repository.kt`
 
 ---
@@ -187,7 +187,7 @@ Use this checklist to validate every database table implementation. **ALL items 
 - [ ] Returns new instance: `Default{TableName}Repository(db)`
 
 ### File Location
-- [ ] Added to `app/module-repository/src/main/kotlin/insight/c0x12c/runtime/factory/RepositoryFactory.kt`
+- [ ] Added to `app/module-repository/src/main/kotlin/com/yourcompany/runtime/factory/RepositoryFactory.kt`
 
 ---
 
@@ -223,7 +223,7 @@ Use this checklist to validate every database table implementation. **ALL items 
 - [ ] 100% success rate
 
 ### File Location
-- [ ] Located in `app/module-repository/src/test/kotlin/insight/c0x12c/postgresql/repository/`
+- [ ] Located in `app/module-repository/src/test/kotlin/com/yourcompany/postgresql/repository/`
 - [ ] File name is `Default{TableName}RepositoryTest.kt`
 
 ---

@@ -4,6 +4,21 @@
 
 ---
 
+## RPC Style — No REST Verbs
+
+All mutations use `@Post`. Never use `@Put`, `@Delete`, or `@Patch`.
+
+| Action | HTTP Method | Example |
+|--------|-------------|---------|
+| Read one | `@Get` | `@Get("/item")` |
+| Read list | `@Get` | `@Get("/items")` |
+| Create | `@Post` | `@Post` |
+| Update | `@Post("/update")` | `@Post("/update")` |
+| Delete | `@Post("/delete")` | `@Post("/delete")` |
+| Custom action | `@Post("/close")` | `@Post("/close")` |
+
+---
+
 ## URL Design
 
 ### NEVER Use Path Parameters
@@ -200,6 +215,29 @@ dependencies {
 | Item in list | `{Entity}Item` | `ConversationItem` |
 | Brief/summary | `{Entity}Brief` | `ContactBrief` |
 | Request | `{Action}{Entity}Request` | `CreateConversationRequest` |
+
+### Request Validation Annotations
+
+All required fields in request DTOs MUST have validation annotations:
+
+```kotlin
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
+
+data class CreateItemRequest(
+  @field:NotBlank(message = "name is required")
+  val name: String,                                // String → @field:NotBlank
+
+  @field:NotNull(message = "amount is required")
+  val amount: BigDecimal,                          // Non-String → @field:NotNull
+
+  val note: String? = null                         // Optional → no annotation
+)
+```
+
+**Message format:** snake_case field name + " is required" (e.g., `"participant_id is required"`).
+
+Response DTOs do NOT need validation annotations.
 
 Why this matters:
 - Single source of truth

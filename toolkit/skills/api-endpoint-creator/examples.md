@@ -1,6 +1,6 @@
 # API Endpoint Creator - Code Examples
 
-This file has real patterns from the Insight codebase. **Follow these patterns exactly**.
+This file has real patterns from the codebase. **Follow these patterns exactly**.
 
 ---
 
@@ -10,18 +10,18 @@ Shows the full flow from Controller → Manager → Repository.
 
 ### 1. Controller Layer
 
-**File**: `app/api-application/src/main/kotlin/insight/c0x12c/controller/admin/ProjectController.kt`
+**File**: `app/api-application/src/main/kotlin/com/yourcompany/controller/admin/ProjectController.kt`
 
 ```kotlin
-package insight.c0x12c.controller.admin
+package com.yourcompany.controller.admin
 
-import insight.c0x12c.auth.contract.model.UserAuthentication
-import insight.c0x12c.client.request.insight.CreateProjectRequest
-import insight.c0x12c.client.request.insight.UpdateProjectRequest
-import insight.c0x12c.client.response.insight.ProjectResponse
-import insight.c0x12c.client.response.insight.ProjectListResponse
-import insight.c0x12c.exception.throwOrValue
-import insight.c0x12c.insight.contract.ProjectManager
+import com.yourcompany.auth.contract.model.UserAuthentication
+import com.yourcompany.client.request.{domain}.CreateProjectRequest
+import com.yourcompany.client.request.{domain}.UpdateProjectRequest
+import com.yourcompany.client.response.{domain}.ProjectResponse
+import com.yourcompany.client.response.{domain}.ProjectListResponse
+import com.yourcompany.exception.throwOrValue
+import com.yourcompany.{domain}.contract.ProjectManager
 import io.micronaut.http.annotation.*
 import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
@@ -98,17 +98,17 @@ class ProjectController(
 
 ### 2. Manager Interface
 
-**File**: `app/module-insight/module-api/src/main/kotlin/insight/c0x12c/insight/contract/ProjectManager.kt`
+**File**: `app/module-{domain}/module-api/src/main/kotlin/com/yourcompany/insight/contract/ProjectManager.kt`
 
 ```kotlin
-package insight.c0x12c.insight.contract
+package com.yourcompany.{domain}.contract
 
 import arrow.core.Either
-import insight.c0x12c.client.request.insight.CreateProjectRequest
-import insight.c0x12c.client.request.insight.UpdateProjectRequest
-import insight.c0x12c.client.response.insight.ProjectResponse
-import insight.c0x12c.client.response.insight.ProjectListResponse
-import insight.c0x12c.exception.ClientException
+import com.yourcompany.client.request.{domain}.CreateProjectRequest
+import com.yourcompany.client.request.{domain}.UpdateProjectRequest
+import com.yourcompany.client.response.{domain}.ProjectResponse
+import com.yourcompany.client.response.{domain}.ProjectListResponse
+import com.yourcompany.exception.ClientException
 import java.util.UUID
 
 interface ProjectManager {
@@ -142,25 +142,25 @@ interface ProjectManager {
 
 ### 3. Manager Implementation
 
-**File**: `app/module-insight/module-impl/src/main/kotlin/insight/c0x12c/insight/impl/DefaultProjectManager.kt`
+**File**: `app/module-{domain}/module-impl/src/main/kotlin/com/yourcompany/insight/impl/DefaultProjectManager.kt`
 
 ```kotlin
-package insight.c0x12c.insight.impl
+package com.yourcompany.{domain}.impl
 
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.c0x12c.database.DatabaseContext
-import insight.c0x12c.client.request.insight.CreateProjectRequest
-import insight.c0x12c.client.request.insight.UpdateProjectRequest
-import insight.c0x12c.client.response.insight.ProjectResponse
-import insight.c0x12c.client.response.insight.ProjectListResponse
-import insight.c0x12c.exception.ClientError
-import insight.c0x12c.exception.ClientException
-import insight.c0x12c.insight.contract.ProjectManager
-import insight.c0x12c.postgresql.entity.ProjectEntity
-import insight.c0x12c.postgresql.repository.ProjectRepository
-import insight.c0x12c.postgresql.repository.EmployeeRepository
+import com.yourcompany.database.DatabaseContext
+import com.yourcompany.client.request.{domain}.CreateProjectRequest
+import com.yourcompany.client.request.{domain}.UpdateProjectRequest
+import com.yourcompany.client.response.{domain}.ProjectResponse
+import com.yourcompany.client.response.{domain}.ProjectListResponse
+import com.yourcompany.exception.ClientError
+import com.yourcompany.exception.ClientException
+import com.yourcompany.{domain}.contract.ProjectManager
+import com.yourcompany.postgresql.entity.ProjectEntity
+import com.yourcompany.postgresql.repository.ProjectRepository
+import com.yourcompany.postgresql.repository.EmployeeRepository
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
 
@@ -241,12 +241,12 @@ class DefaultProjectManager(
 
 ### 4. Response Model with Companion Object
 
-**File**: `app/module-client/src/main/kotlin/insight/c0x12c/client/response/insight/ProjectResponse.kt`
+**File**: `app/module-client/src/main/kotlin/com/yourcompany/client/response/insight/ProjectResponse.kt`
 
 ```kotlin
-package insight.c0x12c.client.response.insight
+package com.yourcompany.client.response.{domain}
 
-import insight.c0x12c.postgresql.entity.ProjectEntity
+import com.yourcompany.postgresql.entity.ProjectEntity
 import java.time.Instant
 import java.util.UUID
 
@@ -298,10 +298,10 @@ data class ProjectListResponse(
 
 ### 5. Request Model
 
-**File**: `app/module-client/src/main/kotlin/insight/c0x12c/client/request/insight/ProjectRequests.kt`
+**File**: `app/module-client/src/main/kotlin/com/yourcompany/client/request/insight/ProjectRequests.kt`
 
 ```kotlin
-package insight.c0x12c.client.request.insight
+package com.yourcompany.client.request.{domain}
 
 import java.util.UUID
 
@@ -325,21 +325,21 @@ data class UpdateProjectRequest(
 
 ### 6. Factory Bean
 
-**File**: `app/module-insight/module-impl/src/main/kotlin/insight/c0x12c/runtime/factory/InsightManagerFactory.kt`
+**File**: `app/module-{domain}/module-impl/src/main/kotlin/com/yourcompany/runtime/factory/{Domain}ManagerFactory.kt`
 
 ```kotlin
-package insight.c0x12c.runtime.factory
+package com.yourcompany.runtime.factory
 
-import com.c0x12c.database.DatabaseContext
-import insight.c0x12c.insight.contract.ProjectManager
-import insight.c0x12c.insight.impl.DefaultProjectManager
-import insight.c0x12c.postgresql.repository.ProjectRepository
-import insight.c0x12c.postgresql.repository.EmployeeRepository
+import com.yourcompany.database.DatabaseContext
+import com.yourcompany.{domain}.contract.ProjectManager
+import com.yourcompany.{domain}.impl.DefaultProjectManager
+import com.yourcompany.postgresql.repository.ProjectRepository
+import com.yourcompany.postgresql.repository.EmployeeRepository
 import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
 
 @Factory
-class InsightManagerFactory {
+class {Domain}ManagerFactory {
 
   @Singleton
   fun provideProjectManager(
@@ -360,15 +360,15 @@ class InsightManagerFactory {
 
 ### 7. Retrofit Client
 
-**File**: `app/module-client/src/main/kotlin/insight/c0x12c/client/ProjectClient.kt`
+**File**: `app/module-client/src/main/kotlin/com/yourcompany/client/ProjectClient.kt`
 
 ```kotlin
-package insight.c0x12c.client
+package com.yourcompany.client
 
-import insight.c0x12c.client.request.insight.CreateProjectRequest
-import insight.c0x12c.client.request.insight.UpdateProjectRequest
-import insight.c0x12c.client.response.insight.ProjectResponse
-import insight.c0x12c.client.response.insight.ProjectListResponse
+import com.yourcompany.client.request.{domain}.CreateProjectRequest
+import com.yourcompany.client.request.{domain}.UpdateProjectRequest
+import com.yourcompany.client.response.{domain}.ProjectResponse
+import com.yourcompany.client.response.{domain}.ProjectListResponse
 import retrofit2.http.*
 import java.util.UUID
 

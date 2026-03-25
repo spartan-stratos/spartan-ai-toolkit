@@ -123,6 +123,22 @@ import org.jetbrains.exposed.sql.SortOrder
 .orderBy(MyTable.createdAt to false)
 ```
 
+### Chaining WHERE Conditions
+
+Calling `.where {}` twice **replaces** the first condition. Use `.andWhere {}` to add conditions:
+
+```kotlin
+// CORRECT — andWhere adds to existing condition
+MyTable.selectAll()
+  .where { MyTable.deletedAt.isNull() }
+  .andWhere { MyTable.status eq "active" }
+
+// WRONG — second where replaces the deletedAt filter!
+MyTable.selectAll()
+  .where { MyTable.deletedAt.isNull() }
+  .where { MyTable.status eq "active" }  // REPLACES the first where!
+```
+
 ### Transaction Usage
 
 - **Reads**: `transaction(db.replica) { ... }`

@@ -149,7 +149,7 @@ assertThat(result)
 ./gradlew test
 
 # Specific test class
-./gradlew test --tests "insight.c0x12c.EmployeeControllerTest"
+./gradlew test --tests "com.yourcompany.EmployeeControllerTest"
 
 # Module tests only
 ./gradlew :app:module-repository:test

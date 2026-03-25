@@ -1,6 +1,6 @@
 # Error Handling Guide - Either Type Usage
 
-How to use Arrow's `Either` type for error handling in the Insight platform.
+How to use Arrow's `Either` type for error handling in the platform.
 
 ---
 

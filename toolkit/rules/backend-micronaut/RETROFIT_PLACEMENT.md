@@ -249,9 +249,9 @@ backend/
 
 ## Related Rules
 
-- `.claude/rules/KOTLIN_CODING_STANDARDS.md` - No force unwraps
-- `.claude/rules/NAMING_CONVENTIONS.md` - Package naming
-- `.claude/rules/DATABASE_DESIGN.md` - Repository patterns
+- `KOTLIN.md` — Null safety, no force unwraps
+- `NAMING_CONVENTIONS.md` — Package naming
+- `SCHEMA.md` — Repository patterns
 
 ---
 

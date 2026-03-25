@@ -1,15 +1,15 @@
 # Database Table Creator - Code Examples
 
-This file contains actual code patterns extracted from the Insight codebase. **Follow these patterns exactly**.
+This file contains actual code patterns extracted from the codebase. **Follow these patterns exactly**.
 
 ---
 
 ## Kotlin Table Object Pattern
 
-**File**: `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/table/UserTable.kt`
+**File**: `app/module-repository/src/main/kotlin/com/yourcompany/postgresql/table/UserTable.kt`
 
 ```kotlin
-package insight.c0x12c.postgresql.table
+package com.yourcompany.postgresql.table
 
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.javatime.timestamp
@@ -49,16 +49,16 @@ object UserTable : UUIDTable("users") {  // ✓ MUST extend UUIDTable
 
 ## Entity Data Class Pattern
 
-**File**: `app/module-repository/src/main/kotlin/insight/c0x12c/postgresql/entity/UserEntity.kt`
+**File**: `app/module-repository/src/main/kotlin/com/yourcompany/postgresql/entity/UserEntity.kt`
 
 ```kotlin
-package insight.c0x12c.postgresql.entity
+package com.yourcompany.postgresql.entity
 
-import insight.c0x12c.postgresql.constant.ReferralSource
-import insight.c0x12c.postgresql.constant.UserRoleType
-import insight.c0x12c.postgresql.constant.UserStatus
-import insight.c0x12c.postgresql.constant.UserStatusType
-import insight.c0x12c.postgresql.constant.UserType
+import com.yourcompany.postgresql.constant.ReferralSource
+import com.yourcompany.postgresql.constant.UserRoleType
+import com.yourcompany.postgresql.constant.UserStatus
+import com.yourcompany.postgresql.constant.UserStatusType
+import com.yourcompany.postgresql.constant.UserType
 import java.time.Instant
 import java.util.UUID
 
@@ -98,9 +98,9 @@ data class UserEntity(  // ✓ Use data class
 ## Repository Interface Pattern
 
 ```kotlin
-package insight.c0x12c.postgresql.repository
+package com.yourcompany.postgresql.repository
 
-import insight.c0x12c.postgresql.entity.UserEntity
+import com.yourcompany.postgresql.entity.UserEntity
 import java.util.UUID
 
 interface UserRepository {
@@ -137,11 +137,11 @@ interface UserRepository {
 ## Repository Implementation Pattern
 
 ```kotlin
-package insight.c0x12c.postgresql.repository
+package com.yourcompany.postgresql.repository
 
-import com.c0x12c.database.DatabaseContext
-import insight.c0x12c.postgresql.entity.UserEntity
-import insight.c0x12c.postgresql.table.UserTable
+import com.yourcompany.database.DatabaseContext
+import com.yourcompany.postgresql.entity.UserEntity
+import com.yourcompany.postgresql.table.UserTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -284,13 +284,13 @@ class DefaultUserRepository(
 
 ## Repository Factory Bean Pattern
 
-**File**: `app/module-repository/src/main/kotlin/insight/c0x12c/runtime/factory/RepositoryFactory.kt`
+**File**: `app/module-repository/src/main/kotlin/com/yourcompany/runtime/factory/RepositoryFactory.kt`
 
 ```kotlin
-package insight.c0x12c.runtime.factory
+package com.yourcompany.runtime.factory
 
-import com.c0x12c.database.DatabaseContext
-import insight.c0x12c.postgresql.repository.*
+import com.yourcompany.database.DatabaseContext
+import com.yourcompany.postgresql.repository.*
 import io.micronaut.context.annotation.Factory
 import jakarta.inject.Singleton
 
@@ -323,12 +323,12 @@ class RepositoryFactory {
 ## Repository Test Pattern
 
 ```kotlin
-package insight.c0x12c.postgresql.repository
+package com.yourcompany.postgresql.repository
 
 import assertk.assertThat
 import assertk.assertions.*
-import insight.c0x12c.postgresql.entity.UserEntity
-import insight.c0x12c.postgresql.constant.UserStatus
+import com.yourcompany.postgresql.entity.UserEntity
+import com.yourcompany.postgresql.constant.UserStatus
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.junit.jupiter.api.BeforeEach
