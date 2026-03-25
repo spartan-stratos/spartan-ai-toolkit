@@ -8,6 +8,27 @@
 Rules in `rules/frontend-react/`:
 - `FRONTEND.md` — Build check before commit, API case conversion, null safety, optimistic updates
 
+### Feature Development Workflow (Frontend)
+
+When building a frontend feature, follow this pipeline:
+
+```
+Epic → Spec → Design → Plan → Build → Review
+              ↑                  ↑       ↑        ↑
+            Gate 1             Gate 2  Gate 3   Gate 4
+```
+
+**Build phases:** Types & API → Components → Pages/Routes → Tests
+
+Design is NOT optional for frontend — always create a design doc for new screens.
+
+See `templates/workflow-frontend-react.md` for the full workflow with:
+- Stack-specific quality gates (TypeScript, React patterns, accessibility, responsive)
+- File location guide (App Router conventions)
+- Parallel vs sequential task planning
+
+For small tasks (< 1 day), `/spartan:quickplan` covers spec + plan in one shot.
+
 ### Frontend Skills
 
 - `/ui-ux-pro-max` — Design system with 67 styles, 96 palettes, 13 stacks

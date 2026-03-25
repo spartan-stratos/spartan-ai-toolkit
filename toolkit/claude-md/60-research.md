@@ -64,7 +64,7 @@ These skills are used by the commands above. You can also use them directly.
 
 Reference materials available in the toolkit:
 - **12 frameworks**: Lean Canvas, Design Sprint, Business Model Canvas, JTBD, Mom Test, Value Proposition Canvas, and more
-- **6 templates**: Idea canvas, competitor analysis, user interview, validation checklist, PRD, project readme
+- **13 templates**: Idea canvas, competitor analysis, user interview, validation checklist, PRD, project readme, epic, feature spec, implementation plan, quality gates, design doc, workflow-backend-micronaut, workflow-frontend-react
 
 ### Rules
 

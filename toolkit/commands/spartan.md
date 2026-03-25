@@ -111,6 +111,24 @@ Based on what the user says, match to the right command:
 | "workstreams", "parallel work", "concurrent milestones" | `/spartan:workstreams` |
 | "what went wrong", "forensics", "post-mortem", "why did it fail" | `/spartan:forensics` |
 
+### Feature development workflow (epic → spec → plan → build → review)
+| User says something like... | Route to |
+|---|---|
+| "break this into features", "epic", "feature breakdown" | Use `templates/epic.md` — help user fill it in |
+| "write a spec", "spec this out", "define requirements" | Use `templates/feature-spec.md` — walk through each section |
+| "implementation plan", "break into tasks", "plan the build" | Use `templates/implementation-plan.md` — design architecture + task breakdown |
+| "quality check", "gate check", "review checklist" | Use `templates/quality-gates.md` — run the right gate |
+| "design doc", "design this feature", "UI spec" | Use `templates/design-doc.md` — flows, wireframes, components |
+
+**Tip:** For small tasks (< 1 day), `/spartan:quickplan` covers spec + plan in one shot. Use the templates for bigger features where you want more detail and quality gates between phases.
+
+The workflow:
+```
+Epic → Spec → [Design] → Plan → Build → Review
+              ↑                   ↑       ↑        ↑
+            Gate 1              Gate 2  Gate 3   Gate 4
+```
+
 ### Setup & scaffolding (less frequent)
 | User says something like... | Route to |
 |---|---|
@@ -137,6 +155,27 @@ Based on what the user says, match to the right command:
 | "interview", "talk to users", "mom test", "customer interview" | `/spartan:interview` |
 | "lean canvas", "business model", "one-page canvas" | `/spartan:lean-canvas` |
 | "brainstorm", "generate ideas", "explore ideas", "new idea" | `/spartan:brainstorm` |
+
+### Startup research pipeline (idea → investor-ready)
+| User says something like... | Route to |
+|---|---|
+| "I have a startup idea", "new startup", "explore an idea" | `/spartan:kickoff "idea"` |
+| "full pipeline", "idea to investor", "end to end" | `/spartan:full-run "theme"` |
+| "market research", "dig deeper", "competitor analysis" | `/spartan:deep-dive "project"` |
+| "pitch deck", "investor materials", "one-pager" | `/spartan:pitch "type"` |
+| "investor emails", "outreach", "reach out to investors" | `/spartan:outreach "investor"` |
+| "fundraise", "raise money", "get funded" | `/spartan:fundraise "project"` |
+| "research a topic", "deep research" | `/spartan:research "topic"` |
+| "write a post", "blog post", "article" | `/spartan:write "topic"` |
+| "content", "social media", "turn into content" | `/spartan:content "source"` |
+
+**Tip:** Not sure where to start? Run `/spartan:kickoff` — it walks you through brainstorm → validate. If you already validated, jump to `/spartan:deep-dive`.
+
+The full pipeline looks like this:
+```
+/kickoff (brainstorm + validate) → /deep-dive (research + teardowns) → /fundraise (pitch + outreach)
+```
+Or run `/spartan:full-run` to go through all stages with gates.
 
 ### Safety
 | User says something like... | Route to |
@@ -186,7 +225,26 @@ Don't dump all 20. Group by journey:
 `quickplan` → code → `pr-ready` — the daily loop
 
 **Product (thinking before building):**
-`brainstorm` → `validate` → `think` → then build
+`brainstorm` → `validate` → `teardown` → `interview` → `lean-canvas` → `think` → then build
+
+**Research (full startup pipeline — needs `product` pack too):**
+```
+Stage 1: DISCOVER       Stage 2: FILTER        Stage 3: DIG           Stage 4: BUILD
+/kickoff                /validate              /deep-dive             /fundraise
+/brainstorm                                    /research              /pitch
+                                               /teardown              /outreach
+
+8-15 ideas         →    GO / TEST / KILL   →   Market + rivals    →   Deck + emails
+Pick top 3              Kill bad ones          Real numbers           Ready to send
+```
+Combo shortcuts: `/kickoff` (stages 1-2), `/deep-dive` (stage 3), `/fundraise` (stage 4), `/full-run` (all stages)
+
+**Feature Development (templates for structured building):**
+```
+Epic → Spec → Plan → Build → Review (with quality gates between each phase)
+```
+Templates: `epic`, `feature-spec`, `implementation-plan`, `quality-gates`, `design-doc`
+For small tasks, `/quickplan` covers spec + plan in one shot.
 
 **Backend / Frontend / Project-Mgmt / Ops:**
 Stack-specific scaffolding, reviews, and tooling

@@ -1,5 +1,7 @@
 # PRD: [Feature/Product Name]
 
+> **When to use this:** PRDs are for stakeholder alignment — "should we build this?" They're high-level and non-technical. For the development workflow (epic → spec → plan → build), use `epic.md` and `feature-spec.md` instead. A PRD can feed into an epic, but they serve different audiences.
+
 **Author:**
 **Date:**
 **Status:** Draft / Review / Approved

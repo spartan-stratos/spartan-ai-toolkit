@@ -14,6 +14,26 @@ Rules in `rules/backend-micronaut/` enforce coding standards:
 
 > Full patterns: use /kotlin-best-practices or /backend-api-design skill
 
+### Feature Development Workflow (Backend)
+
+When building a backend feature, follow this pipeline:
+
+```
+Epic → Spec → Plan → Build → Review
+              ↑         ↑       ↑        ↑
+            Gate 1    Gate 2  Gate 3   Gate 4
+```
+
+**Build phases:** Database → Business Logic → API Layer → Tests
+
+See `templates/workflow-backend-micronaut.md` for the full workflow with:
+- Stack-specific quality gates (Kotlin rules, Exposed ORM checks, API conventions)
+- Concrete code patterns (Controller, Manager, Repository, Factory, DTO, Test)
+- Real file locations per module
+- Parallel vs sequential task planning
+
+For small tasks (< 1 day), `/spartan:quickplan` covers spec + plan in one shot.
+
 ### Backend Skills
 
 - `/api-endpoint-creator` — Generate full Controller → Manager → Repository stack

@@ -246,16 +246,81 @@ Don't memorize the list. Use `/spartan` and it'll figure it out. But if you want
 | Analyze a competitor | `/spartan:teardown` |
 | Interview users | `/spartan:interview` |
 | Build a lean canvas | `/spartan:lean-canvas` |
+| Generate and filter ideas | `/spartan:brainstorm` |
 
-### "I need to research"
+### "I have a startup idea" (Research Pipeline)
+
+The `research` pack (which pulls in `product`) gives you a 4-stage pipeline from idea to investor-ready. Each stage has a gate &mdash; you decide whether to keep going or stop.
+
+```
+Stage 1: DISCOVER       Stage 2: FILTER        Stage 3: DIG           Stage 4: BUILD
+───────────────         ──────────────         ─────────────          ──────────────
+/kickoff                /validate              /deep-dive             /fundraise
+/brainstorm                                    /research              /pitch
+                                               /teardown              /outreach
+
+ 8-15 ideas        →    GO / TEST / KILL   →   Market + rivals    →   Deck + emails
+ Pick top 3             Kill bad ones          Real numbers           Ready to send
+```
+
+**Combo commands** &mdash; so you don't have to run each step by hand:
+
+| What you're doing | Command | Stages |
+|-------------------|---------|--------|
+| Start from scratch | `/spartan:kickoff "theme"` | 1 &rarr; 2 |
+| Dig into a validated idea | `/spartan:deep-dive "project"` | 3 |
+| Build pitch + outreach | `/spartan:fundraise "project"` | 4 |
+| Run the whole pipeline | `/spartan:full-run "theme"` | 1 &rarr; 4 |
+
+**Single commands** for when you know what you need:
 
 | What you're doing | Command |
 |-------------------|---------|
-| Deep research on a topic | `/spartan:research` |
-| Full startup pipeline | `/spartan:full-run` |
-| Market research + competitors | `/spartan:deep-dive` |
-| Create pitch materials | `/spartan:pitch` |
-| Write investor emails | `/spartan:outreach` |
+| Deep research on a topic | `/spartan:research "topic"` |
+| Create pitch materials | `/spartan:pitch "type"` |
+| Write investor emails | `/spartan:outreach "investor"` |
+| Turn research into content | `/spartan:content "source"` |
+| Write a blog post | `/spartan:write "topic"` |
+
+### "I'm building a feature" (Feature Development Workflow)
+
+The toolkit includes templates for a structured feature development workflow with quality gates between each phase.
+
+```
+Epic → Spec → [Design] → Plan → Build → Review
+              ↑                   ↑       ↑        ↑
+            Gate 1              Gate 2  Gate 3   Gate 4
+```
+
+| Phase | What Happens | Template |
+|-------|-------------|----------|
+| **Epic** | Break big feature into ordered sub-features | `templates/epic.md` |
+| **Spec** | Define problem, requirements, data model, API, edge cases | `templates/feature-spec.md` |
+| **Design** | User flows, wireframes, components, responsive (optional, for UI features) | `templates/design-doc.md` |
+| **Plan** | Design architecture, list files, break into tasks with phases | `templates/implementation-plan.md` |
+| **Build** | Implement task by task, run Gate 3 after each | quality-gates Gate 3 |
+| **Review** | Final review: all tests pass, no TODOs, no regressions | quality-gates Gate 4 |
+
+**Quality gates** (`templates/quality-gates.md`) are checklists that must pass before moving to the next phase. They catch missing specs, bad architecture, code violations, and incomplete testing.
+
+**Stack-specific workflows** &mdash; each pack has its own version with real code patterns, file locations, and quality gates tuned to the stack:
+
+| Pack | Workflow | Build Phases |
+|------|----------|-------------|
+| `backend-micronaut` | `templates/workflow-backend-micronaut.md` | Database &rarr; Business Logic &rarr; API &rarr; Tests |
+| `frontend-react` | `templates/workflow-frontend-react.md` | Types &amp; API &rarr; Components &rarr; Pages &rarr; Tests |
+| Generic (any stack) | `templates/quality-gates.md` | Adapt phases to your stack |
+
+The backend workflow includes code patterns for Controllers, Managers, Repositories, Factories, DTOs, and Tests &mdash; with real module paths and Kotlin-specific quality gates.
+
+The frontend workflow includes App Router conventions, TypeScript checks, accessibility gates, and responsive verification.
+
+**How to use it:**
+1. Start with `/spartan:quickplan` for small tasks (it covers spec + plan in one shot)
+2. For bigger features, use the stack-specific workflow as your guide
+3. Use `/spartan:project new` for multi-day projects with milestone tracking
+
+There's also a **design doc template** (`templates/design-doc.md`) for UI features &mdash; covers user flows, wireframes, responsive behavior, and accessibility.
 
 ### "I need to manage a project"
 
@@ -288,6 +353,8 @@ Spartan installs four types of content:
 **Skills** &mdash; deep knowledge in specific areas. API endpoint patterns, database design, test strategies, UI/UX design intelligence. Claude loads them when relevant.
 
 **Agents** &mdash; expert personas. A Micronaut backend expert, a CTO for architecture decisions, an idea-killer for stress-testing, a research planner for coordinating research.
+
+**Templates** &mdash; fill-in-the-blank documents for common workflows. Epics, feature specs, implementation plans, quality gates, design docs, lean canvases, competitor analyses, and more.
 
 ---
 
