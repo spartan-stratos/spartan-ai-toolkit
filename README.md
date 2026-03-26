@@ -12,6 +12,12 @@
     <a href="#all-commands">All Commands</a> &middot;
     <a href="CONTRIBUTING.md">Contributing</a>
   </p>
+  <p align="center">
+    <a href="https://www.npmjs.com/package/@c0x12c/spartan-ai-toolkit"><img src="https://img.shields.io/npm/v/@c0x12c/spartan-ai-toolkit.svg" alt="npm version"></a>
+    <a href="https://www.npmjs.com/package/@c0x12c/spartan-ai-toolkit"><img src="https://img.shields.io/npm/dm/@c0x12c/spartan-ai-toolkit.svg" alt="npm downloads"></a>
+    <a href="https://github.com/spartan-stratos/spartan-ai-toolkit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/spartan-stratos/spartan-ai-toolkit.svg" alt="license"></a>
+    <a href="https://github.com/spartan-stratos/spartan-ai-toolkit/stargazers"><img src="https://img.shields.io/github/stars/spartan-stratos/spartan-ai-toolkit.svg" alt="GitHub stars"></a>
+  </p>
 </p>
 
 ---
