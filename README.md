@@ -187,47 +187,60 @@ npx @c0x12c/spartan-ai-toolkit@latest --all
 
 ## How It Works
 
-After installing, type `/spartan`. The smart router figures out what you need.
+After installing, type `/spartan`. The smart router figures out what you need and runs the right workflow.
 
-### The Feature Workflow
+### 5 Workflow Leaders
 
-This is the core pipeline. Every feature goes through it.
+Each leader runs a full pipeline end-to-end. You don't chain commands manually &mdash; the leader decides which skills and sub-steps to call.
 
 ```
-/spartan:epic → /spartan:spec → /spartan:design → /spartan:plan → /spartan:build → /spartan:pr-ready
-                     ↑               ↑                 ↑              ↑ + 3.5           ↑
-                   Gate 1       Design Gate          Gate 2         Gate 3            Gate 4
+/spartan:build "feature"     One command. The leader handles the rest.
+       │
+       ├── checks .memory/ for relevant decisions
+       ├── checks .planning/ for existing spec/design/plan
+       │
+       ├── SPEC ──────── Gate 1  (inline for small work, full Q&A for big work)
+       ├── DESIGN ────── Design Gate  (auto-detected for UI work)
+       ├── PLAN ──────── Gate 2  (inline or saved to .planning/)
+       ├── IMPLEMENT ─── Gate 3  (TDD, task by task)
+       ├── REVIEW ────── Gate 3.5  (self-review, optional dual-agent)
+       └── SHIP ──────── Gate 4  (PR created, patterns saved to .memory/)
 ```
 
-| Step | Command | What happens |
-|------|---------|-------------|
-| **Spec** | `/spartan:spec "feature"` | Interactive Q&A &rarr; saves to `.planning/specs/` &rarr; Gate 1 |
-| **Design** | `/spartan:design "feature"` | Design doc + dual-agent review (designer + critic) &rarr; Design Gate |
-| **Plan** | `/spartan:plan "feature"` | Reads spec &rarr; architecture + task breakdown &rarr; saves to `.planning/plans/` &rarr; Gate 2 |
-| **Build** | `/spartan:build "feature"` | Picks up saved spec/plan &rarr; TDD task by task &rarr; Gate 3 |
-| **Review** | `/spartan:gate-review` | Dual-agent review (builder + reviewer both accept) &rarr; Gate 3.5 |
-| **Ship** | `/spartan:pr-ready` | Rebase, test, lint, create PR &rarr; Gate 4 |
+| Leader | Command | What it handles |
+|--------|---------|----------------|
+| **Build** | `/spartan:build [feature]` | Spec &rarr; design? &rarr; plan &rarr; TDD &rarr; review &rarr; PR. Auto-detects backend/frontend. Resumes across sessions. |
+| **Fix** | `/spartan:fix [symptom]` | Checks known issues &rarr; reproduce &rarr; investigate &rarr; test-first fix &rarr; PR. Saves patterns to memory. |
+| **Startup** | `/spartan:startup [idea]` | Brainstorm &rarr; validate &rarr; research &rarr; pitch. Auto-resumes from where you left off. |
+| **Onboard** | `/spartan:onboard` | Scan &rarr; map architecture &rarr; setup tooling &rarr; save findings to memory for future sessions. |
+| **Research** | `/spartan:research [topic]` | Frame question &rarr; gather sources &rarr; analyze &rarr; structured report. |
 
-You don't have to run every step. Skip design for backend-only work. Skip epic if it's a single feature. The workflow adapts:
+**Fast path:** For small work (&lt; 1 day, &le; 4 tasks), `/spartan:build` does spec + plan inline. No separate commands needed. Just say what you want to build.
 
-| Situation | Path |
-|-----------|------|
-| Backend feature | `spec` &rarr; `plan` &rarr; `build` |
-| Frontend feature | `spec` &rarr; `design` &rarr; `plan` &rarr; `build` |
-| Batch of features | `epic` &rarr; then spec/plan/build each one |
-| Multi-week project | `project new` &rarr; milestones &rarr; phases |
-| Bug fix | `/spartan:fix` (its own workflow) |
+**Full path:** For bigger work (5+ tasks, multi-day), the leader saves specs, designs, and plans to `.planning/` so you can resume in a new session.
+
+### Individual commands still work
+
+Leaders call these internally, but you can run them directly when you want just one step:
+
+| Command | What it does |
+|---------|-------------|
+| `/spartan:spec "feature"` | Write a spec &rarr; saves to `.planning/specs/` |
+| `/spartan:design "feature"` | Design doc + dual-agent review |
+| `/spartan:plan "feature"` | Implementation plan from spec &rarr; saves to `.planning/plans/` |
+| `/spartan:gate-review` | Dual-agent review (builder + reviewer) |
+| `/spartan:pr-ready` | Pre-PR checklist + auto PR |
 
 ### Skills: knowledge at each step
 
-Skills are the domain experts the workflow calls on. You don't pick them &mdash; the workflow loads the right skill at the right time based on your stack.
+Skills are the domain experts the leaders call on. You don't pick them &mdash; the leader loads the right skill at the right time based on your stack.
 
-| Skill | When it's used |
-|-------|---------------|
+| Skill | When the leader calls it |
+|-------|------------------------|
 | `kotlin-best-practices` | During build (Kotlin files) |
 | `database-patterns` | During plan + build (migration tasks) |
 | `ui-ux-pro-max` | During design + build (React components) |
-| `design-workflow` | During `/spartan:design` (anti-AI-generic rules) |
+| `design-workflow` | During design step (anti-AI-generic rules) |
 | `testing-strategies` | During build (test tasks) |
 | `security-checklist` | During review (security scan) |
 
@@ -238,21 +251,19 @@ A skill alone is just a prompt file. Inside a workflow, it's the right knowledge
 The AI forgets everything when you close the terminal. Agent memory fixes that.
 
 ```
-.planning/
-  specs/           ← Feature specs (survive sessions)
-  plans/           ← Implementation plans
-  designs/         ← Design docs
-  epics/           ← Epic tracking
-  design-config.md ← Project design system
-
-.memory/
-  index.md         ← Quick reference to all knowledge
-  decisions/       ← Architectural decision records
-  patterns/        ← Reusable code patterns discovered
-  knowledge/       ← Domain facts, API gotchas
+.planning/                          .memory/
+  specs/     ← Feature specs          index.md     ← Quick reference
+  plans/     ← Implementation plans   decisions/   ← Architecture decisions
+  designs/   ← Design docs            patterns/    ← Code patterns found
+  epics/     ← Epic tracking          knowledge/   ← Domain facts, gotchas
+                                       blockers/    ← Known issues
 ```
 
-When you run `/spartan:build`, it checks `.planning/specs/` for a saved spec. If one exists, it skips the Q&A and uses it. When you run `/spartan:plan`, it reads the spec and the codebase to make a plan that fits. The memory connects the dots.
+**Leaders read and write memory automatically:**
+- `/spartan:build` checks `.planning/` for saved artifacts. If a spec exists, it skips the Q&A. After shipping, it saves new patterns to `.memory/`.
+- `/spartan:fix` checks `.memory/blockers/` for known issues before investigating. After fixing, it saves recurring patterns.
+- `/spartan:onboard` saves architecture findings to `.memory/knowledge/` so future sessions start with context.
+- `/spartan:startup` scans the project folder and auto-resumes from the last completed stage.
 
 ### Rules: always-on standards
 
@@ -265,9 +276,9 @@ npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut
 
 ### Getting started
 
-1. **Run `/spartan:onboard`** to set up your project
-2. **Try `/spartan:spec "small feature"`** then `/spartan:build "small feature"` to see the workflow
-3. After that, just use `/spartan` &mdash; the router picks the right command
+1. **Run `/spartan:onboard`** to set up your project (saves findings for future sessions)
+2. **Try `/spartan:build "small feature"`** &mdash; it handles spec, plan, TDD, review, and PR in one flow
+3. After that, just use `/spartan` &mdash; the router picks the right leader
 
 ---
 
@@ -275,16 +286,22 @@ npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut
 
 Type `/spartan` to get the smart router. Or go direct:
 
-### Workflows
-| Command | What it does |
-|---------|-------------|
-| `build [mode] [feature]` | Build a feature end-to-end (backend, frontend, or auto-detect) |
-| `fix [symptom]` | Find and fix a bug with structured investigation |
-| `research [topic]` | Deep research with source tracking and report |
-| `startup [idea]` | Full startup pipeline: brainstorm to investor-ready |
-| `onboard` | Understand a new codebase and set up tooling |
+### Workflow Leaders (start here)
+
+Each leader runs a full pipeline. You give it one command &mdash; it handles the rest.
+
+| Leader | Command | Pipeline |
+|--------|---------|----------|
+| **Build** | `build [mode] [feature]` | context &rarr; spec &rarr; design? &rarr; plan &rarr; TDD &rarr; review &rarr; PR |
+| **Fix** | `fix [symptom]` | known issues &rarr; reproduce &rarr; investigate &rarr; test-first fix &rarr; PR |
+| **Startup** | `startup [idea]` | resume check &rarr; brainstorm &rarr; validate &rarr; research &rarr; pitch |
+| **Onboard** | `onboard` | memory check &rarr; scan &rarr; map &rarr; setup &rarr; save to memory |
+| **Research** | `research [topic]` | frame &rarr; gather &rarr; analyze &rarr; report |
 
 ### Core (always installed)
+
+Leaders call these automatically, but you can also run them directly.
+
 | Command | What it does |
 |---------|-------------|
 | `spec "feature"` | Write a feature spec &mdash; saves to `.planning/specs/` |

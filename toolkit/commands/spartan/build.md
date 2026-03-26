@@ -2,24 +2,26 @@
 name: spartan:build
 description: "Build a new feature end-to-end — backend, frontend, or full-stack with auto-detection"
 argument-hint: "[backend|frontend] [feature description]"
+preamble-tier: 4
 ---
 
 # Build: {{ args[0] | default: "a new feature" }}
 
-You are running the **Build workflow** — the main way to go from requirement to merged PR.
+You are the **Build workflow leader** — the main way to go from requirement to merged PR.
 
-This workflow has 4 stages with gates between each. Don't skip ahead.
+You decide which steps to run, which skills to call, and when to move forward. The user doesn't need to chain commands manually — you handle the full pipeline.
 
 ```
-STAGE 1: UNDERSTAND        STAGE 2: PLAN           STAGE 3: IMPLEMENT        STAGE 4: SHIP
-───────────────────       ──────────────          ──────────────────        ──────────────
-3 forcing questions       Size check:             Task by task, TDD         Self-review
-Scope: in / out           Small → inline plan     Right skills per stack    Fix issues found
-Stack detection           Big → full /phase       Tests after each task     Create PR
+PIPELINE:
 
-Gate 1                    Gate 2                  Gate 3                    Gate 4
-"Scope right?"            "Plan good?"            "Tests pass?"             "PR created"
+  Check Context → Spec → Design? → Plan → Implement → Review → Ship
+       │            │        │         │        │          │       │
+   .memory/    Gate 1    Design    Gate 2   Gate 3    Gate 3.5  Gate 4
+   .planning/           Gate (UI)
 ```
+
+**Fast path:** For small work (< 1 day, ≤ 4 tasks), you do spec + plan inline. No separate commands needed.
+**Full path:** For bigger work, you call `/spartan:spec`, `/spartan:design`, `/spartan:plan` as sub-steps.
 
 ---
 
@@ -50,23 +52,58 @@ ls .planning/PROJECT.md 2>/dev/null && echo "GSD_ACTIVE"
 
 ---
 
-## Stage 1: Understand
+## Step 0.5: Check Context (silent — no questions)
 
-**First, check for a saved spec:**
+Before doing anything, check what already exists for this feature.
+
 ```bash
+# Check memory for relevant decisions/patterns
+ls .memory/index.md 2>/dev/null
+ls .memory/decisions/ .memory/patterns/ .memory/knowledge/ .memory/blockers/ 2>/dev/null
+
+# Check for existing artifacts
 ls .planning/specs/*.md 2>/dev/null
+ls .planning/designs/*.md 2>/dev/null
+ls .planning/plans/*.md 2>/dev/null
+
+# Check for handoff from a previous session
+ls .handoff/*.md 2>/dev/null
 ```
 
-If a spec exists for this feature (matching the feature name), read it and use it as the scope. Skip the 3 questions — the spec already answered them. Show:
-> "Found spec: `.planning/specs/{name}.md` — using it as scope."
+**If `.memory/index.md` exists**, read it. Look for decisions or patterns related to this feature. If you find something relevant, mention it:
+> "Found relevant context in `.memory/`: [brief summary]. Using this."
 
-If no spec exists, **ask 3 forcing questions. Always. Even in auto mode.**
+**If a handoff exists**, read it. You might be resuming a previous session's work:
+> "Found handoff from a previous session. Resuming from: [last stage]."
+
+**If spec/design/plan already exist** for this feature, skip those stages and jump ahead. Show what you found:
+> "Found: spec ✓, design ✓, plan ✓ — jumping to Implement."
+
+---
+
+## Stage 1: Understand (Spec)
+
+### Size check first
+
+Before asking anything, estimate the size from the user's description:
+
+- **Small** (< 1 day, ≤ 4 tasks, ≤ 3 files) → **Fast path** — inline spec below
+- **Big** (multi-day, 5+ tasks, new tables + endpoints + UI) → **Full path** — run `/spartan:spec`
+
+**How to decide:**
+- Adding a column + updating one endpoint = small
+- New feature with migration + service + controller + frontend = big
+- If unclear, ask one question: "Quick estimate — is this a few hours or multiple days?"
+
+### Fast path (small work)
+
+Ask 3 forcing questions. Always. Even in auto mode.
 
 1. **"What pain does this solve?"** — Not the feature. The pain. If the user says "add a profiles endpoint" ask what user problem it fixes.
 2. **"What's the narrowest version we can ship?"** — Force MVP thinking. Cut scope until it hurts.
 3. **"What assumption could be wrong?"** — Surface hidden risks early.
 
-After the user answers (or after reading the spec), produce a scope block:
+After the user answers, produce a scope block:
 
 ```markdown
 ## Scope: [feature name]
@@ -85,6 +122,15 @@ After the user answers (or after reading the spec), produce a scope block:
 **Risk:** [the assumption that could be wrong]
 ```
 
+### Full path (big work)
+
+Tell the user and run the spec command internally:
+> "This is bigger work — let me run a proper spec first."
+
+Use the approach from `/spartan:spec` — ask questions one at a time, fill the template, run Gate 1, save to `.planning/specs/`.
+
+Then continue to the next stage automatically (don't tell the user to run a separate command).
+
 **GATE 1 — STOP and ask:**
 > "Here's the scope. Anything to change before I plan?"
 >
@@ -92,26 +138,49 @@ After the user answers (or after reading the spec), produce a scope block:
 
 ---
 
+## Stage 1.5: Design (UI work only — auto-detected)
+
+**Only runs if the feature has UI work.** Skip entirely for pure backend.
+
+Check if this feature needs a design:
+- Frontend mode? → Yes
+- Full-stack mode with UI changes? → Yes
+- Backend only? → Skip this stage
+
+Check if a design already exists:
+```bash
+ls .planning/designs/*.md 2>/dev/null
+```
+
+If no design exists and UI work is needed:
+> "This has UI work. Want me to create a design doc?"
+>
+> - **A) Yes** — I'll run the design workflow (dual-agent review with design-critic)
+> - **B) Skip** — I'll design as I build (fine for simple UI changes)
+> - **C) I have Figma designs** — point me to them
+
+If user picks A → use the approach from `/spartan:design` internally. Run the full design workflow including the design-critic agent review.
+
+If user picks B → continue to Plan.
+
+If user picks C → read the Figma reference and use it as the design source.
+
+**Auto mode on?** → Skip for small UI changes (adding a column to a table, a toggle). Run for new screens/pages.
+
+---
+
 ## Stage 2: Plan
 
 ### Check for saved plan
 
-```bash
-ls .planning/plans/*.md 2>/dev/null
-```
-
-If a plan exists for this feature, read it and use it. Skip the inline planning — go straight to Stage 3 (Implement). Show:
+If a plan already exists for this feature, use it:
 > "Found plan: `.planning/plans/{name}.md` — using it."
 
-If no plan exists, do the size check below.
+If no plan exists, do the size check:
 
-### Size check
+### Fast path (small — 1-4 tasks)
 
-Count the expected work:
-- **Small** (1-4 tasks, < 1 day): Inline plan right here.
-- **Big** (5+ tasks, multi-day): Use `/spartan:phase plan` for a full wave-parallel plan.
-
-### Inline plan format (small features)
+Produce an inline plan:
 
 ```markdown
 ## Plan: [feature name]
@@ -127,7 +196,13 @@ Verify: [how to confirm]
 ...
 ```
 
-**Max 4 tasks for inline plan.** If you need more, it's a big feature — use `/spartan:phase`.
+**Max 4 tasks for inline plan.** If you need more, use the full path.
+
+### Full path (big — 5+ tasks)
+
+Use the approach from `/spartan:plan` internally — architecture design, file locations, phased tasks with parallel/sequential marking. Save to `.planning/plans/`.
+
+Then continue automatically.
 
 ### What the plan includes (by mode)
 
@@ -211,13 +286,15 @@ npm test
 **GATE 3 — STOP and ask:**
 > "All [N] tasks done. [X] tests passing. Ready for review?"
 >
-> If 3+ tasks were completed, suggest: "Want a dual-agent review? Run `/spartan:gate-review`"
+> If 3+ tasks were completed: "I'll run a self-review now. For a deeper dual-agent review, say 'gate review'."
 >
-> **Auto mode on?** → Continue to Ship immediately.
+> **Auto mode on?** → Continue to Review immediately.
 
 ---
 
-## Stage 4: Ship
+## Stage 3.5: Review (auto-runs)
+
+This stage runs automatically after implementation. You don't wait for the user to run a separate review command.
 
 ### Self-review
 - **Backend code** → use the approach from `/spartan:review`
@@ -229,23 +306,68 @@ Fix any issues found during review. Commit fixes separately:
 fix([scope]): [what review caught]
 ```
 
+### Dual-agent review (optional, on request)
+If the user says "gate review" or if the feature is large (5+ tasks), offer to spawn the gate-review approach:
+> "Want a dual-agent gate review? This spawns a reviewer agent for a second opinion."
+
+If yes → use the approach from `/spartan:gate-review` internally.
+
+---
+
+## Stage 4: Ship
+
 ### Create PR
 Run the approach from `/spartan:pr-ready`:
 - Rebase onto main
 - Run all checks one final time
 - Create PR with clear title, summary, and test plan
 
+### Save to memory (if something notable was learned)
+
+After the PR is created, check if this build revealed anything worth remembering:
+
+- **New pattern discovered?** → Save to `.memory/patterns/`
+- **Architecture decision made?** → Save to `.memory/decisions/`
+- **Gotcha or workaround found?** → Save to `.memory/knowledge/`
+- **Nothing notable?** → Skip. Don't save noise.
+
+```bash
+mkdir -p .memory/decisions .memory/patterns .memory/knowledge
+```
+
+Update `.memory/index.md` if you saved anything.
+
 **GATE 4 — Done.**
 > "PR created: [link]. Here's what's in it: [summary]."
 
 ---
 
+## Resume: Picking Up Where You Left Off
+
+If a previous session was interrupted (context overflow, user stopped, etc.), this workflow can resume.
+
+**How resume works:**
+1. Step 0.5 checks for `.handoff/` files and existing `.planning/` artifacts
+2. Determine which stage was completed last:
+   - Has spec but no plan → resume at Stage 2 (Plan)
+   - Has plan but no commits on feature branch → resume at Stage 3 (Implement)
+   - Has commits but no PR → resume at Stage 4 (Ship)
+3. Show the user: "Resuming from [stage]. Here's what was done: [summary]."
+4. Continue from that point.
+
+**Don't re-do completed stages.** Read the saved artifacts and move forward.
+
+---
+
 ## Rules
 
-- **Always start at Stage 1.** Don't skip the 3 questions. They prevent building the wrong thing.
-- **Gates are mandatory.** Even small features go through all 4 stages. The stages are fast for small work — that's fine.
+- **You are the orchestrator.** Don't tell the user to run `/spartan:spec` or `/spartan:plan` separately. Run those approaches yourself when needed.
+- **Fast path is the default for small work.** If the whole thing is 1-4 tasks, do everything inline. Don't force the user through 3 separate commands.
+- **Full path for big work.** If 5+ tasks, save artifacts to `.planning/` so future sessions can pick up.
+- **Gates are mandatory.** Even small features go through all stages. The stages are fast for small work — that's fine.
 - **TDD by default.** Write the test first. Override only when test-first doesn't make sense for that specific task.
 - **One commit per task.** Don't batch. Each task = one commit with a clear message.
-- **Security check always runs.** Whether backend or frontend, security patterns get checked at the end of Stage 3.
+- **Security check always runs.** Whether backend or frontend, security patterns get checked during review.
 - **Frontend checks for backend needs.** If a new page needs data that doesn't exist yet, say so at Stage 2 and add backend tasks first.
 - **Don't over-plan.** If the whole thing is 1-2 files and 30 minutes of work, don't force it into this workflow. Just do it. This workflow is for features that need structure — at least 2-3 tasks.
+- **Save state for big work.** If 5+ tasks, save artifacts to `.planning/` so future sessions can resume.

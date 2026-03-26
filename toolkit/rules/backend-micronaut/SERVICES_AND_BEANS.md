@@ -217,7 +217,7 @@ Shared Beans (bottom)      — infrastructure (DB, Redis, AWS), no dependencies
 3. **`@Named`** for multiple implementations of same interface
 4. **`@Primary`** for default implementation
 5. **`@Requires`** for conditional bean creation
-6. **No circular dependencies** — use intermediary or refactor
+6. **No circular dependencies** — fix with interface extraction (see below)
 
 ```kotlin
 // CORRECT — Factory pattern
@@ -273,5 +273,53 @@ fun testDatabaseContext(): DatabaseContext = InMemoryDatabaseContext()
 - [ ] Use `@Named` for multiple implementations
 - [ ] Use `@Primary` for default implementation
 - [ ] Use `@Requires` for conditional creation
-- [ ] No circular dependencies
+- [ ] No circular dependencies (see "Breaking Circular Dependencies" below)
 - [ ] Bean is testable (can be replaced with `@Replaces`)
+
+---
+
+## Breaking Circular Dependencies
+
+`Provider<T>` for lazy initialization is a code smell for a circular dependency. Fix the root cause.
+
+### The Problem
+
+```
+ProjectManager → WorkspaceManager → SomeService → ProjectManager  (cycle!)
+```
+
+**Bad workaround:**
+```kotlin
+// Provider<T> hides the cycle — DON'T DO THIS
+class DefaultProjectManager(
+  private val workspaceManagerProvider: Provider<WorkspaceManager>,  // Lazy
+) : ProjectManager
+```
+
+### The Fix: Interface Extraction + Layer Split
+
+**Step 1** — Find the shared functionality causing the cycle.
+
+**Step 2** — Extract it into a focused interface:
+```kotlin
+interface ProjectThumbnailResolver {
+  suspend fun resolveProjectThumbnailUrl(entity: ProjectEntity): String?
+}
+```
+
+**Step 3** — Move the logic to a new component with lower-level dependencies:
+```kotlin
+class DefaultProjectThumbnailResolver(
+  private val storageService: StorageService  // No cycle
+) : ProjectThumbnailResolver { ... }
+```
+
+**Step 4** — Inject directly, no Provider needed:
+```kotlin
+class DefaultProjectManager(
+  private val workspaceManager: WorkspaceManager,         // Direct injection
+  private val projectThumbnailResolver: ProjectThumbnailResolver  // New!
+) : ProjectManager
+```
+
+**Rule:** If you reach for `Provider<T>`, stop. Extract the shared functionality into its own interface at a lower layer.
