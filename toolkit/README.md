@@ -1,6 +1,6 @@
 # Spartan AI Toolkit
 
-> Engineering discipline layer for AI coding tools — commands, rules, skills, agents, and packs.
+> Workflow-first engineering discipline for AI coding tools. Workflows solve problems end-to-end. Skills provide knowledge at each step. Agent memory carries context across sessions.
 
 ---
 
@@ -51,34 +51,34 @@ After install, open any project, run `claude`, then type `/spartan`.
 
 ---
 
-## How to Use — Pick Your Style
+## How to Use
 
-**Workflows** &mdash; guided multi-stage processes. Best for features, bug fixes, research. Uses more tokens but catches what you'd miss.
+### The core workflow
 
-| Workflow | Command | What it does |
-|----------|---------|-------------|
-| **Build** | `/spartan:build [backend\|frontend] [feature]` | Requirement &rarr; plan &rarr; TDD &rarr; review &rarr; PR |
-| **Fix** | `/spartan:fix [symptom]` | Reproduce &rarr; investigate &rarr; test-first fix &rarr; PR |
-| **Research** | `/spartan:research [topic]` | Frame &rarr; gather &rarr; analyze &rarr; report |
-| **Startup** | `/spartan:startup [idea]` | Brainstorm &rarr; validate &rarr; research &rarr; pitch |
-| **Onboard** | `/spartan:onboard` | Scan &rarr; map architecture &rarr; set up tooling |
-
-**Direct commands** &mdash; one command, one job. Best when you know what step you need. Saves tokens.
+Every feature follows the same pipeline. Skip steps that don't apply.
 
 ```
-/spartan:spec "feature"    ← write the spec
-/spartan:plan "feature"    ← plan the implementation
-/spartan:review             ← just the code review
-/spartan:pr-ready           ← just the PR creation
-/spartan:migration "desc"   ← just the migration
+/spartan:spec → /spartan:design → /spartan:plan → /spartan:build → /spartan:pr-ready
+      ↑              ↑                 ↑              ↑ + 3.5           ↑
+    Gate 1      Design Gate         Gate 2          Gate 3           Gate 4
 ```
 
-**Rules only** &mdash; zero overhead. Rules load automatically and enforce coding standards every session. No commands needed.
+| Step | What happens |
+|------|-------------|
+| `spec` | Interactive Q&A &rarr; saved spec &rarr; Gate 1 checks quality |
+| `design` | Design doc + dual-agent review (skip for backend-only) |
+| `plan` | Architecture + task breakdown from spec &rarr; Gate 2 |
+| `build` | TDD task by task, picks up saved spec/plan |
+| `gate-review` | Builder + reviewer agent both must accept |
+| `pr-ready` | Rebase, test, lint, create PR |
 
-```bash
-# Install packs → rules work silently in every session
-npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut
-```
+**Bigger work?** Use `/spartan:epic` to break it into features first, then run the pipeline for each one. For multi-week projects, use `/spartan:project new` with milestones and phases.
+
+**Skills load automatically** based on your stack. Kotlin files &rarr; `kotlin-best-practices`. React components &rarr; `ui-ux-pro-max`. Migrations &rarr; `database-patterns`. You don't pick them.
+
+**Agent memory** (`.planning/`, `.memory/`) carries specs, plans, decisions, and patterns across sessions. The AI builds on what it already knows instead of starting from scratch.
+
+**Rules** load every session with zero tokens. They enforce coding standards silently.
 
 ---
 

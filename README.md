@@ -1,14 +1,14 @@
 <p align="center">
   <h1 align="center">Spartan AI Toolkit</h1>
   <p align="center">
-    <strong>Engineering discipline layer for AI coding tools</strong>
+    <strong>Workflow-first engineering discipline for AI coding tools</strong>
     <br />
-    Workflows &middot; Commands &middot; Rules &middot; Skills &middot; Agents
+    Workflows &middot; Skills &middot; Agent Memory &middot; Quality Gates
   </p>
   <p align="center">
     <a href="#install">Install</a> &middot;
     <a href="#pick-your-packs">Pick Your Packs</a> &middot;
-    <a href="#how-to-use">How to Use</a> &middot;
+    <a href="#how-it-works">How It Works</a> &middot;
     <a href="#all-commands">All Commands</a> &middot;
     <a href="CONTRIBUTING.md">Contributing</a>
   </p>
@@ -24,18 +24,45 @@
 
 ## Why Spartan?
 
-AI coding tools are powerful. But on real projects, they write code without tests, push PRs without rebasing, edit files you didn't ask about, and forget decisions from 20 minutes ago. Every developer on your team gets different code style from the same AI.
+Most AI coding tools give you **skills** &mdash; a better prompt for writing tests, a smarter code review, a prettier design. That's nice. But skills alone don't solve problems. They're just steps. Nobody ships a feature by running "write test" in isolation.
 
-Spartan fixes this. It's a set of **workflows, rules, and commands** that make AI coding tools consistent and reliable for production work.
+Real work needs **workflows** &mdash; end-to-end pipelines that take you from "I need to build X" to "PR merged." Workflows connect the steps in the right order, with quality gates between each one, and agent memory that carries knowledge across sessions.
+
+**Spartan is workflow-first.** Skills and commands still exist, but they're nodes in a pipeline &mdash; not the product.
+
+### The three layers
+
+```
+WORKFLOWS       End-to-end pipelines that solve problems
+                spec → design → plan → build → review → ship
+                   ↑        ↑        ↑       ↑ + 3.5      ↑
+                 Gate 1  Design   Gate 2    Gate 3       Gate 4
+                         Gate
+                                    │
+SKILLS          Knowledge at each step (Kotlin patterns, UI design,
+                database rules, security checks, testing strategies)
+                                    │
+AGENT MEMORY    Decisions, patterns, and context that survive across
+                sessions (.memory/, .planning/, design-config)
+```
+
+**Workflows** define the process: what happens, in what order, with what gates. They call the right skills at the right time. You don't need to know which skill to use &mdash; the workflow picks it.
+
+**Skills** are the domain knowledge. They teach the AI how to write Kotlin, how to design UIs that don't look AI-generated, how to structure database migrations. A skill alone is just a prompt. Inside a workflow, it's the right knowledge at the right moment.
+
+**Agent memory** is what makes multi-session work possible. Decisions from Phase 1 inform Phase 3. Design choices from the spec carry through to the code review. Without memory, each session starts from scratch. With it, the AI builds on what it already knows.
+
+### What that looks like in practice
 
 | Without Spartan | With Spartan |
 |----------------|-------------|
-| "Build this feature" &rarr; jumps to code, no plan, no tests | `/spartan:build` &rarr; understand, plan, TDD, review, PR |
+| "Build this feature" &rarr; jumps to code, no plan, no tests | `/spartan:build` &rarr; spec, plan, TDD, gate review, PR |
 | "Fix this bug" &rarr; guesses a fix, hopes for the best | `/spartan:fix` &rarr; reproduce, root-cause, test-first fix, PR |
-| Team of 5 devs &rarr; each gets different code style | Rule files &rarr; same standards for everyone, every session |
-| 3-week feature &rarr; no plan, lost context | `/spartan:project new` &rarr; roadmap, phases, wave execution, persistent memory |
+| Team of 5 devs &rarr; each gets different code style | Rules load every session &rarr; same standards for everyone |
+| 3-week feature &rarr; no plan, lost context between sessions | `/spartan:project` &rarr; roadmap, phases, agent memory across sessions |
+| "Design this page" &rarr; generic AI template | `/spartan:design` &rarr; design config, dual-agent review, Design Gate |
 
-> Not everything needs a workflow. Questions, small code changes (&lt; 30 min) &mdash; just talk to your AI directly. Workflows are for **structured work where missing steps cause real problems**.
+> Not everything needs a workflow. Questions, small code changes (&lt; 30 min) &mdash; just talk to your AI. Workflows are for **structured work where missing steps cause real problems**.
 
 ---
 
@@ -158,81 +185,89 @@ npx @c0x12c/spartan-ai-toolkit@latest --all
 
 ---
 
-## How to Use
+## How It Works
 
-After installing, open any project and type `/spartan`. The smart router figures out what you need.
+After installing, type `/spartan`. The smart router figures out what you need.
 
-But here's the real guide &mdash; **pick the approach that fits how you work:**
+### The Feature Workflow
 
-### Approach 1: Workflows (guided, thorough)
-
-**Best for:** Features with 3+ tasks, bugs you can't figure out quickly, research projects, codebase onboarding.
-
-Workflows walk you through stages with gates between each step. They call the right commands and skills for you &mdash; you don't need to know what's under the hood.
-
-| Workflow | Command | What it does |
-|----------|---------|-------------|
-| **Build** | `/spartan:build [backend\|frontend] [feature]` | Requirement &rarr; plan &rarr; TDD &rarr; review &rarr; PR |
-| **Fix** | `/spartan:fix [symptom]` | Reproduce &rarr; investigate &rarr; test-first fix &rarr; PR |
-| **Research** | `/spartan:research [topic]` | Frame question &rarr; gather sources &rarr; analyze &rarr; report |
-| **Startup** | `/spartan:startup [idea]` | Brainstorm &rarr; validate &rarr; market research &rarr; pitch |
-| **Onboard** | `/spartan:onboard` | Scan codebase &rarr; map architecture &rarr; set up tooling |
-
-**Build** auto-detects your stack. If you have `build.gradle.kts`, it uses Kotlin/Micronaut skills. If you have `next.config.*`, it uses React/Next.js skills. You can also be explicit:
+This is the core pipeline. Every feature goes through it.
 
 ```
-/spartan:build backend add user profile endpoint
-/spartan:build frontend dashboard page
-/spartan:build add payment processing        ← auto-detect
+/spartan:epic → /spartan:spec → /spartan:design → /spartan:plan → /spartan:build → /spartan:pr-ready
+                     ↑               ↑                 ↑              ↑ + 3.5           ↑
+                   Gate 1       Design Gate          Gate 2         Gate 3            Gate 4
 ```
 
-**Startup** replaces the old `/spartan:full-run`. Same 4-stage pipeline, new name.
+| Step | Command | What happens |
+|------|---------|-------------|
+| **Spec** | `/spartan:spec "feature"` | Interactive Q&A &rarr; saves to `.planning/specs/` &rarr; Gate 1 |
+| **Design** | `/spartan:design "feature"` | Design doc + dual-agent review (designer + critic) &rarr; Design Gate |
+| **Plan** | `/spartan:plan "feature"` | Reads spec &rarr; architecture + task breakdown &rarr; saves to `.planning/plans/` &rarr; Gate 2 |
+| **Build** | `/spartan:build "feature"` | Picks up saved spec/plan &rarr; TDD task by task &rarr; Gate 3 |
+| **Review** | `/spartan:gate-review` | Dual-agent review (builder + reviewer both accept) &rarr; Gate 3.5 |
+| **Ship** | `/spartan:pr-ready` | Rebase, test, lint, create PR &rarr; Gate 4 |
 
-**Fix** replaces the old `/spartan:debug`. Same investigation protocol, but now goes all the way to PR.
+You don't have to run every step. Skip design for backend-only work. Skip epic if it's a single feature. The workflow adapts:
 
-### Approach 2: Direct commands (fast, focused)
+| Situation | Path |
+|-----------|------|
+| Backend feature | `spec` &rarr; `plan` &rarr; `build` |
+| Frontend feature | `spec` &rarr; `design` &rarr; `plan` &rarr; `build` |
+| Batch of features | `epic` &rarr; then spec/plan/build each one |
+| Multi-week project | `project new` &rarr; milestones &rarr; phases |
+| Bug fix | `/spartan:fix` (its own workflow) |
 
-**Best for:** When you know exactly what you need. One command, one job, done.
+### Skills: knowledge at each step
 
-Workflows use more tokens because they run multiple stages. If you want to save tokens or you already know what step you're on, jump straight to the command:
+Skills are the domain experts the workflow calls on. You don't pick them &mdash; the workflow loads the right skill at the right time based on your stack.
 
-| Instead of... | Use directly |
-|---------------|-------------|
-| Running the full Build workflow | `/spartan:spec "feature"` + `/spartan:plan "feature"` for planning, then code manually |
-| Running the full Fix workflow | `/spartan:debug "symptom"` for just the investigation part |
-| Build workflow's review stage | `/spartan:review` (backend) or `/spartan:fe-review` (frontend) |
-| Build workflow's ship stage | `/spartan:pr-ready` to create the PR |
-| Startup workflow's full pipeline | `/spartan:kickoff` (stages 1-2), `/spartan:deep-dive` (stage 3), `/spartan:fundraise` (stage 4) |
+| Skill | When it's used |
+|-------|---------------|
+| `kotlin-best-practices` | During build (Kotlin files) |
+| `database-patterns` | During plan + build (migration tasks) |
+| `ui-ux-pro-max` | During design + build (React components) |
+| `design-workflow` | During `/spartan:design` (anti-AI-generic rules) |
+| `testing-strategies` | During build (test tasks) |
+| `security-checklist` | During review (security scan) |
 
-Think of it this way: **workflows are the recipe, commands are individual cooking steps.** If you already know how to cook, just grab the step you need.
+A skill alone is just a prompt file. Inside a workflow, it's the right knowledge at the right moment.
 
-### Approach 3: Rules only (zero overhead)
+### Agent memory: context across sessions
 
-**Best for:** Teams that want consistent code style without changing how they work.
+The AI forgets everything when you close the terminal. Agent memory fixes that.
 
-Rules cost zero extra tokens. They're loaded automatically every session as part of CLAUDE.md. You don't run anything &mdash; the AI just follows the standards.
+```
+.planning/
+  specs/           ← Feature specs (survive sessions)
+  plans/           ← Implementation plans
+  designs/         ← Design docs
+  epics/           ← Epic tracking
+  design-config.md ← Project design system
 
-What rules do:
-- Force consistent naming (`NAMING_CONVENTIONS`)
-- Enforce architecture patterns (`ARCHITECTURE`, `CONTROLLERS`, `SERVICES_AND_BEANS`)
-- Prevent bad database design (`SCHEMA`, `ORM_AND_REPO`, `TRANSACTIONS`)
-- Catch Kotlin anti-patterns (`KOTLIN`)
-- Keep frontend code clean (`FRONTEND`)
+.memory/
+  index.md         ← Quick reference to all knowledge
+  decisions/       ← Architectural decision records
+  patterns/        ← Reusable code patterns discovered
+  knowledge/       ← Domain facts, API gotchas
+```
 
-Install with just the packs you want, and the rules work silently in every session:
+When you run `/spartan:build`, it checks `.planning/specs/` for a saved spec. If one exists, it skips the Q&A and uses it. When you run `/spartan:plan`, it reads the spec and the codebase to make a plan that fits. The memory connects the dots.
+
+### Rules: always-on standards
+
+Rules cost zero tokens. They load automatically every session. The AI follows them without you asking.
 
 ```bash
 npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut
-# Now every AI session follows your Kotlin + Micronaut coding standards
+# Now every session follows your Kotlin + Micronaut coding standards
 ```
 
 ### Getting started
 
-Whichever approach you pick:
-
-1. **Run `/spartan:onboard`** (or `/spartan:init-project` for just the CLAUDE.md) to set up your project
-2. **Try `/spartan:build backend [small feature]`** to see the full workflow once
-3. After that, use whichever approach fits the task
+1. **Run `/spartan:onboard`** to set up your project
+2. **Try `/spartan:spec "small feature"`** then `/spartan:build "small feature"` to see the workflow
+3. After that, just use `/spartan` &mdash; the router picks the right command
 
 ---
 
