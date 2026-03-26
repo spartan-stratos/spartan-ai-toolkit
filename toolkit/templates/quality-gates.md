@@ -98,25 +98,34 @@ Run after each task is done during the build phase.
 
 ---
 
-## Gate 3.5: Phase Review
+## Gate 3.5: Phase Review (Dual-Agent)
 
-Run after all tasks in a phase are done. This is the "zoom out" check.
+Run after all tasks in a phase are done. This is a **dual-agent review** — the builder and the `phase-reviewer` agent both evaluate the work. Both must accept.
 
-**Code Design:**
+**Trigger:** `/spartan:gate-review [phase number]`
+
+### Agent Agreement (must pass first)
+- [ ] Reviewer agent spawned and given all changed files
+- [ ] Builder did self-assessment before calling reviewer
+- [ ] Both agents (builder + reviewer) confirmed they accept the result
+- [ ] All discussion points are resolved (no open disagreements)
+- [ ] If disagreement after 3 rounds → escalated to user
+
+### Code Design
 - [ ] Single responsibility (each class/module does one thing)
 - [ ] No god classes or methods doing too much
 - [ ] Proper separation of concerns between layers
 - [ ] Naming is clear and consistent
 - [ ] Method/function signatures are clean (not too many parameters)
 
-**Best Practices:**
+### Best Practices
 - [ ] No unnecessary complexity or over-engineering
 - [ ] No dead code or unused imports
 - [ ] Error messages are helpful (what went wrong + what to do)
 - [ ] Logging is right — enough to debug, not noisy
 - [ ] No magic numbers or strings (use config or constants)
 
-**Clean Code:**
+### Clean Code
 - [ ] Functions are short and focused
 - [ ] No deeply nested conditionals (max 2-3 levels)
 - [ ] No copy-paste duplication
@@ -163,5 +172,5 @@ Run when all tasks are done. This is the "ship it?" check.
 | Gate 1 | After spec | Is the WHAT clear enough to plan? |
 | Gate 2 | After plan | Is the HOW clear enough to build? |
 | Gate 3 | After each task | Does this code follow the rules? |
-| Gate 3.5 | After each phase | Is the code clean and well-designed? |
+| Gate 3.5 | After each phase | Dual-agent review — builder + reviewer both accept? |
 | Gate 4 | After all tasks | Is this ready to ship? |

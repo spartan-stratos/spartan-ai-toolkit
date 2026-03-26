@@ -8,10 +8,10 @@ PACK_DESC_core="Core workflow (always installed)"
 PACK_HIDDEN_core=false
 PACK_COMING_SOON_core=false
 PACK_DEPENDS_core=""
-PACK_COMMANDS_core="spec plan build fix onboard daily context-save update debug pr-ready init-project careful freeze unfreeze guard"
+PACK_COMMANDS_core="spec plan build fix onboard daily context-save update debug pr-ready init-project careful freeze unfreeze guard gate-review"
 PACK_RULES_core="core/NAMING_CONVENTIONS.md"
 PACK_SKILLS_core=""
-PACK_AGENTS_core=""
+PACK_AGENTS_core="phase-reviewer.md"
 PACK_CLAUDE_SECTIONS_core=""
 
 PACK_DESC_database="Database patterns, migrations, Exposed ORM"

@@ -70,7 +70,11 @@ During execution:
 - Capture new knowledge to `.memory/` as you go
 
 After execution, tell the user:
-"Phase {{ args[1] | default: "N" }} executed. [N] commits made. Next step: `/spartan:phase verify {{ args[1] | default: "N" }}`"
+"Phase {{ args[1] | default: "N" }} executed. [N] commits made."
+
+Suggest next step based on phase complexity:
+- If phase had 3+ tasks: "Run `/spartan:gate-review {{ args[1] | default: "N" }}` for a dual-agent review, then `/spartan:phase verify {{ args[1] | default: "N" }}`"
+- If phase was simple (1-2 tasks): "Next step: `/spartan:phase verify {{ args[1] | default: "N" }}`"
 
 {% elif args[0] == "verify" %}
 ## Verify Phase {{ args[1] | default: "N" }}
@@ -112,6 +116,8 @@ Example: `/spartan:phase discuss 1`
 /spartan:phase plan N        ← Wave-parallel plan from .memory/ context
        ↓
 /spartan:phase execute N     ← TDD, wave by wave, safety guardrails
+       ↓
+/spartan:gate-review N       ← Dual-agent review (Gate 3.5) — optional but recommended
        ↓
 /spartan:phase verify N      ← UAT + capture knowledge to .memory/
        ↓
