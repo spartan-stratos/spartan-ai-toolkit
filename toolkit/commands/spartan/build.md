@@ -211,6 +211,8 @@ npm test
 **GATE 3 — STOP and ask:**
 > "All [N] tasks done. [X] tests passing. Ready for review?"
 >
+> If 3+ tasks were completed, suggest: "Want a dual-agent review? Run `/spartan:gate-review`"
+>
 > **Auto mode on?** → Continue to Ship immediately.
 
 ---

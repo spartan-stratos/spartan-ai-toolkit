@@ -105,6 +105,8 @@ Route here when the user wants a specific tool, not a full workflow.
 | User says... | Route to |
 |---|---|
 | "plan a task", "write a spec" | `/spartan:spec` → `/spartan:plan` |
+| "break into features", "epic" | `/spartan:epic` |
+| "review my code", "dual review", "gate review" | `/spartan:gate-review` |
 | "big project", "multi-day", "new milestone" | `/spartan:project new` |
 | "continue phase", "next phase" | `/spartan:phase` |
 | "workstreams", "parallel work" | `/spartan:workstreams` |

@@ -89,6 +89,11 @@ Auto mode is ideal for experienced users who trust the workflow and want maximum
 | `/spartan:plan "feature"` | Write implementation plan from spec → saves to `.planning/plans/` → Gate 2 |
 | `/spartan:epic "name"` | Break big work into ordered features → saves to `.planning/epics/` |
 
+### Quality Gates
+| Command | Purpose |
+|---|---|
+| `/spartan:gate-review [phase]` | Dual-agent review (Gate 3.5) — builder + reviewer must both accept |
+
 ### Individual Commands
 | Command | Purpose |
 |---|---|

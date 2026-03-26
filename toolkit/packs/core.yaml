@@ -22,10 +22,12 @@ commands:
   - guard
   - sessions
   - contribute
+  - gate-review
 
 rules:
   - core/NAMING_CONVENTIONS.md
 
 skills: []
-agents: []
+agents:
+  - phase-reviewer.md
 claude-sections: []
