@@ -5,6 +5,7 @@
 
 | Command | Purpose |
 |---|---|
+| `/spartan:epic "name"` | Break big work into ordered features → each goes through spec → plan → build |
 | `/spartan:project [action]` | Manage large projects: `new`, `status`, `milestone-new`, `milestone-complete`, `milestone-summary`, `manager` |
 | `/spartan:phase [action] [N]` | Manage phases: `discuss`, `plan`, `execute`, `verify` |
 | `/spartan:workstreams [action]` | Parallel workstreams: `list`, `create`, `switch`, `status`, `progress`, `complete`, `resume` |

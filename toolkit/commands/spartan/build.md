@@ -52,13 +52,21 @@ ls .planning/PROJECT.md 2>/dev/null && echo "GSD_ACTIVE"
 
 ## Stage 1: Understand
 
-**Ask 3 forcing questions. Always. Even in auto mode.**
+**First, check for a saved spec:**
+```bash
+ls .planning/specs/*.md 2>/dev/null
+```
+
+If a spec exists for this feature (matching the feature name), read it and use it as the scope. Skip the 3 questions — the spec already answered them. Show:
+> "Found spec: `.planning/specs/{name}.md` — using it as scope."
+
+If no spec exists, **ask 3 forcing questions. Always. Even in auto mode.**
 
 1. **"What pain does this solve?"** — Not the feature. The pain. If the user says "add a profiles endpoint" ask what user problem it fixes.
 2. **"What's the narrowest version we can ship?"** — Force MVP thinking. Cut scope until it hurts.
 3. **"What assumption could be wrong?"** — Surface hidden risks early.
 
-After the user answers, produce a scope block:
+After the user answers (or after reading the spec), produce a scope block:
 
 ```markdown
 ## Scope: [feature name]
@@ -86,10 +94,21 @@ After the user answers, produce a scope block:
 
 ## Stage 2: Plan
 
+### Check for saved plan
+
+```bash
+ls .planning/plans/*.md 2>/dev/null
+```
+
+If a plan exists for this feature, read it and use it. Skip the inline planning — go straight to Stage 3 (Implement). Show:
+> "Found plan: `.planning/plans/{name}.md` — using it."
+
+If no plan exists, do the size check below.
+
 ### Size check
 
 Count the expected work:
-- **Small** (1-4 tasks, < 1 day): Inline plan right here. Like a mini-quickplan.
+- **Small** (1-4 tasks, < 1 day): Inline plan right here.
 - **Big** (5+ tasks, multi-day): Use `/spartan:phase plan` for a full wave-parallel plan.
 
 ### Inline plan format (small features)

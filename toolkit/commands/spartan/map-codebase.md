@@ -66,7 +66,7 @@ Once mapping is complete, suggest next steps based on context:
 
 - **Starting a new project?** → `/spartan:project new` (map feeds into roadmap creation)
 - **Planning a phase?** → `/spartan:phase plan N` (agents read codebase docs automatically)
-- **Major refactoring?** → `/spartan:quickplan "refactor description"` (informed by CONCERNS.md)
+- **Major refactoring?** → `/spartan:spec "refactor description"` → `/spartan:build` (informed by CONCERNS.md)
 - **Team onboarding?** → Share `.planning/codebase/` docs with new team members
 
 The codebase map is consumed automatically by GSD planning and execution agents — no manual wiring needed.

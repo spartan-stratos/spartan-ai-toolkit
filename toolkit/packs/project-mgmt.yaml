@@ -5,6 +5,7 @@ priority: 30
 hidden: false
 
 commands:
+  - epic
   - project
   - phase
   - workstreams

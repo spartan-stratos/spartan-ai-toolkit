@@ -19,7 +19,9 @@ These commands help you think deep before writing code. Use them when starting a
        ↓
 /spartan:think "feature"          ← 6-phase deep thinking before code
        ↓
-/spartan:quickplan "task"         ← Then build it
+/spartan:spec "task"              ← Write the spec
+/spartan:plan "task"              ← Plan the work
+/spartan:build "task"             ← Then build it
 ```
 
 You don't have to use all of them. Pick what fits your stage.

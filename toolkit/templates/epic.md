@@ -96,5 +96,5 @@ What could block us or go wrong?
 |-----------|-----|
 | Big feature set (3+ features, multi-week) | This epic template |
 | Single feature (1-3 days) | Skip epic, start with `feature-spec.md` |
-| Quick task (< 1 day) | Skip both, use `/spartan:quickplan` |
+| Quick task (< 1 day) | Skip epic, use `/spartan:spec` → `/spartan:build` |
 | Product-level vision doc for stakeholders | Use `prd-template.md` instead |

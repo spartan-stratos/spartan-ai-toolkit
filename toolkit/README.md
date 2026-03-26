@@ -66,7 +66,8 @@ After install, open any project, run `claude`, then type `/spartan`.
 **Direct commands** &mdash; one command, one job. Best when you know what step you need. Saves tokens.
 
 ```
-/spartan:quickplan "task"   ← just the planning step
+/spartan:spec "feature"    ← write the spec
+/spartan:plan "feature"    ← plan the implementation
 /spartan:review             ← just the code review
 /spartan:pr-ready           ← just the PR creation
 /spartan:migration "desc"   ← just the migration
@@ -135,7 +136,7 @@ npx @c0x12c/spartan-ai-toolkit@latest --all
 
 | Pack | Category | Depends on | What you get |
 |------|----------|------------|--------------|
-| **core** | Core | — | Always installed. Workflows (build, fix, onboard), quickplan, pr-ready, daily, safety commands |
+| **core** | Core | — | Always installed. Workflows (build, fix, onboard), spec, plan, pr-ready, daily, safety commands |
 | **backend-micronaut** | Backend | database, shared-backend | Kotlin service scaffold, code review, testcontainers, API/DB/Kotlin rules, 5 skills, 2 agents |
 | **backend-nodejs** | Backend | database, shared-backend | Coming soon |
 | **backend-python** | Backend | database, shared-backend | Coming soon |
@@ -151,7 +152,7 @@ Hidden packs (`database`, `shared-backend`) get pulled in as dependencies — yo
 
 ## Commands
 
-All commands start with `/spartan:` (e.g., `/spartan:quickplan "task"`).
+All commands start with `/spartan:` (e.g., `/spartan:spec "feature"`).
 
 Type `/spartan` to get the smart router — it asks what you need and picks the right command.
 
@@ -167,7 +168,8 @@ Type `/spartan` to get the smart router — it asks what you need and picks the 
 ### Core (always installed)
 | Command | What it does |
 |---------|-------------|
-| `quickplan "task"` | Task < 1 day — spec + plan + branch in one shot |
+| `spec "feature"` | Write a feature spec — saves to `.planning/specs/` |
+| `plan "feature"` | Write implementation plan from spec — saves to `.planning/plans/` |
 | `daily` | Standup summary from git history |
 | `pr-ready` | Full checklist before creating any PR |
 | `init-project` | Auto-generate CLAUDE.md from codebase scan |

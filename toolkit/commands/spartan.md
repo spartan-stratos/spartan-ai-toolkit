@@ -104,7 +104,7 @@ Route here when the user wants a specific tool, not a full workflow.
 **Planning & project management:**
 | User says... | Route to |
 |---|---|
-| "plan a task" (small, < 1 day) | `/spartan:quickplan` |
+| "plan a task", "write a spec" | `/spartan:spec` → `/spartan:plan` |
 | "big project", "multi-day", "new milestone" | `/spartan:project new` |
 | "continue phase", "next phase" | `/spartan:phase` |
 | "workstreams", "parallel work" | `/spartan:workstreams` |

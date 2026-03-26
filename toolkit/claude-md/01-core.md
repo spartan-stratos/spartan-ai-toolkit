@@ -7,7 +7,7 @@
 **Detect the language of the user's message and respond entirely in that same language.** This is not optional — it overrides the default English behavior of all commands. If the user writes in Vietnamese, ALL output must be in Vietnamese. If in French, respond in French. If in English, respond in English. This applies to everything: explanations, questions, gate prompts, debug reports, summaries, and PR descriptions. Only code syntax, variable names, file paths, and command names (e.g., `/spartan:fix`) stay in their original form.
 
 ### 2. Spec Before Code
-- Task < 1 day → `/spartan:quickplan` for fast spec + plan
+- Task < 1 day → `/spartan:spec` + `/spartan:plan` + `/spartan:build`
 - Task > 1 day → `/spartan:project new` or `/spartan:project milestone-new`
 - Never write production code without a written spec or plan
 
@@ -61,6 +61,19 @@ Auto mode is ideal for experienced users who trust the workflow and want maximum
 
 ## Core Commands (always available)
 
+### Feature Workflow
+```
+/spartan:epic → /spartan:spec → [/spartan:design] → /spartan:plan → /spartan:build → /spartan:pr-ready
+                     ↑                                    ↑                ↑                ↑
+                   Gate 1                               Gate 2         Gate 3            Gate 4
+```
+
+| Size | Path |
+|---|---|
+| Single feature | `/spartan:spec` → `/spartan:plan` → `/spartan:build` |
+| Batch of features (1-2 weeks) | `/spartan:epic` → then spec/plan/build each feature |
+| Multi-week project | `/spartan:project new` → milestones + phases |
+
 ### Workflows (start here)
 | Command | Purpose |
 |---|---|
@@ -69,10 +82,16 @@ Auto mode is ideal for experienced users who trust the workflow and want maximum
 | `/spartan:fix "symptom"` | Bug workflow: reproduce → investigate → fix → PR |
 | `/spartan:onboard` | Codebase understanding: scan → map → setup |
 
+### Spec & Plan (saved artifacts)
+| Command | Purpose |
+|---|---|
+| `/spartan:spec "feature"` | Write a feature spec → saves to `.planning/specs/` → Gate 1 |
+| `/spartan:plan "feature"` | Write implementation plan from spec → saves to `.planning/plans/` → Gate 2 |
+| `/spartan:epic "name"` | Break big work into ordered features → saves to `.planning/epics/` |
+
 ### Individual Commands
 | Command | Purpose |
 |---|---|
-| `/spartan:quickplan "task"` | Spec + plan + branch in one shot (< 1 day) |
 | `/spartan:pr-ready` | Pre-PR checklist + auto PR description |
 | `/spartan:daily` | Standup summary from git log |
 | `/spartan:init-project` | Auto-generate CLAUDE.md from codebase |
