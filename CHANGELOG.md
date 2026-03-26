@@ -27,7 +27,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Core principles renumbered — language rule is #1
 - Commands now respond in the user's language
 
-## [1.2.0] - 2025-12-15
+## [1.2.0] - 2026-03-25
 
 ### Added
 - Manual trigger for publish workflow
@@ -40,7 +40,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 - Publish workflow now triggers after release completes
 
-## [1.1.0] - 2025-11-20
+## [1.1.0] - 2026-03-25
 
 ### Added
 - Workflow layer — build, fix, research, startup, onboard (5 guided workflows)
@@ -50,12 +50,12 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Removed
 - Credits section from toolkit README
 
-## [1.0.1] - 2025-11-10
+## [1.0.1] - 2026-03-25
 
 ### Fixed
 - npm blocks re-publish of unpublished 1.0.0 — bumped to 1.0.1
 
-## [1.0.0] - 2025-11-10
+## [1.0.0] - 2026-03-25
 
 ### Added
 - Pack system with YAML manifests and dependency resolver (BFS, cycle detection)

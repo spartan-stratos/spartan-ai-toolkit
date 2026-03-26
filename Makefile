@@ -91,7 +91,7 @@ bump: ## Bump version: make bump v=1.3.0
 	         toolkit/.claude-plugin/plugin.json \
 	         toolkit/.claude-plugin/marketplace.json \
 	         .claude-plugin/marketplace.json; do \
-	  sed -i '' 's/"version": *"[^"]*"/"version": "$(v)"/' "$$f"; \
+	  sed 's/"version": *"[^"]*"/"version": "$(v)"/' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; \
 	  echo "  Updated: $$f"; \
 	done; \
 	echo "Done. All 5 files now at $(v)."
