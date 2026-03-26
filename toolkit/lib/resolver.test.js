@@ -3,7 +3,9 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolve, detectCycles, resolveAliases, toPacks } from './resolver.js';
+import { resolve, detectCycles, resolveAliases, toPacks, validatePack, loadExternalPacks } from './resolver.js';
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 
 // Helper: create a minimal manifest map
 function makeManifests(defs) {
@@ -136,5 +138,161 @@ describe('toPacks', () => {
     const idx = (name) => PACK_ORDER.indexOf(name);
     assert.ok(idx('database') < idx('backend-micronaut'));
     assert.ok(idx('product') < idx('research'));
+  });
+});
+
+// ── Test fixtures for validatePack / loadExternalPacks ──────────
+const TMP = join(import.meta.dirname, '..', '.test-tmp-resolver');
+
+function setupExternal() {
+  rmSync(TMP, { recursive: true, force: true });
+  mkdirSync(TMP, { recursive: true });
+}
+
+function cleanupExternal() {
+  rmSync(TMP, { recursive: true, force: true });
+}
+
+describe('validatePack', () => {
+  it('passes for a valid manifest', () => {
+    const manifest = {
+      name: 'my-pack',
+      description: 'A test pack',
+      commands: [],
+      rules: [],
+      skills: [],
+      agents: [],
+    };
+    const result = validatePack(manifest, TMP, new Set());
+    assert.ok(result.valid, `errors: ${result.errors.join(', ')}`);
+    assert.equal(result.errors.length, 0);
+  });
+
+  it('fails when name is missing', () => {
+    const manifest = { description: 'No name' };
+    const result = validatePack(manifest, TMP, new Set());
+    assert.ok(!result.valid);
+    assert.ok(result.errors.some(e => e.includes('name')));
+  });
+
+  it('fails when description is missing', () => {
+    const manifest = { name: 'no-desc' };
+    const result = validatePack(manifest, TMP, new Set());
+    assert.ok(!result.valid);
+    assert.ok(result.errors.some(e => e.includes('description')));
+  });
+
+  it('fails when name collides with built-in pack', () => {
+    const manifest = { name: 'core', description: 'Fake core' };
+    const builtins = new Set(['core', 'backend-micronaut']);
+    const result = validatePack(manifest, TMP, builtins);
+    assert.ok(!result.valid);
+    assert.ok(result.errors.some(e => e.includes('collides')));
+  });
+
+  it('fails when name uses wrong format', () => {
+    const manifest = { name: 'My_Pack', description: 'Bad name' };
+    const result = validatePack(manifest, TMP, new Set());
+    assert.ok(!result.valid);
+    assert.ok(result.errors.some(e => e.includes('kebab-case')));
+  });
+
+  it('fails when dependency references unknown pack', () => {
+    const manifest = {
+      name: 'my-pack',
+      description: 'Has bad dep',
+      depends: ['nonexistent-pack'],
+    };
+    const builtins = new Set(['core']);
+    const result = validatePack(manifest, TMP, builtins);
+    assert.ok(!result.valid);
+    assert.ok(result.errors.some(e => e.includes('nonexistent-pack')));
+  });
+
+  it('allows dependency on built-in pack', () => {
+    const manifest = {
+      name: 'my-pack',
+      description: 'Depends on core',
+      depends: ['core'],
+    };
+    const builtins = new Set(['core']);
+    const result = validatePack(manifest, TMP, builtins);
+    assert.ok(result.valid, `errors: ${result.errors.join(', ')}`);
+  });
+
+  it('warns about missing command files', () => {
+    setupExternal();
+    try {
+      const packDir = join(TMP, 'my-pack');
+      mkdirSync(join(packDir, 'commands', 'spartan'), { recursive: true });
+      // command file does NOT exist
+      const manifest = {
+        name: 'my-pack',
+        description: 'Missing command',
+        commands: ['nonexistent-cmd'],
+      };
+      const result = validatePack(manifest, packDir, new Set());
+      assert.ok(result.warnings.some(w => w.includes('nonexistent-cmd')));
+    } finally {
+      cleanupExternal();
+    }
+  });
+});
+
+describe('loadExternalPacks', () => {
+  it('loads valid external pack from directory', () => {
+    setupExternal();
+    try {
+      const packDir = join(TMP, 'community');
+      mkdirSync(join(packDir, 'packs'), { recursive: true });
+      writeFileSync(join(packDir, 'packs', 'go-backend.yaml'), `
+name: go-backend
+description: "Go backend rules"
+category: Backend
+priority: 100
+commands: []
+rules: []
+skills: []
+agents: []
+claude-sections: []
+`);
+      const builtins = new Set(['core']);
+      const result = loadExternalPacks(packDir, builtins);
+      assert.ok(result.loaded.has('go-backend'));
+      assert.equal(result.errors.length, 0);
+    } finally {
+      cleanupExternal();
+    }
+  });
+
+  it('rejects external pack with name collision', () => {
+    setupExternal();
+    try {
+      const packDir = join(TMP, 'bad-community');
+      mkdirSync(join(packDir, 'packs'), { recursive: true });
+      writeFileSync(join(packDir, 'packs', 'core.yaml'), `
+name: core
+description: "Fake core"
+`);
+      const builtins = new Set(['core']);
+      const result = loadExternalPacks(packDir, builtins);
+      assert.ok(!result.loaded.has('core'));
+      assert.ok(result.errors.length > 0);
+    } finally {
+      cleanupExternal();
+    }
+  });
+
+  it('returns empty when directory has no packs/', () => {
+    setupExternal();
+    try {
+      const packDir = join(TMP, 'empty');
+      mkdirSync(packDir, { recursive: true });
+      const result = loadExternalPacks(packDir, new Set());
+      assert.equal(result.loaded.size, 0);
+      assert.equal(result.errors.length, 0);
+    } finally {
+      cleanupExternal();
+    }
   });
 });

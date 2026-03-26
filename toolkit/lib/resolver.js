@@ -1,7 +1,7 @@
 // Spartan AI Toolkit — Pack Resolver
 // Loads YAML manifests and resolves dependencies (BFS + cycle detection).
 
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { load } from 'js-yaml';
 
@@ -141,4 +141,132 @@ export function toPacks(manifests) {
 
   const PACK_ORDER = allPacks.map(m => m.name);
   return { PACKS, PACK_ORDER };
+}
+
+// ── Community Pack Support ─────────────────────────────────────
+
+const KEBAB_RE = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
+
+/**
+ * Validate a community pack manifest.
+ * @param {object} manifest - The parsed YAML manifest
+ * @param {string} packDir - Root directory of the external pack (for file checks)
+ * @param {Set<string>} builtinNames - Names of built-in packs (collision check)
+ * @returns {{ valid: boolean, errors: string[], warnings: string[] }}
+ */
+export function validatePack(manifest, packDir, builtinNames) {
+  const errors = [];
+  const warnings = [];
+
+  // Required fields
+  if (!manifest.name) {
+    errors.push('Missing required field: name');
+  }
+  if (!manifest.description) {
+    errors.push('Missing required field: description');
+  }
+
+  // Name format
+  if (manifest.name && !KEBAB_RE.test(manifest.name)) {
+    errors.push(`Pack name "${manifest.name}" must be kebab-case (e.g., "go-backend")`);
+  }
+
+  // Name collision
+  if (manifest.name && builtinNames.has(manifest.name)) {
+    errors.push(`Pack name "${manifest.name}" collides with a built-in pack`);
+  }
+
+  // Dependency check — deps must be either built-in or in the same external dir
+  if (manifest.depends) {
+    for (const dep of manifest.depends) {
+      if (!builtinNames.has(dep)) {
+        // Check if dep is another external pack in same dir
+        const depFile = join(packDir, 'packs', `${dep}.yaml`);
+        if (!existsSync(depFile)) {
+          errors.push(`Dependency "${dep}" is not a built-in pack and not found in pack directory`);
+        }
+      }
+    }
+  }
+
+  // File existence warnings (non-blocking)
+  if (manifest.commands) {
+    for (const cmd of manifest.commands) {
+      const cmdFile = join(packDir, 'commands', 'spartan', `${cmd}.md`);
+      if (!existsSync(cmdFile)) {
+        warnings.push(`Command file not found: commands/spartan/${cmd}.md`);
+      }
+    }
+  }
+  if (manifest.rules) {
+    for (const rule of manifest.rules) {
+      const ruleFile = join(packDir, 'rules', rule);
+      if (!existsSync(ruleFile)) {
+        warnings.push(`Rule file not found: rules/${rule}`);
+      }
+    }
+  }
+  if (manifest.skills) {
+    for (const skill of manifest.skills) {
+      const skillDir = join(packDir, 'skills', skill);
+      if (!existsSync(skillDir)) {
+        warnings.push(`Skill directory not found: skills/${skill}`);
+      }
+    }
+  }
+  if (manifest.agents) {
+    for (const agent of manifest.agents) {
+      const agentFile = join(packDir, 'agents', agent);
+      if (!existsSync(agentFile)) {
+        warnings.push(`Agent file not found: agents/${agent}`);
+      }
+    }
+  }
+
+  return { valid: errors.length === 0, errors, warnings };
+}
+
+/**
+ * Load and validate external packs from a community pack directory.
+ * Expected structure: packDir/packs/*.yaml
+ * @param {string} packDir - Root directory of external pack collection
+ * @param {Set<string>} builtinNames - Names of built-in packs
+ * @returns {{ loaded: Map<string, object>, errors: string[] }}
+ */
+export function loadExternalPacks(packDir, builtinNames) {
+  const loaded = new Map();
+  const errors = [];
+
+  const packsSubdir = join(packDir, 'packs');
+  if (!existsSync(packsSubdir)) {
+    return { loaded, errors };
+  }
+
+  let files;
+  try {
+    files = readdirSync(packsSubdir).filter(f => f.endsWith('.yaml'));
+  } catch {
+    return { loaded, errors };
+  }
+
+  for (const file of files) {
+    try {
+      const raw = readFileSync(join(packsSubdir, file), 'utf-8');
+      const manifest = load(raw);
+
+      const result = validatePack(manifest, packDir, builtinNames);
+      if (!result.valid) {
+        for (const err of result.errors) {
+          errors.push(`${file}: ${err}`);
+        }
+        continue;
+      }
+
+      loaded.set(manifest.name, manifest);
+    } catch (err) {
+      errors.push(`${file}: Failed to parse — ${err.message}`);
+    }
+  }
+
+  return { loaded, errors };
 }
