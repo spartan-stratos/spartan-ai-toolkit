@@ -42,7 +42,26 @@ All documents include **file paths in backticks** so Claude can navigate directl
 
 ## Execution
 
-Delegate to GSD's map-codebase workflow:
+### Agent Teams boost (if enabled)
+
+```bash
+echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
+```
+
+**If Agent Teams is enabled**, use a coordinated mapping team instead of independent subagents:
+
+1. Use `TeamCreate` with name `map-{project-slug}`
+2. Create 4 tasks — one per domain (tech, architecture, quality, concerns)
+3. Spawn 4 agents in parallel:
+   - **tech-mapper** — STACK.md + INTEGRATIONS.md
+   - **arch-mapper** — ARCHITECTURE.md + STRUCTURE.md
+   - **quality-mapper** — CONVENTIONS.md + TESTING.md
+   - **concerns-mapper** — CONCERNS.md
+4. Agents can message each other if they find cross-cutting issues (e.g., tech mapper finds a security concern → messages concerns-mapper)
+5. After all complete, verify 7 documents exist and are non-empty
+6. Clean up team with `TeamDelete`
+
+**If Agent Teams is NOT enabled**, delegate to GSD:
 
 **Run this command now:**
 

@@ -13,6 +13,7 @@
 | `/spartan:forensics "problem"` | Post-mortem investigation — diagnose failed workflows |
 | `/spartan:brownfield [svc]` | Map existing codebase; generates CONTEXT-MAP.md |
 | `/spartan:map-codebase` | Deep codebase analysis and architecture mapping |
+| `/spartan:team [action]` | Agent Teams: `create`, `status`, `wave`, `review`, `research`, `build`, `clean` |
 
 ### Office Hours (GSD Discuss Phase)
 When running `/spartan:phase discuss N`, Claude MUST ask these 3 forcing questions BEFORE gathering requirements:
@@ -90,3 +91,29 @@ Multi-tab: each Claude Code tab handles one WU from the same wave.
 ```
 
 Users never need to type `/gsd:*` commands — the wrappers handle everything.
+
+### Agent Teams (Experimental)
+
+**Requires:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` env var set to `1`.
+
+Agent Teams replace manual multi-tab parallelism with automated multi-agent coordination. Multiple Claude Code sessions share a task list, communicate via messages, and work in parallel.
+
+| Command | What it does |
+|---|---|
+| `/spartan:team create` | Create a team with smart defaults for a task |
+| `/spartan:team status` | Show team progress and teammate states |
+| `/spartan:team wave` | Execute a GSD wave plan using Agent Teams |
+| `/spartan:team review` | Quick-spawn: parallel review team (quality + tests + security) |
+| `/spartan:team research` | Quick-spawn: research swarm (breadth + depth + contrarian) |
+| `/spartan:team build` | Quick-spawn: parallel implementation team |
+| `/spartan:team clean` | Shut down teammates and clean up |
+
+**How it bridges waves:**
+```
+Wave plan (.planning/)  →  /spartan:team wave  →  Agent Teams
+  WU-1, WU-3, WU-5         TeamCreate              Teammate per WU
+  (was: manual tabs)        TaskCreate per WU       Worktree isolation
+                            Spawn agents            Auto-advance waves
+```
+
+Teams store state in `~/.claude/teams/` and `~/.claude/tasks/`. Clean up with `/spartan:team clean`.

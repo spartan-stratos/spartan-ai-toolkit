@@ -61,6 +61,30 @@ If the user has multiple Claude Code tabs available, suggest:
 
 Running the planned tasks wave by wave.
 
+### Agent Teams boost (if enabled)
+
+```bash
+echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
+```
+
+**If Agent Teams is enabled AND the wave plan has 2+ parallel work units in any wave:**
+
+Offer to use Agent Teams for wave execution:
+> "Wave 1 has [N] parallel work units. Want me to use Agent Teams?
+>
+> I'd go with **A** — it automates what you'd do manually across tabs.
+>
+> - **A) Agent Teams** — one agent per WU, worktree isolation, auto-advance between waves
+> - **B) Manual** — I'll execute sequentially, or you open multiple tabs yourself"
+
+If user picks A → run `/spartan:team wave` internally. This:
+1. Creates a team from the wave plan
+2. Spawns one agent per WU with worktree isolation
+3. Verifies tests pass between waves
+4. Auto-advances to the next wave
+
+If user picks B (or Agent Teams not enabled) → continue with default execution:
+
 **Run:** `/gsd:execute-phase {{ args[1] | default: "N" }}`
 
 During execution:

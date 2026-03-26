@@ -8,6 +8,10 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- `/spartan:team` command — manage Claude Code Agent Teams (create, status, wave, review, research, build, clean)
+- `team-coordinator` agent for multi-agent parallel work coordination
+- Agent Teams integration in 6 workflows: build, phase execute, gate-review, map-codebase, startup, onboard, research
+- Conditional detection: workflows check `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` and offer parallel execution when enabled
 - `make bump v=X.Y.Z` target to sync all 5 version files at once
 - Session tracking, browser QA command, and contributor mode
 - `--pack-dir` flag for loading community packs from external directories

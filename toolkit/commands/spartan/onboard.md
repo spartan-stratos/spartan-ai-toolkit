@@ -103,6 +103,25 @@ git branch -a | head -20
 
 **Goal:** Understand how the pieces fit together. Build a mental model.
 
+### Agent Teams boost (if enabled)
+
+```bash
+echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
+```
+
+**If Agent Teams is enabled AND the codebase is large (50+ files or multi-module):**
+
+Run a parallel mapping team for faster analysis:
+1. Use `TeamCreate` with name `onboard-{project-slug}`
+2. Spawn 2-3 mapper agents in parallel:
+   - **stack-mapper** — tech stack, dependencies, build tools
+   - **arch-mapper** — architecture patterns, data flow, entry points
+   - **quality-mapper** — conventions, test patterns, concerns
+3. After all report back, synthesize into the architecture overview below
+4. Clean up team with `TeamDelete`
+
+**If Agent Teams is NOT enabled (or codebase is small)**, map manually:
+
 ### Architecture mapping
 
 Use the approach from `/spartan:map-codebase` internally:

@@ -241,6 +241,36 @@ Write the first failing test for Task 1. Show it fails.
 
 ## Stage 3: Implement
 
+### Agent Teams boost (if enabled)
+
+```bash
+echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
+```
+
+**If Agent Teams is enabled AND the plan has 4+ tasks AND the feature is full-stack:**
+
+Offer to parallelize implementation with Agent Teams:
+> "This has [N] tasks across backend and frontend. Want me to spin up a build team?
+>
+> I'd go with **A** — parallel tracks save time on full-stack work.
+>
+> - **A) Build team** — one backend agent + one frontend agent, working in parallel (uses more tokens)
+> - **B) Sequential** — I'll do all tasks one by one (cheaper, simpler)"
+
+If user picks A:
+1. Use `TeamCreate` with name `build-{feature-slug}`
+2. Create tasks from the plan — backend tasks assigned to `backend-dev`, frontend tasks to `frontend-dev`
+3. Set `addBlockedBy` for frontend tasks that need backend API first
+4. Spawn two agents with `isolation: "worktree"`:
+   - **backend-dev** — gets backend tasks, relevant Kotlin/Micronaut rules
+   - **frontend-dev** — gets frontend tasks, relevant React/Next.js rules
+5. Monitor progress. When both finish, merge worktrees and run full test suite.
+6. After completion, use `TeamDelete` to clean up.
+
+If user picks B (or Agent Teams not enabled), continue with sequential execution below.
+
+### Sequential execution (default)
+
 Execute each task in order:
 
 ### For each task:
