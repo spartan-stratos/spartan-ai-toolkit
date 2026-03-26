@@ -1,4 +1,4 @@
-.PHONY: setup validate validate-structure validate-content lint bridge-dev bridge-start help
+.PHONY: setup validate validate-structure validate-content lint bridge-dev bridge-start bump help
 
 # ── Setup ──────────────────────────────────────────────
 
@@ -77,6 +77,24 @@ bridge-start: ## Start telegram bridge
 bridge-install: ## Install bridge dependencies (core + telegram)
 	@cd bridges/core && npm install
 	@cd bridges/telegram && npm install
+
+# ── Version ────────────────────────────────────────────
+
+bump: ## Bump version: make bump v=1.3.0
+	@if [ -z "$(v)" ]; then \
+	  echo "Usage: make bump v=1.3.0"; \
+	  exit 1; \
+	fi; \
+	echo "Bumping to $(v)..."; \
+	printf '%s\n' "$(v)" > toolkit/VERSION; \
+	for f in toolkit/package.json \
+	         toolkit/.claude-plugin/plugin.json \
+	         toolkit/.claude-plugin/marketplace.json \
+	         .claude-plugin/marketplace.json; do \
+	  sed 's/"version": *"[^"]*"/"version": "$(v)"/' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; \
+	  echo "  Updated: $$f"; \
+	done; \
+	echo "Done. All 5 files now at $(v)."
 
 # ── Help ───────────────────────────────────────────────
 
