@@ -48,7 +48,7 @@ function blue(s) { return `${C.blue}${s}${C.reset}`; }
 
 // ── Pack definitions (loaded from YAML manifests) ───────────────
 import { PACKS, PACK_ORDER } from '../lib/packs.js';
-import { assembleCLAUDEmd } from '../lib/assembler.js';
+import { assembleCLAUDEmd, assembleAGENTSmd } from '../lib/assembler.js';
 import { resolve as resolveDeps, resolveAliases, loadManifests } from '../lib/resolver.js';
 
 const manifests = loadManifests(join(PKG_ROOT, 'packs'));
@@ -61,11 +61,13 @@ let packsArg = '';
 let installAll = false;
 let mode = 'global';  // default for claude-code
 let showHelp = false;
+let format = '';  // '' = default, 'agents-md' = export AGENTS.md
 
 for (const arg of args) {
   if (arg === '--help' || arg === '-h') showHelp = true;
   else if (arg.startsWith('--agent=')) agent = arg.split('=')[1];
   else if (arg.startsWith('--packs=')) packsArg = arg.split('=')[1];
+  else if (arg.startsWith('--format=')) format = arg.split('=')[1];
   else if (arg === '--all') installAll = true;
   else if (arg === '--global') mode = 'global';
   else if (arg === '--local') mode = 'local';
@@ -100,6 +102,7 @@ if (showHelp) {
                     Choices: claude-code, cursor, windsurf, codex, copilot
     --packs=LIST    Comma-separated packs (claude-code only)
                     Example: --packs=backend-micronaut,product
+    --format=NAME   Output format: agents-md (exports AGENTS.md for cross-tool use)
     --all           Install all packs
     --global        Install to home dir (default for claude-code/codex)
     --local         Install to current project dir
@@ -124,6 +127,9 @@ ${lines.join('\n')}`).join('\n')}
 
     ${cyan('npx spartan-ai-toolkit@latest --agent=cursor')}
       Install rules for Cursor (rules + AGENTS.md only)
+
+    ${cyan('npx spartan-ai-toolkit@latest --format=agents-md --packs=backend-micronaut')}
+      Export AGENTS.md for any AI coding tool
 `);
   process.exit(0);
 }
@@ -495,23 +501,15 @@ async function installRulesOnly() {
     console.log(`\n${blue('[1/2]')} ${bold('Rules')} — ${dim('no rule packs selected')}\n`);
   }
 
-  // Install AGENTS.md
+  // Install AGENTS.md — assembled from pack sections + agents
   console.log(`${blue('[2/2]')} ${bold('Installing AGENTS.md...')}`);
 
-  const allAgents = gatherItems([...PACK_ORDER], 'agents');
-  if (allAgents.length > 0 && targets.agentsMd) {
-    let agentsContent = '# Spartan AI Toolkit — Agents\n\n';
-    agentsContent += 'Expert agents for your AI coding assistant.\n\n---\n\n';
-    for (const agentFile of allAgents) {
-      const src = join(SRC.agents, agentFile);
-      if (existsSync(src)) {
-        agentsContent += readFileSync(src, 'utf-8') + '\n\n---\n\n';
-      }
-    }
-    writeFileSync(targets.agentsMd, agentsContent.trimEnd() + '\n', 'utf-8');
+  if (targets.agentsMd) {
+    const agentsContent = assembleAGENTSmd(SRC.claudeMd, SRC.agents, selectedPacks, PACKS);
+    writeFileSync(targets.agentsMd, agentsContent, 'utf-8');
     console.log(`  ${green('+')} AGENTS.md\n`);
   } else {
-    console.log(`  ${dim('No agents to install')}\n`);
+    console.log(`  ${dim('No AGENTS.md target')}\n`);
   }
 
   // Save selection
@@ -552,6 +550,16 @@ async function main() {
     }
   } finally {
     closeRL();
+  }
+
+  // Export AGENTS.md alongside normal install when --format=agents-md
+  if (format === 'agents-md' && (agent === 'claude-code' || agent === 'codex')) {
+    const cwd = process.cwd();
+    const agentsMdPath = join(cwd, 'AGENTS.md');
+    console.log(`${blue('[+]')} ${bold('Exporting AGENTS.md for cross-tool use...')}`);
+    const agentsContent = assembleAGENTSmd(SRC.claudeMd, SRC.agents, selectedPacks, PACKS);
+    writeFileSync(agentsMdPath, agentsContent, 'utf-8');
+    console.log(`  ${green('+')} AGENTS.md (works with Cursor, Copilot, Windsurf, Codex, and 20+ tools)\n`);
   }
 
   // Success
