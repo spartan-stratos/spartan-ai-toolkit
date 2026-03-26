@@ -48,10 +48,14 @@ function blue(s) { return `${C.blue}${s}${C.reset}`; }
 
 // ── Pack definitions (loaded from YAML manifests) ───────────────
 import { PACKS, PACK_ORDER } from '../lib/packs.js';
-import { assembleCLAUDEmd } from '../lib/assembler.js';
-import { resolve as resolveDeps, resolveAliases, loadManifests } from '../lib/resolver.js';
+import { assembleCLAUDEmd, assembleAGENTSmd } from '../lib/assembler.js';
+import { resolve as resolveDeps, resolveAliases, loadManifests, loadExternalPacks } from '../lib/resolver.js';
+import { detectStacks } from '../lib/detector.js';
 
 const manifests = loadManifests(join(PKG_ROOT, 'packs'));
+
+// Maps community pack names to their source directory (for file resolution)
+const externalPackSources = {};
 
 // ── Parse args ──────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -61,12 +65,18 @@ let packsArg = '';
 let installAll = false;
 let mode = 'global';  // default for claude-code
 let showHelp = false;
+let format = '';  // '' = default, 'agents-md' = export AGENTS.md
+let autoDetect = false;
+let packDirArg = '';  // external community pack directory
 
 for (const arg of args) {
   if (arg === '--help' || arg === '-h') showHelp = true;
   else if (arg.startsWith('--agent=')) agent = arg.split('=')[1];
   else if (arg.startsWith('--packs=')) packsArg = arg.split('=')[1];
+  else if (arg.startsWith('--format=')) format = arg.split('=')[1];
+  else if (arg.startsWith('--pack-dir=')) packDirArg = arg.split('=')[1];
   else if (arg === '--all') installAll = true;
+  else if (arg === '--auto') autoDetect = true;
   else if (arg === '--global') mode = 'global';
   else if (arg === '--local') mode = 'local';
 }
@@ -100,6 +110,9 @@ if (showHelp) {
                     Choices: claude-code, cursor, windsurf, codex, copilot
     --packs=LIST    Comma-separated packs (claude-code only)
                     Example: --packs=backend-micronaut,product
+    --auto          Auto-detect tech stack and suggest packs (no menu)
+    --pack-dir=DIR  Load community packs from an external directory
+    --format=NAME   Output format: agents-md (exports AGENTS.md for cross-tool use)
     --all           Install all packs
     --global        Install to home dir (default for claude-code/codex)
     --local         Install to current project dir
@@ -124,6 +137,12 @@ ${lines.join('\n')}`).join('\n')}
 
     ${cyan('npx spartan-ai-toolkit@latest --agent=cursor')}
       Install rules for Cursor (rules + AGENTS.md only)
+
+    ${cyan('npx spartan-ai-toolkit@latest --auto')}
+      Auto-detect your tech stack and install matching packs
+
+    ${cyan('npx spartan-ai-toolkit@latest --format=agents-md --packs=backend-micronaut')}
+      Export AGENTS.md for any AI coding tool
 `);
   process.exit(0);
 }
@@ -220,6 +239,11 @@ function copyDir(src, dest) {
   cpSync(src, dest, { recursive: true });
 }
 
+/** Get the source root for a pack (built-in uses PKG_ROOT, community uses pack-dir). */
+function getPackSource(packName) {
+  return externalPackSources[packName] || PKG_ROOT;
+}
+
 /** Get all items for a category across selected packs, deduplicated. */
 function gatherItems(selectedPacks, category) {
   const seen = new Set();
@@ -231,6 +255,24 @@ function gatherItems(selectedPacks, category) {
       if (!seen.has(item)) {
         seen.add(item);
         result.push(item);
+      }
+    }
+  }
+  return result;
+}
+
+/** Like gatherItems but includes the source root for each item (for community pack support). */
+function gatherItemsWithSource(selectedPacks, category) {
+  const seen = new Set();
+  const result = [];
+  for (const pack of selectedPacks) {
+    const def = PACKS[pack];
+    if (!def) continue;
+    const srcRoot = getPackSource(pack);
+    for (const item of def[category]) {
+      if (!seen.has(item)) {
+        seen.add(item);
+        result.push({ item, srcRoot });
       }
     }
   }
@@ -251,6 +293,44 @@ async function selectPacks(targets) {
     const { resolved: aliased, warnings } = resolveAliases(requested);
     for (const w of warnings) console.log(`  ${yellow('!')} ${w}`);
     return resolveDeps(aliased, manifests);
+  }
+
+  // --auto flag: detect tech stack
+  if (autoDetect) {
+    const cwd = process.cwd();
+    console.log(`\n  ${blue('Scanning')} ${dim(cwd)} ${blue('for tech stack...')}\n`);
+    const { detected, comingSoon } = detectStacks(cwd);
+
+    if (detected.length > 0) {
+      console.log(`  ${bold('Detected stacks:')}`);
+      for (const d of detected) {
+        console.log(`    ${green('✓')} ${bold(d.pack)} ${dim(`(${d.reason})`)}`);
+      }
+
+      if (comingSoon.length > 0) {
+        console.log('');
+        for (const d of comingSoon) {
+          console.log(`    ${yellow('~')} ${d.pack} ${dim(`(${d.reason})`)} ${dim('— coming soon, skipped')}`);
+        }
+      }
+      console.log('');
+
+      const packNames = detected.map(d => d.pack);
+      const confirm = await ask(`  Install ${bold(packNames.join(' + '))}? [Y/n]: `);
+      if (confirm !== 'n' && confirm !== 'N') {
+        return resolveDeps(packNames, manifests);
+      }
+      // User said no — fall through to interactive menu
+      console.log('');
+    } else {
+      console.log(`  ${dim('No stacks detected.')}`);
+      if (comingSoon.length > 0) {
+        for (const d of comingSoon) {
+          console.log(`    ${yellow('~')} ${d.pack} ${dim(`(${d.reason})`)} ${dim('— coming soon')}`);
+        }
+      }
+      console.log(`  ${dim('Falling back to interactive menu...')}\n`);
+    }
   }
 
   // Check saved packs
@@ -358,9 +438,9 @@ async function installFull() {
     cmdCount++;
   }
 
-  const selectedCommands = gatherItems(selectedPacks, 'commands');
-  for (const cmd of selectedCommands) {
-    const src = join(SRC.commandsSub, `${cmd}.md`);
+  const selectedCommands = gatherItemsWithSource(selectedPacks, 'commands');
+  for (const { item: cmd, srcRoot } of selectedCommands) {
+    const src = join(srcRoot, 'commands', 'spartan', `${cmd}.md`);
     if (existsSync(src)) {
       copyFile(src, join(targets.commands, `${cmd}.md`));
       console.log(`  ${green('+')} /spartan:${cmd}`);
@@ -372,14 +452,13 @@ async function installFull() {
   console.log(`  ${bold(cmdCount + ' commands')} installed\n`);
 
   // 3) Rules (now with subdirectory structure)
-  const selectedRules = gatherItems(selectedPacks, 'rules');
-  if (selectedRules.length > 0) {
+  const rulesWithSource = gatherItemsWithSource(selectedPacks, 'rules');
+  if (rulesWithSource.length > 0) {
     console.log(`${blue('[3/5]')} ${bold('Installing rules...')}`);
     let ruleCount = 0;
 
-    for (const rule of selectedRules) {
-      // Rules now have subdir paths like "database/SCHEMA.md"
-      const src = join(SRC.rules, rule);
+    for (const { item: rule, srcRoot } of rulesWithSource) {
+      const src = join(srcRoot, 'rules', rule);
       const dest = join(targets.rules, rule);
       if (existsSync(src)) {
         copyFile(src, dest);
@@ -393,14 +472,14 @@ async function installFull() {
   }
 
   // 4) Skills
-  const selectedSkills = gatherItems(selectedPacks, 'skills');
-  if (selectedSkills.length > 0) {
+  const skillsWithSource = gatherItemsWithSource(selectedPacks, 'skills');
+  if (skillsWithSource.length > 0) {
     console.log(`${blue('[4/5]')} ${bold('Installing skills...')}`);
     ensureDir(targets.skills);
     let skillCount = 0;
 
-    for (const skill of selectedSkills) {
-      const src = join(SRC.skills, skill);
+    for (const { item: skill, srcRoot } of skillsWithSource) {
+      const src = join(srcRoot, 'skills', skill);
       if (existsSync(src)) {
         copyDir(src, join(targets.skills, skill));
         console.log(`  ${green('+')} ${skill}`);
@@ -413,14 +492,14 @@ async function installFull() {
   }
 
   // 5) Agents
-  const selectedAgents = gatherItems(selectedPacks, 'agents');
-  if (selectedAgents.length > 0) {
+  const agentsWithSource = gatherItemsWithSource(selectedPacks, 'agents');
+  if (agentsWithSource.length > 0) {
     console.log(`${blue('[5/5]')} ${bold('Installing agents...')}`);
     ensureDir(targets.agents);
     let agentCount = 0;
 
-    for (const agentFile of selectedAgents) {
-      const src = join(SRC.agents, agentFile);
+    for (const { item: agentFile, srcRoot } of agentsWithSource) {
+      const src = join(srcRoot, 'agents', agentFile);
       if (existsSync(src)) {
         copyFile(src, join(targets.agents, agentFile));
         console.log(`  ${green('+')} ${agentFile.replace('.md', '')}`);
@@ -495,23 +574,15 @@ async function installRulesOnly() {
     console.log(`\n${blue('[1/2]')} ${bold('Rules')} — ${dim('no rule packs selected')}\n`);
   }
 
-  // Install AGENTS.md
+  // Install AGENTS.md — assembled from pack sections + agents
   console.log(`${blue('[2/2]')} ${bold('Installing AGENTS.md...')}`);
 
-  const allAgents = gatherItems([...PACK_ORDER], 'agents');
-  if (allAgents.length > 0 && targets.agentsMd) {
-    let agentsContent = '# Spartan AI Toolkit — Agents\n\n';
-    agentsContent += 'Expert agents for your AI coding assistant.\n\n---\n\n';
-    for (const agentFile of allAgents) {
-      const src = join(SRC.agents, agentFile);
-      if (existsSync(src)) {
-        agentsContent += readFileSync(src, 'utf-8') + '\n\n---\n\n';
-      }
-    }
-    writeFileSync(targets.agentsMd, agentsContent.trimEnd() + '\n', 'utf-8');
+  if (targets.agentsMd) {
+    const agentsContent = assembleAGENTSmd(SRC.claudeMd, SRC.agents, selectedPacks, PACKS);
+    writeFileSync(targets.agentsMd, agentsContent, 'utf-8');
     console.log(`  ${green('+')} AGENTS.md\n`);
   } else {
-    console.log(`  ${dim('No agents to install')}\n`);
+    console.log(`  ${dim('No AGENTS.md target')}\n`);
   }
 
   // Save selection
@@ -538,6 +609,49 @@ async function main() {
     process.exit(1);
   }
 
+  // Load community packs if --pack-dir is set
+  if (packDirArg) {
+    const packDirPath = pathResolve(process.cwd(), packDirArg);
+    const builtinNames = new Set(manifests.keys());
+    console.log(`\n  ${blue('Loading community packs from')} ${dim(packDirPath)}`);
+    const { loaded, errors } = loadExternalPacks(packDirPath, builtinNames);
+
+    if (errors.length > 0) {
+      for (const err of errors) {
+        console.log(`  ${yellow('!')} ${err}`);
+      }
+    }
+
+    if (loaded.size > 0) {
+      for (const [name, manifest] of loaded) {
+        manifests.set(name, manifest);
+        externalPackSources[name] = packDirPath;
+        // Add to PACKS and PACK_ORDER so menus and install work
+        PACKS[name] = {
+          description: manifest.description,
+          category: manifest.category || 'Community',
+          priority: manifest.priority ?? 500,
+          hidden: manifest.hidden || false,
+          comingSoon: manifest['coming-soon'] || false,
+          depends: manifest.depends || [],
+          commands: manifest.commands || [],
+          rules: manifest.rules || [],
+          skills: manifest.skills || [],
+          agents: manifest.agents || [],
+          claudeSections: manifest['claude-sections'] || [],
+        };
+        PACK_ORDER.push(name);
+      }
+      // Re-sort PACK_ORDER by priority
+      PACK_ORDER.sort((a, b) => (PACKS[a]?.priority ?? 999) - (PACKS[b]?.priority ?? 999));
+
+      const names = [...loaded.keys()].join(', ');
+      console.log(`  ${green('+')} Loaded: ${bold(names)}\n`);
+    } else {
+      console.log(`  ${dim('No valid community packs found')}\n`);
+    }
+  }
+
   let selectedPacks;
 
   try {
@@ -552,6 +666,16 @@ async function main() {
     }
   } finally {
     closeRL();
+  }
+
+  // Export AGENTS.md alongside normal install when --format=agents-md
+  if (format === 'agents-md' && (agent === 'claude-code' || agent === 'codex')) {
+    const cwd = process.cwd();
+    const agentsMdPath = join(cwd, 'AGENTS.md');
+    console.log(`${blue('[+]')} ${bold('Exporting AGENTS.md for cross-tool use...')}`);
+    const agentsContent = assembleAGENTSmd(SRC.claudeMd, SRC.agents, selectedPacks, PACKS);
+    writeFileSync(agentsMdPath, agentsContent, 'utf-8');
+    console.log(`  ${green('+')} AGENTS.md (works with Cursor, Copilot, Windsurf, Codex, and 20+ tools)\n`);
   }
 
   // Success
