@@ -1,7 +1,7 @@
 {
   "name": "spartan-ai-toolkit",
   "version": "1.2.0",
-  "description": "Engineering discipline layer for Claude Code — 5 workflows, 48 commands, 11 rules, 18 skills, 4 agents organized in 11 packs",
+  "description": "Engineering discipline layer for Claude Code — 5 workflows, 51 commands, 11 rules, 19 skills, 4 agents organized in 11 packs",
   "author": {
     "name": "Khoa Tran",
     "url": "https://github.com/spartan-stratos"

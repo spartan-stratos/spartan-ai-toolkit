@@ -19,6 +19,8 @@ commands:
   - freeze
   - unfreeze
   - guard
+  - sessions
+  - contribute
 
 rules:
   - core/NAMING_CONVENTIONS.md

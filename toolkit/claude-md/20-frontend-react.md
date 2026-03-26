@@ -42,3 +42,4 @@ For small tasks (< 1 day), `/spartan:quickplan` covers spec + plan in one shot.
 | `/spartan:fe-review` | PR review with Next.js App Router conventions |
 | `/spartan:figma-to-code [url]` | Convert Figma screen to production code via MCP |
 | `/spartan:e2e [feature]` | Scaffold Playwright E2E testing |
+| `/spartan:qa [url] [feature]` | Real browser QA — opens Chromium, tests flows, finds bugs |

@@ -10,12 +10,14 @@ commands:
   - fe-review
   - figma-to-code
   - e2e
+  - qa
 
 rules:
   - frontend-react/FRONTEND.md
 
 skills:
   - ui-ux-pro-max
+  - browser-qa
 
 agents: []
 
