@@ -136,12 +136,12 @@ npx @c0x12c/spartan-ai-toolkit@latest --all
 
 | Pack | Category | Depends on | What you get |
 |------|----------|------------|--------------|
-| **core** | Core | — | Always installed. Workflows (build, fix, onboard), spec, plan, pr-ready, daily, safety commands |
+| **core** | Core | — | Always installed. Workflows (build, fix, onboard), spec, plan, gate-review, pr-ready, daily, safety commands, phase-reviewer agent |
 | **backend-micronaut** | Backend | database, shared-backend | Kotlin service scaffold, code review, testcontainers, API/DB/Kotlin rules, 5 skills, 2 agents |
 | **backend-nodejs** | Backend | database, shared-backend | Coming soon |
 | **backend-python** | Backend | database, shared-backend | Coming soon |
-| **frontend-react** | Frontend | — | Next.js app/feature scaffold, Figma-to-code, E2E, frontend review, UI/UX skill |
-| **project-mgmt** | Planning | — | Project lifecycle, phases, workstreams, GSD upgrade, forensics, brownfield, codebase mapping |
+| **frontend-react** | Frontend | — | Design workflow, Next.js scaffold, Figma-to-code, E2E, frontend review, UI/UX + design-workflow skills, design-critic agent |
+| **project-mgmt** | Planning | — | Epics, project lifecycle, phases, workstreams, GSD upgrade, forensics, brownfield, codebase mapping |
 | **product** | Planning | — | Think-before-build, validate, teardown, interview, lean canvas, brainstorm |
 | **ops** | Ship | — | Deploy + env-setup |
 | **research** | Research | product | Startup + research workflows, kickoff to investor outreach, 10 skills, 2 agents |
@@ -170,6 +170,7 @@ Type `/spartan` to get the smart router — it asks what you need and picks the 
 |---------|-------------|
 | `spec "feature"` | Write a feature spec — saves to `.planning/specs/` |
 | `plan "feature"` | Write implementation plan from spec — saves to `.planning/plans/` |
+| `gate-review [phase]` | Dual-agent review (Gate 3.5) — builder + reviewer both accept |
 | `daily` | Standup summary from git history |
 | `pr-ready` | Full checklist before creating any PR |
 | `init-project` | Auto-generate CLAUDE.md from codebase scan |
@@ -191,6 +192,7 @@ Type `/spartan` to get the smart router — it asks what you need and picks the 
 ### Frontend (frontend-react pack)
 | Command | What it does |
 |---------|-------------|
+| `design "feature"` | Design workflow with dual-agent review (Design Gate) |
 | `next-app "name"` | Scaffold new Next.js app |
 | `next-feature "name"` | Add feature to existing Next.js app |
 | `fe-review` | PR review with Next.js conventions |
@@ -200,6 +202,7 @@ Type `/spartan` to get the smart router — it asks what you need and picks the 
 ### Planning (project-mgmt pack)
 | Command | What it does |
 |---------|-------------|
+| `epic "name"` | Break big work into ordered features |
 | `project [action]` | Large project lifecycle (new, status, milestone) |
 | `phase [action]` | Phase lifecycle (discuss, plan, execute, verify) |
 | `workstreams [action]` | Parallel work tracks |

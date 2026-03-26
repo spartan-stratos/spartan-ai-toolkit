@@ -8,8 +8,9 @@ Each phase of the feature development workflow has a quality gate. The gate must
 
 ```
 Epic → Spec → [Design] → Plan → Build → Review
-              ↑                   ↑       ↑        ↑
-            Gate 1              Gate 2  Gate 3   Gate 4
+        ↑        ↑          ↑      ↑        ↑
+      Gate 1  Design      Gate 2  Gate 3  Gate 4
+              Gate               Gate 3.5
 ```
 
 Design is optional — use it for features with UI work. See `design-doc.md`.
@@ -156,6 +157,58 @@ Run when all tasks are done. This is the "ship it?" check.
 
 ---
 
+## Design Gate (Dual-Agent)
+
+Run after the designer and `design-critic` agent both review the design doc. Both must accept.
+
+**Trigger:** `/spartan:design [feature-name]`
+
+### Agent Agreement
+- [ ] Design-critic agent spawned and given the design doc
+- [ ] Designer did self-check before calling critic
+- [ ] Both agents (designer + critic) confirmed they accept
+- [ ] All discussion points resolved
+
+### AI Generic Detection
+- [ ] No colors outside the project palette (check design-config.md)
+- [ ] No generic gradient blobs or decorative noise
+- [ ] Layout has visual variety (not everything centered, same size)
+- [ ] Typography has clear hierarchy (3+ distinct sizes/weights)
+- [ ] Copy is specific to the project domain (not generic marketing)
+- [ ] Design personality matches design-config.md
+- [ ] Accent color used sparingly — max 10-15% of screen
+- [ ] Would you remember this design? (If no, it's too generic)
+
+### Design System Compliance (if design-config exists)
+- [ ] Colors match the design-config palette exactly
+- [ ] Font matches design-config
+- [ ] Shadows/radius match design-config values
+- [ ] No Tailwind default colors used
+
+### User Flows
+- [ ] Every user story from spec has a mapped flow
+- [ ] Each flow has clear steps: trigger, actions, end state
+- [ ] Edge case flows listed (empty data, error, loading, timeout)
+
+### Accessibility (WCAG AA)
+- [ ] Text contrast ratio meets 4.5:1
+- [ ] Interactive elements have focus states
+- [ ] Touch targets at least 44x44px on mobile
+- [ ] No information conveyed by color alone
+
+### Responsiveness
+- [ ] Layout works at mobile, tablet, desktop
+- [ ] No horizontal scroll on mobile
+- [ ] Content reflows properly
+
+### Completeness
+- [ ] All states shown (loading, empty, error, success)
+- [ ] Component specs have: name, props, states
+- [ ] Wireframes exist for key screens
+- [ ] A developer could build from just the design doc
+
+---
+
 ## What to Do When a Gate Fails
 
 1. **Find the failing items** — which checkboxes are unchecked?
@@ -174,3 +227,4 @@ Run when all tasks are done. This is the "ship it?" check.
 | Gate 3 | After each task | Does this code follow the rules? |
 | Gate 3.5 | After each phase | Dual-agent review — builder + reviewer both accept? |
 | Gate 4 | After all tasks | Is this ready to ship? |
+| Design Gate | After design doc | Dual-agent — designer + critic both accept? Not AI-generic? |

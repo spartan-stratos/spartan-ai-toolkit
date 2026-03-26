@@ -254,6 +254,7 @@ Type `/spartan` to get the smart router. Or go direct:
 |---------|-------------|
 | `spec "feature"` | Write a feature spec &mdash; saves to `.planning/specs/` |
 | `plan "feature"` | Write implementation plan from spec &mdash; saves to `.planning/plans/` |
+| `gate-review [phase]` | Dual-agent review (Gate 3.5) &mdash; builder + reviewer both accept |
 | `daily` | Standup summary from git history |
 | `pr-ready` | Full checklist before creating any PR |
 | `init-project` | Auto-generate CLAUDE.md from codebase scan |
@@ -275,6 +276,7 @@ Type `/spartan` to get the smart router. Or go direct:
 ### Frontend (frontend-react pack)
 | Command | What it does |
 |---------|-------------|
+| `design "feature"` | Design workflow with dual-agent review (Design Gate) |
 | `next-app "name"` | Scaffold new Next.js app |
 | `next-feature "name"` | Add feature to existing Next.js app |
 | `fe-review` | PR review with Next.js conventions |
@@ -284,6 +286,7 @@ Type `/spartan` to get the smart router. Or go direct:
 ### Planning (project-mgmt pack)
 | Command | What it does |
 |---------|-------------|
+| `epic "name"` | Break big work into ordered features |
 | `project [action]` | Large project lifecycle (new, status, milestone) |
 | `phase [action]` | Phase lifecycle (discuss, plan, execute, verify) |
 | `workstreams [action]` | Parallel work tracks |
