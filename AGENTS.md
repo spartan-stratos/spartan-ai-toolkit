@@ -4,16 +4,16 @@ Engineering discipline layer for AI coding tools. Provides rules, skills, workfl
 
 ## Rules
 
-Coding standards in `toolkit/rules/project/`. Apply these to your project:
+Coding standards in `toolkit/rules/{pack-name}/`. Apply these to your project:
 
-- **CORE_RULES** — Kotlin null safety, Either error handling, no `!!`
-- **ARCHITECTURE_RULES** — Layered architecture: Controller → Manager → Repository
-- **API_RULES** — RPC-style API design, query params only, no path params
-- **DATABASE_RULES** — No foreign keys, TEXT not VARCHAR, soft deletes, uuid_generate_v4()
-- **FRONTEND_RULES** — Build check before commit, cleanup imports, null safety
-- **NAMING_CONVENTIONS** — snake_case DB/JSON, camelCase Kotlin/TypeScript
-- **CONTROLLER_TEST_STANDARDS** — @MicronautTest integration test patterns
-- **TRANSACTION_RULES** — Multi-table operations must use transactions
+- **KOTLIN** — Kotlin null safety, Either error handling, no `!!` (`rules/backend-micronaut/`)
+- **ARCHITECTURE** — Layered architecture: Controller → Manager → Repository (`rules/shared-backend/`)
+- **API_DESIGN** — RPC-style API design, query params only, no path params (`rules/backend-micronaut/`)
+- **SCHEMA** — No foreign keys, TEXT not VARCHAR, soft deletes, gen_random_uuid() (`rules/database/`)
+- **FRONTEND** — Build check before commit, cleanup imports, null safety (`rules/frontend-react/`)
+- **NAMING_CONVENTIONS** — snake_case DB/JSON, camelCase Kotlin/TypeScript (`rules/core/`)
+- **CONTROLLERS** — @MicronautTest integration test patterns (`rules/backend-micronaut/`)
+- **TRANSACTIONS** — Multi-table operations must use transactions (`rules/database/`)
 
 ## Skills
 

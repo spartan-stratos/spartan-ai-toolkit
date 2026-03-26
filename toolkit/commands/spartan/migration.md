@@ -6,7 +6,7 @@ argument-hint: "[description of the migration]"
 
 Create a migration for: {{ args[0] }}
 
-**Before creating, read:** `rules/project/DATABASE_RULES.md`
+**Before creating, read:** `rules/database/SCHEMA.md`
 
 ## Hard Rules (from DATABASE_RULES)
 - **TEXT not VARCHAR** — always

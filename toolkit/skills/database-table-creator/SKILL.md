@@ -26,7 +26,7 @@ Generates:
 
 ## Critical Rules
 
-### Database Design (.claude/rules/project/DATABASE_RULES.md)
+### Database Design (rules/database/SCHEMA.md)
 
 **SQL Requirements**:
 - ❌ NO foreign key constraints (NEVER use REFERENCES or FOREIGN KEY)
