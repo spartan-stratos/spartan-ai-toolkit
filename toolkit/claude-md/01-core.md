@@ -64,13 +64,14 @@ Auto mode is ideal for experienced users who trust the workflow and want maximum
 ### Feature Workflow
 ```
 /spartan:epic → /spartan:spec → [/spartan:design] → /spartan:plan → /spartan:build → /spartan:pr-ready
-                     ↑                                    ↑                ↑                ↑
-                   Gate 1                               Gate 2         Gate 3            Gate 4
+                     ↑                ↑                   ↑              ↑ + 3.5           ↑
+                   Gate 1        Design Gate            Gate 2         Gate 3            Gate 4
 ```
 
 | Size | Path |
 |---|---|
-| Single feature | `/spartan:spec` → `/spartan:plan` → `/spartan:build` |
+| Single feature (backend) | `/spartan:spec` → `/spartan:plan` → `/spartan:build` |
+| Single feature (with UI) | `/spartan:spec` → `/spartan:design` → `/spartan:plan` → `/spartan:build` |
 | Batch of features (1-2 weeks) | `/spartan:epic` → then spec/plan/build each feature |
 | Multi-week project | `/spartan:project new` → milestones + phases |
 

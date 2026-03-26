@@ -68,10 +68,10 @@ PACK_DESC_frontend_react="React + Next.js frontend"
 PACK_HIDDEN_frontend_react=false
 PACK_COMING_SOON_frontend_react=false
 PACK_DEPENDS_frontend_react=""
-PACK_COMMANDS_frontend_react="next-app next-feature fe-review figma-to-code e2e"
+PACK_COMMANDS_frontend_react="design next-app next-feature fe-review figma-to-code e2e qa"
 PACK_RULES_frontend_react="frontend-react/FRONTEND.md"
-PACK_SKILLS_frontend_react="ui-ux-pro-max"
-PACK_AGENTS_frontend_react=""
+PACK_SKILLS_frontend_react="ui-ux-pro-max design-workflow browser-qa"
+PACK_AGENTS_frontend_react="design-critic.md"
 PACK_CLAUDE_SECTIONS_frontend_react="20-frontend-react.md"
 
 PACK_DESC_project_mgmt="Large multi-day projects (GSD)"

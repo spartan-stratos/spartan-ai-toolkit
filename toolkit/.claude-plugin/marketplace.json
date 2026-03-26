@@ -8,9 +8,9 @@
   "plugins": [
     {
       "name": "spartan-ai-toolkit",
-      "description": "5 workflows, 54 commands, 11 rules, 19 skills, 5 agents — organized in 11 packs with dependencies",
+      "description": "5 workflows, 55 commands, 11 rules, 20 skills, 6 agents — organized in 11 packs with dependencies",
       "source": "./toolkit",
-      "version": "1.3.1"
+      "version": "1.4.0"
     }
   ]
 }
