@@ -7,10 +7,10 @@ argument-hint: "[service-name] [brief description]"
 You are scaffolding a new Kotlin Micronaut microservice for the Spartan platform.
 
 **Before scaffolding, read these company rules:**
-- `rules/project/ARCHITECTURE_RULES.md` — Layered architecture
-- `rules/project/CORE_RULES.md` — Kotlin conventions
-- `rules/project/DATABASE_RULES.md` — Schema standards
-- `rules/project/API_RULES.md` — API design patterns
+- `rules/shared-backend/ARCHITECTURE.md` — Layered architecture
+- `rules/backend-micronaut/KOTLIN.md` — Kotlin conventions
+- `rules/database/SCHEMA.md` — Schema standards
+- `rules/backend-micronaut/API_DESIGN.md` — API design patterns
 
 ## Service: {{ args[0] }}
 ## Purpose: {{ args[1] }}

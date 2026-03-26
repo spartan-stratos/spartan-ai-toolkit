@@ -47,7 +47,7 @@ FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================================
--- CRITICAL RULES (from .claude/rules/project/DATABASE_RULES.md):
+-- CRITICAL RULES (from rules/database/SCHEMA.md):
 -- ============================================================================
 -- ✅ Use TEXT for strings (NEVER VARCHAR)
 -- ✅ Use UUID for primary keys and foreign keys

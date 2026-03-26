@@ -17,7 +17,7 @@ Thanks for your interest in contributing! This guide covers what you need to kno
 | Type | Location | Description |
 |------|----------|-------------|
 | **Commands** | `toolkit/commands/spartan/` | Slash commands for structured workflows |
-| **Rules** | `toolkit/rules/project/` | Coding standards Claude enforces automatically |
+| **Rules** | `toolkit/rules/{pack-name}/` | Coding standards Claude enforces automatically |
 | **Skills** | `toolkit/skills/` | Reusable prompt templates for common tasks |
 | **Agents** | `toolkit/agents/` | Expert agent definitions for specialized guidance |
 | **Telegram Bridge** | `bridges/telegram/` | Remote control features |
@@ -37,7 +37,7 @@ Thanks for your interest in contributing! This guide covers what you need to kno
 - **Handle edge cases** — what if the user runs this in an empty repo? In a non-git folder?
 - **Test manually** — run the command in Claude Code, verify it behaves correctly
 
-### Rules (`rules/project/`)
+### Rules (`rules/{pack-name}/`)
 
 - **Must be enforceable** — if Claude can't follow the rule consistently, don't add it
 - **Be specific** — show code examples for both correct and incorrect patterns
@@ -50,7 +50,7 @@ Thanks for your interest in contributing! This guide covers what you need to kno
 - **Each skill is a directory** with a `SKILL.md` entry point (follows Agent Skills spec)
 - **Include examples** — show input/output pairs so Claude knows what to generate
 - **Target a specific task** — "generate API endpoint" not "do backend stuff"
-- **Reference rules** — skills should follow the conventions defined in `rules/project/`
+- **Reference rules** — skills should follow the conventions defined in `rules/{pack-name}/`
 
 ### Agents (`agents/`)
 
@@ -125,7 +125,7 @@ This checks:
 - **Keep it under 200 lines of actionable content** — every line has a cost (tokens)
 - **No filler** — if a section doesn't change Claude's behavior, remove it
 - **Test after editing** — run `setup.sh --global`, open Claude Code, verify the change works
-- **Don't duplicate rules** — if something belongs in `rules/project/`, put it there, not in CLAUDE.md
+- **Don't duplicate rules** — if something belongs in `rules/{pack-name}/`, put it there, not in CLAUDE.md
 
 ---
 

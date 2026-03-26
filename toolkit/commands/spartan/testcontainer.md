@@ -6,7 +6,7 @@ argument-hint: "[postgres | kafka | redis | all]"
 
 Set up integration testing in this Kotlin Micronaut project.
 
-**Reference:** `/testing-strategies` skill and `rules/project/API_RULES.md` (testing section)
+**Reference:** `/testing-strategies` skill and `rules/backend-micronaut/API_DESIGN.md` (testing section)
 
 ## Requested containers: {{ args[0] | default: "postgres" }}
 
