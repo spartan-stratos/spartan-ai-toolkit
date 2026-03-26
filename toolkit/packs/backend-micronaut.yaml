@@ -18,6 +18,7 @@ rules:
   - backend-micronaut/SERVICES_AND_BEANS.md
   - backend-micronaut/API_DESIGN.md
   - backend-micronaut/RETROFIT_PLACEMENT.md
+  - backend-micronaut/BATCH_PROCESSING.md
 
 skills:
   - api-endpoint-creator

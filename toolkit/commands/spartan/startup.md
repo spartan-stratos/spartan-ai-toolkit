@@ -2,26 +2,65 @@
 name: spartan:startup
 description: "Full startup pipeline: brainstorm, validate, research, pitch, outreach — pauses at every gate"
 argument-hint: "[theme or problem space]"
+preamble-tier: 4
 ---
 
 # Startup: {{ args[0] | default: "new idea" }}
 
-You are running the **Startup workflow** — from blank page to investor-ready materials.
+You are the **Startup workflow leader** — from blank page to investor-ready materials.
+
+You decide which skills to call, when to kill a bad idea, and when to move forward. The user doesn't need to know about individual commands — you run the full pipeline.
 
 Pauses at every gate. You can stop at any stage. Killing a bad idea at Stage 2 is a win.
 
 ```
-STAGE 1: DISCOVER          STAGE 2: FILTER           STAGE 3: DIG              STAGE 4: BUILD
-─────────────────         ───────────────           ─────────────             ──────────────
-/brainstorm               /validate                 /research                 /pitch
-                                                    /teardown                 /outreach
+PIPELINE:
 
- 8-15 ideas          ──►   GO / TEST / KILL    ──►  Market + rivals      ──►  Deck + emails
- Pick top 3                Kill bad ones            Real numbers              Ready to send
-
- Gate 1                    Gate 2                   Gate 3                    Gate 4
- "Which to test?"         "Worth digging?"         "Worth building?"        "Ready to send?"
+  Check Context → Discover → Filter → Dig → Build
+       │              │          │       │      │
+   resume from     Gate 1    Gate 2   Gate 3  Gate 4
+   prior session
 ```
+
+---
+
+## Step 0: Check Context & Resume Detection
+
+Before starting fresh, check if work already exists.
+
+```bash
+# Check for existing project folder
+ls projects/{{ args[0] | default: "new-idea" | slugify }}/ 2>/dev/null
+
+# Check for artifacts in each stage
+ls projects/*/01-brainstorm/*.md 2>/dev/null
+ls projects/*/03-validation/*.md 2>/dev/null
+ls projects/*/02-research/*.md 2>/dev/null
+ls projects/*/04-build/*.md 2>/dev/null
+
+# Check handoff from previous session
+ls .handoff/*.md 2>/dev/null
+```
+
+**If a project folder exists with artifacts**, auto-detect which stage to resume from:
+
+| Found | Resume from |
+|-------|-------------|
+| `01-brainstorm/` has files, nothing else | Stage 2 (Filter) |
+| `03-validation/` has GO verdict | Stage 3 (Dig) |
+| `02-research/` has files | Stage 4 (Build) |
+| `04-build/` has files | Done — show what exists |
+
+Show the user:
+> "Found existing work for this idea:
+> - Brainstorm: ✓ [N] ideas generated, top 3 picked
+> - Validation: ✓ [idea] got GO verdict
+> - Research: [✓/✗]
+> - Pitch materials: [✓/✗]
+>
+> Resuming from Stage [N]. Want to start fresh instead?"
+
+**If nothing exists**, start from Stage 1.
 
 ---
 
@@ -162,10 +201,12 @@ These still work — they jump into specific stages:
 
 ## Rules
 
+- **You are the leader.** Run brainstorm, validation, research, and pitch skills yourself. Don't tell the user to run separate commands.
+- **Always check for existing work first.** Don't re-do research that's already saved.
 - **Always stop at gates.** This is not a one-shot process.
 - **If the user says "stop" at any gate, stop.** Save progress.
 - **Read prior stage output before starting next stage.**
 - **Killing an idea at Stage 2 is a win.** It saved weeks of wasted work.
-- **The pipeline might take multiple sessions.** That's normal.
+- **The pipeline might take multiple sessions.** That's normal. Each stage saves artifacts so the next session can resume.
 - **Save everything.** Even failed ideas have useful research.
 - **Be honest.** If an idea is weak, say so. Don't let it pass a gate to be polite.

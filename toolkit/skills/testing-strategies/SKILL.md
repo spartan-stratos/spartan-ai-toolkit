@@ -142,6 +142,92 @@ assertThat(result)
   .isEqualTo(expected)
 ```
 
+## Unit Tests with MockK
+
+Use MockK for testing managers and services in isolation.
+
+```kotlin
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import io.mockk.slot
+import kotlinx.coroutines.test.runTest
+
+class ChatServiceTest {
+  private val mockClient = mockk<ChatClient>()
+  private val service = ChatService(mockClient)
+
+  @Test
+  fun `should handle basic chat request`() = runTest {
+    // Given
+    coEvery { mockClient.chat(any()) } returns mockResponse
+
+    // When
+    val response = service.chat(messages)
+
+    // Then
+    assertNotNull(response)
+    coVerify(exactly = 1) { mockClient.chat(any()) }
+  }
+
+  @Test
+  fun `should send correct model in request`() = runTest {
+    // Given — capture the argument to verify WHAT was sent
+    val captured = slot<ChatRequest>()
+    coEvery { mockClient.chat(capture(captured)) } returns mockResponse
+
+    // When
+    service.chat(messages)
+
+    // Then
+    assertEquals("gpt-4", captured.captured.model)
+  }
+}
+```
+
+### MockK Rules
+
+- `mockk<T>()` for creating mocks
+- `coEvery` / `coVerify` for suspend functions (not `every`/`verify`)
+- `slot<T>()` + `capture()` to verify what arguments were passed
+- `runTest { }` from `kotlinx.coroutines.test` — NOT `runBlocking`. `runTest` handles virtual time and catches coroutine issues.
+- AAA pattern with comments: `// Given`, `// When`, `// Then`
+
+### Organize with @Nested
+
+```kotlin
+@Nested
+@DisplayName("Chat Operations")
+inner class ChatOperations {
+  @BeforeEach
+  fun setup() {
+    coEvery { mockClient.chat(any()) } returns mockResponse
+  }
+
+  @Test
+  fun `should return zero credits when quota throws`() = runTest {
+    coEvery { quotaService.getRemaining(any()) } throws RuntimeException("boom")
+    val result = service.getCredits(userId)
+    assertThat(result.creditsRemaining).isEqualTo(0)
+  }
+}
+```
+
+---
+
+## Connection Pool for Parallel Tests
+
+If tests fail with "cannot acquire connection" or "connection pool exhausted", bump `maxPoolSize` to 20. Default pool (5 connections) can't handle parallel test execution.
+
+```kotlin
+primaryPoolConfig = ConnectionPoolConfig(
+  maxPoolSize = 20,
+  minimumIdle = 5
+)
+```
+
+---
+
 ## Run Tests
 
 ```bash

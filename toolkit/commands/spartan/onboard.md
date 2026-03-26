@@ -2,23 +2,45 @@
 name: spartan:onboard
 description: "Understand a new codebase — scan, map architecture, set up rules, and get ready to build"
 argument-hint: ""
+preamble-tier: 4
 ---
 
 # Onboard to This Codebase
 
-You are running the **Onboard workflow** — go from "I just joined" to "I'm ready to build."
+You are the **Onboard workflow leader** — go from "I just joined" to "I'm ready to build."
+
+You handle scanning, mapping, and setup in one flow. Don't tell the user to run separate commands.
 
 ```
-STAGE 1: SCAN              STAGE 2: MAP              STAGE 3: SETUP
-─────────────             ────────────              ──────────────
-Project files             Architecture              Generate CLAUDE.md
-Stack detection           Key files + roles          Pick right packs
-Existing docs             Data flow                 Configure rules
-Git history               External deps             Ready to build
+PIPELINE:
 
-Gate 1                    Gate 2                    Gate 3
-"Here's what I see"       "Here's how it works"     "You're set up"
+  Check Context → Scan → Map → Setup → Save to Memory
+       │            │       │      │          │
+   .memory/      Gate 1  Gate 2  Gate 3    auto-save
+   prior sessions
 ```
+
+---
+
+## Step 0: Check Context (silent)
+
+Before scanning from scratch, check if someone already did this work.
+
+```bash
+# Check for existing memory/knowledge
+ls .memory/index.md .memory/knowledge/ 2>/dev/null
+
+# Check for existing CLAUDE.md
+ls CLAUDE.md 2>/dev/null
+
+# Check for prior onboarding
+ls .handoff/*.md 2>/dev/null
+```
+
+**If `.memory/` has knowledge files**, read them. Someone already captured context:
+> "Found existing project knowledge in `.memory/`. Reading it before scanning."
+
+**If CLAUDE.md exists**, read it first. Build on top of it, don't start over.
 
 ---
 
@@ -155,7 +177,7 @@ grep -rn "TODO\|FIXME\|HACK\|XXX" --include="*.kt" --include="*.tsx" --include="
 **Goal:** Configure the AI tools for this specific project.
 
 ### Generate or update CLAUDE.md
-Use the approach from `/spartan:init-project`:
+Use the approach from `/spartan:init-project` internally:
 - Tech stack section
 - Architecture section (from Stage 2)
 - Conventions (detected from code patterns)
@@ -187,11 +209,45 @@ wc -l CLAUDE.md
 ls ~/.claude/rules/ 2>/dev/null
 ```
 
+---
+
+## Stage 4: Save to Memory (auto-runs)
+
+After setup, save key findings so future sessions don't have to re-scan.
+
+```bash
+mkdir -p .memory/knowledge .memory/decisions
+```
+
+**What to save:**
+- **Architecture summary** → `.memory/knowledge/architecture.md`
+- **Key gotchas/patterns found** → `.memory/knowledge/gotchas.md`
+- **Tech debt notes** → `.memory/knowledge/tech-debt.md` (if significant)
+- **Non-obvious decisions** → `.memory/decisions/` (only if the user shared context that isn't in the code)
+
+**What NOT to save:**
+- Things already in CLAUDE.md (don't duplicate)
+- Obvious stuff (it's a React app, it uses TypeScript)
+- File paths (they change)
+
+Create or update `.memory/index.md`:
+```markdown
+# Project Memory
+
+## Knowledge
+- [architecture.md](knowledge/architecture.md) — [one-line summary]
+- [gotchas.md](knowledge/gotchas.md) — [one-line summary]
+
+## Decisions
+[add any decisions the user shared]
+```
+
 **GATE 3 — Done.**
 > "You're set up. Here's what's ready:
 > - CLAUDE.md: [created/updated]
 > - Stack: [detected stack]
 > - Packs: [what's installed]
+> - Memory: key findings saved for future sessions
 >
 > Start building with `/spartan:build [feature]` or explore with `/spartan` anytime."
 
@@ -199,7 +255,7 @@ ls ~/.claude/rules/ 2>/dev/null
 
 ## If the codebase is legacy / brownfield
 
-If the scan reveals a messy or unfamiliar codebase (no docs, no tests, tangled dependencies), use `/spartan:brownfield` internally for a deeper analysis before mapping.
+If the scan reveals a messy or unfamiliar codebase (no docs, no tests, tangled dependencies), use the approach from `/spartan:brownfield` internally for a deeper analysis before mapping.
 
 Signs of brownfield:
 - No tests or very few tests
@@ -215,8 +271,10 @@ In this case, add a warning:
 
 ## Rules
 
+- **You are the leader.** Run scanning, mapping, and setup yourself. Don't tell the user to run `/spartan:init-project` or `/spartan:map-codebase` separately.
 - **Don't change any code during onboarding.** This is read-only. Understand first.
 - **Ask about what's NOT in the code.** Business context, deployment process, team conventions — things you can't see in files.
 - **Don't assume conventions from one file apply everywhere.** Check multiple files for consistency.
 - **If CLAUDE.md exists, read it before scanning.** Someone already did this work — build on it.
+- **Save findings to memory.** Future sessions should benefit from this onboarding work.
 - **The architecture overview should fit on one screen.** If it's longer, you're over-explaining.

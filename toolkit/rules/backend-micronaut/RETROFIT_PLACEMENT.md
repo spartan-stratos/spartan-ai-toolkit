@@ -255,4 +255,36 @@ backend/
 
 ---
 
-**TL;DR:** Retrofit clients → `module-client` (no kapt). Micronaut beans → `module-auth` (has kapt). Never mix.
+---
+
+## Always Retrofit Over Raw OkHttp
+
+Always prefer Retrofit interfaces over raw OkHttp for HTTP clients. ~80% less boilerplate.
+
+```kotlin
+// WRONG — 198 lines of OkHttp boilerplate per client
+class DefaultSearchClient(private val okHttpClient: OkHttpClient) {
+  fun search(query: String): SearchResult {
+    val request = Request.Builder()
+      .url("$baseUrl/search")
+      .post(objectMapper.writeValueAsString(body).toRequestBody())
+      .addHeader("Authorization", "Bearer $apiKey")
+      .build()
+    val response = okHttpClient.newCall(request).execute()
+    // 40+ lines of response parsing, error handling...
+  }
+}
+
+// CORRECT — 25 lines, Retrofit handles the plumbing
+interface SearchClient {
+  @POST("/search")
+  suspend fun search(
+    @Header("Authorization") auth: String,
+    @Body request: SearchRequest
+  ): Response<SearchResult>
+}
+```
+
+---
+
+**TL;DR:** Retrofit clients → `module-client` (no kapt). Micronaut beans → `module-auth` (has kapt). Never mix. Always Retrofit, never raw OkHttp.

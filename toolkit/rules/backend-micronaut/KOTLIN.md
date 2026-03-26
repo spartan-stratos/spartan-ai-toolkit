@@ -296,3 +296,119 @@ fun longFunctionName(
 ./gradlew ktlintCheck     # Check style
 ./gradlew ktlintFormat    # Auto-fix style
 ```
+
+---
+
+## Constants Registry
+
+Use the right pattern for the right kind of constant:
+
+| Use Case | Pattern |
+|----------|---------|
+| Finite, known values (status, role) | `enum class` |
+| Open-ended, growing list (event names, metrics) | `object` with `const val` |
+| Structured paths (S3 keys, URLs) | Type-safe builder class |
+
+```kotlin
+// Enums for BOUNDED sets
+enum class ProjectStatus(val value: String) {
+  ACTIVE("active"), ARCHIVED("archived")
+}
+
+// Object registries for OPEN-ENDED sets
+object ActivityNames {
+  const val AGENT_CONVERSATION = "AgentConversation"
+  const val PROCESS_DOCUMENT = "ProcessDocument"
+  const val SYNC_USER_PROFILE = "SyncUserProfile"
+}
+
+// Type-safe builders for STRUCTURED paths
+object StorageKey {
+  fun user(userId: UUID) = UserStorageKey(userId)
+
+  class UserStorageKey(private val userId: UUID) {
+    fun avatar() = "user/$userId/avatar"
+    fun document(docId: UUID) = "user/$userId/documents/$docId"
+  }
+}
+```
+
+Once a registry passes ~50 constants, split by domain with nested objects:
+```kotlin
+object ActivityNames {
+  object Agent {
+    const val CONVERSATION = "AgentConversation"
+  }
+  object Document {
+    const val PROCESS = "ProcessDocument"
+  }
+}
+// Usage: ActivityNames.Agent.CONVERSATION
+```
+
+---
+
+## Nested Input/Output Data Classes
+
+For internal service contracts, nest `Input`/`Output` inside the class that uses them:
+
+```kotlin
+class ProcessDocumentService {
+  data class Input(
+    val documentId: UUID,
+    val userId: UUID,
+    val options: ProcessOptions = ProcessOptions()
+  )
+  data class Output(
+    val resultId: UUID,
+    val pageCount: Int
+  )
+
+  suspend fun run(input: Input): Either<ClientException, Output> { ... }
+}
+
+// Usage is self-documenting:
+val result = service.run(ProcessDocumentService.Input(documentId = id, userId = userId))
+```
+
+**When to use:** Internal service-to-service contracts, background jobs, batch operations.
+**When NOT to use:** API request/response models — those go in `module-client`.
+
+---
+
+## No Silent Try-Catch
+
+Never catch and swallow exceptions. If you need a fallback, log the failure first.
+
+```kotlin
+// WRONG — silent swallow, hides bugs
+val result = try {
+  expensiveOperation()
+} catch (e: Exception) {
+  fallbackValue  // No logging — bug disappears silently
+}
+
+// CORRECT for non-suspend — log then fallback
+val result = runCatching { blockingOperation() }
+  .onFailure { logger.warn("Operation failed, using fallback", it) }
+  .getOrDefault(fallbackValue)
+
+// CAREFUL — runCatching catches ALL Throwables including CancellationException.
+// In suspend code, this breaks cancellation silently:
+val result = runCatching { suspendFunction() }  // WRONG — swallows CancellationException
+  .getOrDefault(fallback)
+
+// CORRECT for suspend — rethrow CancellationException
+val result = runCatching { suspendFunction() }
+  .onFailure { if (it is CancellationException) throw it }
+  .onFailure { logger.warn("Operation failed", it) }
+  .getOrDefault(fallback)
+
+// BEST — use Either, no exceptions at all
+suspend fun doWork(): Either<ClientException, Result> { ... }
+```
+
+**Rules:**
+- Never catch-and-swallow. Log the failure if you need a fallback.
+- `runCatching` is fine for non-suspend code. For suspend functions, always rethrow `CancellationException` or use Either.
+- If you don't need a fallback, use Either and let the caller decide.

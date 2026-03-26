@@ -2,24 +2,45 @@
 name: spartan:fix
 description: "Find and fix a bug end-to-end — structured investigation, root cause, test-first fix, and PR"
 argument-hint: "[describe the symptom or error]"
+preamble-tier: 3
 ---
 
 # Fix: {{ args[0] | default: "a bug" }}
 
-You are running the **Fix workflow** — structured debugging from symptom to merged PR.
+You are the **Fix workflow leader** — structured debugging from symptom to merged PR.
 
-Don't guess. Don't try random fixes. Follow the 4 stages.
+You decide when to investigate deeper, when to check memory for known issues, and when to ship. Don't guess. Don't try random fixes. Follow the pipeline.
 
 ```
-STAGE 1: REPRODUCE         STAGE 2: INVESTIGATE       STAGE 3: FIX              STAGE 4: SHIP
-──────────────────        ─────────────────         ──────────────            ──────────────
-Get exact symptoms        Trace code path           Write failing test        Review fix
-Find minimal repro        Check recent changes      Minimal fix               Create PR
-Confirm it's real         Pinpoint root cause       Check similar patterns    Clear description
+PIPELINE:
 
-Gate 1                    Gate 2                    Gate 3                    Gate 4
-"I can reproduce this"    "Root cause: [X]"         "All tests pass"          "PR created"
+  Check Context → Reproduce → Investigate → Fix → Ship
+       │              │            │          │      │
+   .memory/        Gate 1       Gate 2     Gate 3  Gate 4
+   known issues
 ```
+
+---
+
+## Step 0: Check Context (silent — no questions)
+
+Before touching anything, check if this is a known issue.
+
+```bash
+# Check memory for known blockers and gotchas
+ls .memory/blockers/ .memory/knowledge/ 2>/dev/null
+
+# Check for handoff from a previous debug session
+ls .handoff/*.md 2>/dev/null
+```
+
+**If `.memory/blockers/` has files**, scan them for anything matching the symptom. If you find a match:
+> "This might be a known issue. Found in `.memory/blockers/[file]`: [summary]. Let me verify if this is the same problem."
+
+**If `.memory/knowledge/` has files**, scan for related gotchas or patterns that might explain the bug.
+
+**If a handoff exists**, check if someone was already debugging this:
+> "Found a previous debug session for this. Resuming from: [last stage]."
 
 ---
 
@@ -156,7 +177,7 @@ fix([scope]): [root cause description]
 
 ## Stage 4: Ship
 
-### Review the fix
+### Self-review
 Quick self-review:
 - Fix addresses root cause, not just symptom?
 - No leftover debug code (log statements, commented code)?
@@ -183,6 +204,20 @@ Clear description matters more for bug fixes than features:
 [Name of the test that guards against this]
 ```
 
+### Save to memory (if this bug reveals a pattern)
+
+After the PR, check if this bug is worth remembering:
+
+- **Recurring pattern?** (same type of bug seen before) → Save to `.memory/knowledge/`
+- **Known blocker for other work?** → Save to `.memory/blockers/`
+- **One-off typo or simple mistake?** → Don't save. Not worth remembering.
+
+```bash
+mkdir -p .memory/knowledge .memory/blockers
+```
+
+Update `.memory/index.md` if you saved anything.
+
 **GATE 4 — Done.**
 > "PR created: [link]. Bug: [symptom]. Root cause: [one line]. Fix: [one line]."
 
@@ -206,16 +241,20 @@ After the PR is created, produce this summary:
 **Similar patterns checked:** [files checked / changes made]
 
 **Prevention:** [what could stop this class of bug — lint rule, convention, type change, etc.]
+
+**Saved to memory:** [yes/no — what was saved and why]
 ```
 
 ---
 
 ## Rules
 
-- **Follow the 4 stages in order.** Don't skip to fixing. Understanding comes first.
+- **You are the leader.** Check memory, investigate, fix, ship — all in one flow. Don't tell the user to run separate commands.
+- **Follow the pipeline in order.** Don't skip to fixing. Understanding comes first.
 - **Never guess.** Every hypothesis needs evidence. "I think it might be..." is not enough.
 - **Write a failing test before writing the fix.** Always.
 - **Minimal fix.** Change as little as possible. Don't refactor while fixing.
 - **Check for siblings.** The same bug pattern might exist nearby. Always look.
 - **Max 3 hypotheses in Stage 2.** If none pan out, stop and ask for help. Don't spiral.
+- **Save patterns to memory.** If this bug type could happen again, save it so future sessions know.
 - **Small bugs don't need this workflow.** If you can see the typo, just fix it. This is for bugs that aren't obvious.
