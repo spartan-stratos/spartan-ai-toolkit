@@ -13,10 +13,12 @@ commands:
   - forensics
   - brownfield
   - map-codebase
+  - team
 
 rules: []
 skills: []
-agents: []
+agents:
+  - team-coordinator.md
 
 claude-sections:
   - 30-project-mgmt.md

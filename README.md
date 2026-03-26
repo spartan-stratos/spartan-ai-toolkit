@@ -342,6 +342,7 @@ Leaders call these automatically, but you can also run them directly.
 | `project [action]` | Large project lifecycle (new, status, milestone) |
 | `phase [action]` | Phase lifecycle (discuss, plan, execute, verify) |
 | `workstreams [action]` | Parallel work tracks |
+| `team [action]` | Agent Teams: create, wave, review, research, build, clean |
 | `think` | Guided thinking before coding |
 | `gsd-upgrade` | Upgrade to GSD v5 with memory + waves |
 | `forensics "problem"` | Post-mortem for failed workflows |
