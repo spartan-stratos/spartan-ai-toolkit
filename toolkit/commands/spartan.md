@@ -111,6 +111,11 @@ Route here when the user wants a specific tool, not a full workflow.
 | "big project", "multi-day", "new milestone" | `/spartan:project new` |
 | "continue phase", "next phase" | `/spartan:phase` |
 | "workstreams", "parallel work" | `/spartan:workstreams` |
+| "agent team", "spawn team", "create team", "multi-agent" | `/spartan:team` |
+| "run wave with agents", "execute wave with team" | `/spartan:team wave` |
+| "parallel review", "team review" | `/spartan:team review` |
+| "research swarm", "parallel research" | `/spartan:team research` |
+| "parallel build", "team build" | `/spartan:team build` |
 | "standup", "what did I do" | `/spartan:daily` |
 
 **Product thinking:**
@@ -248,6 +253,8 @@ You don't have to wait for the user to type `/spartan`. When you notice these pa
 | User is confused about what to do next | "Type `/spartan` and I'll figure out the right workflow." |
 | User just finished a big feature, no tests mentioned | "Should we add tests? `/spartan:e2e` for browser tests, or unit tests first." |
 | User has been coding for a while, no review mentioned | "Want a quick review before moving on? `/spartan:review`" |
+| User has a wave plan with 3+ parallel work units | "This wave has parallel tasks — want to use `/spartan:team wave` to run them with Agent Teams?" |
+| User wants multiple things reviewed or researched at once | "I can spin up a team for parallel work — `/spartan:team`" |
 
 ### How to suggest
 
