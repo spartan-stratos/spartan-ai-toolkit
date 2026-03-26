@@ -27,7 +27,7 @@ See `templates/workflow-frontend-react.md` for the full workflow with:
 - File location guide (App Router conventions)
 - Parallel vs sequential task planning
 
-For small tasks (< 1 day), `/spartan:quickplan` covers spec + plan in one shot.
+For any feature, use `/spartan:spec` → `/spartan:plan` → `/spartan:build`.
 
 ### Frontend Skills
 

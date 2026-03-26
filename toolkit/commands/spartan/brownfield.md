@@ -154,4 +154,4 @@ This prevents scope creep and keeps each change independently reviewable.
 
 After analysis, present the Context Map summary and ask:
 "Analysis complete. What change would you like to make first?
-I'll create a change folder and use `/spartan:quickplan` for it."
+I'll create a change folder and use `/spartan:spec` → `/spartan:build` for it."

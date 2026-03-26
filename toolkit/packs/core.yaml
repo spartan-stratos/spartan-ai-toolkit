@@ -5,10 +5,11 @@ priority: 0
 hidden: false
 
 commands:
+  - spec
+  - plan
   - build
   - fix
   - onboard
-  - quickplan
   - daily
   - context-save
   - update

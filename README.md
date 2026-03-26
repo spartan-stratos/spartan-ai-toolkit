@@ -198,7 +198,7 @@ Workflows use more tokens because they run multiple stages. If you want to save 
 
 | Instead of... | Use directly |
 |---------------|-------------|
-| Running the full Build workflow | `/spartan:quickplan "task"` for planning, then code manually |
+| Running the full Build workflow | `/spartan:spec "feature"` + `/spartan:plan "feature"` for planning, then code manually |
 | Running the full Fix workflow | `/spartan:debug "symptom"` for just the investigation part |
 | Build workflow's review stage | `/spartan:review` (backend) or `/spartan:fe-review` (frontend) |
 | Build workflow's ship stage | `/spartan:pr-ready` to create the PR |
@@ -252,7 +252,8 @@ Type `/spartan` to get the smart router. Or go direct:
 ### Core (always installed)
 | Command | What it does |
 |---------|-------------|
-| `quickplan "task"` | Task &lt; 1 day &mdash; spec + plan + branch in one shot |
+| `spec "feature"` | Write a feature spec &mdash; saves to `.planning/specs/` |
+| `plan "feature"` | Write implementation plan from spec &mdash; saves to `.planning/plans/` |
 | `daily` | Standup summary from git history |
 | `pr-ready` | Full checklist before creating any PR |
 | `init-project` | Auto-generate CLAUDE.md from codebase scan |

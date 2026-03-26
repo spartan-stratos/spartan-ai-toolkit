@@ -42,7 +42,7 @@ Create a new parallel workstream for independent work.
 **Run:** `/gsd:workstreams create {{ args[1] | default: "<name>" }}`
 
 After creation, tell the user:
-"Workstream '{{ args[1] | default: "<name>" }}' created. You are now working in this workstream. Next step: `/spartan:project new` or `/spartan:quickplan` to start work."
+"Workstream '{{ args[1] | default: "<name>" }}' created. You are now working in this workstream. Next step: `/spartan:project new` or `/spartan:spec` to start work."
 
 {% elif args[0] == "switch" %}
 ## Switch Workstream: {{ args[1] | default: "<name>" }}

@@ -34,6 +34,6 @@ What do you need?
 | Size | Use |
 |---|---|
 | < 30 min, ≤ 3 files | Just ask Claude (no command needed) |
-| < 1 day | `/spartan:quickplan` |
-| 1–3 days | `/spartan:project new` (lightweight lifecycle) |
+| < 1 day | `/spartan:spec` → `/spartan:build` |
+| 1–3 days | `/spartan:spec` → `/spartan:plan` → `/spartan:build` |
 | > 3 days, multi-session | `/spartan:project new` (full lifecycle) |
