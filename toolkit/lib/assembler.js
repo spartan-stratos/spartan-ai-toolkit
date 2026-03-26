@@ -120,21 +120,21 @@ export function assembleAGENTSmd(claudeMdDir, agentsDir, selectedPacks, packDefs
       const content = readFileSync(fp, 'utf-8');
       const name = extractFrontmatterField(content, 'name') || agentFile.replace('.md', '');
       const desc = extractFrontmatterField(content, 'description') || '';
-      const firstLine = desc.split('\n')[0].trim();
-      parts.push(`- **${name}**: ${firstLine}`);
+      // Handle multiline descriptions — get first meaningful sentence
+      const cleanDesc = desc.replace(/\\n/g, ' ').split('.')[0].trim();
+      parts.push(`- **${name}**: ${cleanDesc}`);
     }
     parts.push('');
   }
 
-  // Boundaries — from footer
+  // Boundaries — from footer "What NOT to Do" section
   const footerFile = join(claudeMdDir, '90-footer.md');
   if (existsSync(footerFile)) {
     const footer = readFileSync(footerFile, 'utf-8');
-    parts.push('## Boundaries');
-    parts.push('');
-    // Extract the "What NOT to Do" items as NEVER rules
-    const neverItems = extractListItems(footer);
+    const neverItems = extractNotToDoItems(footer);
     if (neverItems.length > 0) {
+      parts.push('## Boundaries');
+      parts.push('');
       parts.push('**NEVER:**');
       for (const item of neverItems) {
         parts.push(`- ${item}`);
@@ -176,10 +176,22 @@ function extractFrontmatterField(content, field) {
   return match ? match[1].trim().replace(/^["']|["']$/g, '') : null;
 }
 
-/** Extract list items (lines starting with -) from markdown. */
-function extractListItems(content) {
-  return content
-    .split('\n')
-    .filter(l => l.match(/^-\s+/))
-    .map(l => l.replace(/^-\s+/, '').trim());
+/** Extract items from the "What NOT to Do" section only. */
+function extractNotToDoItems(content) {
+  const lines = content.split('\n');
+  let inSection = false;
+  const items = [];
+  for (const line of lines) {
+    if (line.match(/what not to do/i)) {
+      inSection = true;
+      continue;
+    }
+    if (inSection && line.match(/^#{1,3}\s/)) {
+      break; // hit next section
+    }
+    if (inSection && line.match(/^-\s+/)) {
+      items.push(line.replace(/^-\s+/, '').trim());
+    }
+  }
+  return items;
 }
