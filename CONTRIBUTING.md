@@ -204,6 +204,73 @@ Add this to your PR description. Significant decisions may also be captured in t
 
 ---
 
+## Creating a Community Pack
+
+A pack bundles commands, rules, skills, and agents for a specific tech stack. Anyone can create one and share it.
+
+### Pack Directory Structure
+
+```
+my-pack/
+├── packs/
+│   └── go-backend.yaml       # Pack manifest (required)
+├── commands/spartan/
+│   └── go-service.md          # Slash commands
+├── rules/
+│   └── go-backend/
+│       └── CONVENTIONS.md     # Rules in a subdirectory matching pack name
+├── skills/
+│   └── go-patterns/
+│       └── SKILL.md           # Each skill is a directory with SKILL.md
+└── agents/
+    └── go-expert.md           # Agent definitions
+```
+
+### Pack Manifest Format
+
+Create a YAML file in `packs/`:
+
+```yaml
+name: go-backend                    # Required: kebab-case, unique
+description: "Go backend with Gin"  # Required: one-line description
+category: Backend                   # Optional: groups in CLI menu
+priority: 100                       # Optional: sort order (100+ for community)
+depends:                            # Optional: built-in packs to depend on
+  - core
+
+commands:
+  - go-service                      # → commands/spartan/go-service.md
+rules:
+  - go-backend/CONVENTIONS.md       # → rules/go-backend/CONVENTIONS.md
+skills:
+  - go-patterns                     # → skills/go-patterns/SKILL.md
+agents:
+  - go-expert.md                    # → agents/go-expert.md
+claude-sections: []
+```
+
+### Installing a Community Pack
+
+```bash
+npx spartan-ai-toolkit@latest --pack-dir=./my-pack
+```
+
+The CLI validates your pack (name format, no collisions, deps exist), merges it with built-in packs, and shows it in the menu.
+
+### Validation Checks
+
+- `name` exists and is kebab-case
+- `description` exists
+- No name collision with built-in packs
+- Dependencies reference valid built-in packs
+- Referenced files exist (warns if missing)
+
+### Sharing
+
+Push to GitHub. Users install with `--pack-dir=path/to/your-pack`. Use priority 100+ so community packs sort after built-in ones.
+
+---
+
 ## Questions?
 
 Open an issue with the `question` label, or reach out in the discussions tab.
