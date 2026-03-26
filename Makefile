@@ -86,27 +86,14 @@ bump: ## Bump version: make bump v=1.3.0
 	  exit 1; \
 	fi; \
 	echo "Bumping to $(v)..."; \
-	echo "$(v)" > toolkit/VERSION; \
-	cd toolkit && node -e " \
-	  const fs = require('fs'); \
-	  const files = [ \
-	    ['package.json', (d) => { d.version = '$(v)'; return d; }], \
-	    ['.claude-plugin/plugin.json', (d) => { d.version = '$(v)'; return d; }], \
-	    ['.claude-plugin/marketplace.json', (d) => { d.plugins[0].version = '$(v)'; return d; }], \
-	  ]; \
-	  files.forEach(([f, fn]) => { \
-	    const d = JSON.parse(fs.readFileSync(f, 'utf8')); \
-	    fs.writeFileSync(f, JSON.stringify(fn(d), null, 2) + '\n'); \
-	    console.log('  Updated: toolkit/' + f); \
-	  }); \
-	"; \
-	cd .. && node -e " \
-	  const fs = require('fs'); \
-	  const d = JSON.parse(fs.readFileSync('.claude-plugin/marketplace.json', 'utf8')); \
-	  d.plugins[0].version = '$(v)'; \
-	  fs.writeFileSync('.claude-plugin/marketplace.json', JSON.stringify(d, null, 2) + '\n'); \
-	  console.log('  Updated: .claude-plugin/marketplace.json'); \
-	"; \
+	printf '%s\n' "$(v)" > toolkit/VERSION; \
+	for f in toolkit/package.json \
+	         toolkit/.claude-plugin/plugin.json \
+	         toolkit/.claude-plugin/marketplace.json \
+	         .claude-plugin/marketplace.json; do \
+	  sed -i '' 's/"version": *"[^"]*"/"version": "$(v)"/' "$$f"; \
+	  echo "  Updated: $$f"; \
+	done; \
 	echo "Done. All 5 files now at $(v)."
 
 # ── Help ───────────────────────────────────────────────
