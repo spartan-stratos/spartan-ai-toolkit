@@ -1,7 +1,7 @@
 # Project: Spartan AI Toolkit
 
 ## About
-Spartan AI Toolkit is an engineering discipline layer for AI coding tools. It has 48 slash commands (11 packs), 11 coding rules, 18 skills, 4 agents, 13 frameworks, and 13 templates. Native integration with Claude Code (npx, plugin, setup script). All content is standard markdown — usable with any AI coding tool (Codex, Gemini, Copilot, Cursor, etc.). Includes a Telegram bridge for remote session control.
+Spartan AI Toolkit is an engineering discipline layer for AI coding tools. It has 51 slash commands (11 packs), 11 coding rules, 19 skills, 4 agents, 13 frameworks, and 13 templates. Native integration with Claude Code (npx, plugin, setup script). All content is standard markdown — usable with any AI coding tool (Codex, Gemini, Copilot, Cursor, etc.). Includes a Telegram bridge for remote session control.
 
 ## Tech Stack
 - **Primary language**: Markdown (commands, rules, skills, docs)
@@ -21,9 +21,9 @@ spartan-ai-toolkit/
 ├── .claude/
 │   └── settings.json            # Project-level config only (nothing else here)
 ├── toolkit/                     # Distribution content (npm: spartan-ai-toolkit)
-│   ├── commands/spartan/        # 48 slash commands
+│   ├── commands/spartan/        # 51 slash commands
 │   ├── commands/spartan.md      # Smart router (entry point)
-│   ├── skills/                  # 18 skill sets (each a directory with SKILL.md)
+│   ├── skills/                  # 19 skill sets (each a directory with SKILL.md)
 │   ├── agents/                  # 4 agent definitions
 │   ├── rules/{pack}/            # 11 coding standard files (grouped by pack)
 │   ├── frameworks/              # 13 startup/product frameworks
@@ -97,8 +97,15 @@ When adding new content to the toolkit, follow these formats exactly. The CLI an
 name: spartan:{command-name}
 description: Brief one-line description — no period
 argument-hint: "[what the user passes]"
+preamble-tier: 3
 ---
 ```
+
+**Preamble tiers:** Controls how much context the router loads before running the command.
+- `1` = Minimal (toggles, simple actions like careful/freeze)
+- `2` = Light (status checks, quick tasks like daily/contribute)
+- `3` = Standard (most commands — default if omitted)
+- `4` = Full (complex multi-phase workflows like project/phase/onboard)
 
 **Body rules:**
 - Title: `# Command Name: {{ args[0] | default: "fallback" }}`
@@ -106,6 +113,7 @@ argument-hint: "[what the user passes]"
 - Step-by-step with `##` headings for sections
 - Reference other commands as `/spartan:command-name`
 - Keep frontmatter `name` in kebab-case with `spartan:` prefix
+- **Questions must follow the Structured Question Format:** simplify → recommend → options (A/B/C) → one decision per turn. Always pick a side. Never ask without options.
 
 ### Skill Format
 

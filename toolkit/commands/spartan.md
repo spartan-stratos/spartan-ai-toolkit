@@ -18,6 +18,36 @@ Your job: understand what the user needs, then route to the right **workflow** o
 
 ---
 
+## Step 0.5: Session Tracking (silent, always runs)
+
+Track this session so other Claude windows know what's happening here:
+
+```bash
+mkdir -p ~/.spartan/sessions
+echo "branch=$(git branch --show-current 2>/dev/null || echo 'unknown') dir=$(basename $(pwd)) time=$(date +%s)" > ~/.spartan/sessions/$$
+```
+
+Count active sessions (modified in last 2 hours):
+
+```bash
+ACTIVE_SESSIONS=0
+NOW=$(date +%s)
+CUTOFF=$((NOW - 7200))
+for f in ~/.spartan/sessions/*; do
+  [ -f "$f" ] || continue
+  MOD=$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null || echo 0)
+  [ "$MOD" -gt "$CUTOFF" ] && ACTIVE_SESSIONS=$((ACTIVE_SESSIONS + 1))
+done
+```
+
+**If 3+ active sessions**, start your response with a grounding line:
+
+> **[Session ground]** You're in `[directory]` on branch `[branch]`. Last commit: `[git log --oneline -1]`.
+
+This prevents confusion when the user is running multiple windows. Keep it to one line — don't make it a big deal.
+
+---
+
 ## Step 1: Detect Project Context (silent, no questions)
 
 Before asking anything, scan the environment:
@@ -125,6 +155,12 @@ Route here when the user wants a specific tool, not a full workflow.
 | "write a post", "blog" | `/spartan:write` |
 | "content", "social media" | `/spartan:content` |
 
+**QA & Testing:**
+| User says... | Route to |
+|---|---|
+| "test in browser", "QA", "check the app", "test the UI" | `/spartan:qa` |
+| "add E2E tests" | `/spartan:e2e` |
+
 **Safety:**
 | User says... | Route to |
 |---|---|
@@ -133,9 +169,17 @@ Route here when the user wants a specific tool, not a full workflow.
 | "max safety", "guard mode" | `/spartan:guard` |
 | "unlock", "unfreeze" | `/spartan:unfreeze` |
 
-**Meta:**
+**Sessions:**
 | User says... | Route to |
 |---|---|
+| "what sessions", "active sessions", "other windows" | `/spartan:sessions` |
+| "clean sessions" | `/spartan:sessions clean` |
+
+**Feedback & Meta:**
+| User says... | Route to |
+|---|---|
+| "contributor mode", "self-improvement", "file reports" | `/spartan:contribute` |
+| "view reports", "skill ratings" | `/spartan:contribute reports` |
 | "what went wrong", "post-mortem" | `/spartan:forensics` |
 | "map the codebase" | `/spartan:map-codebase` |
 | "save context", "running out of context" | `/spartan:context-save` |
@@ -154,6 +198,96 @@ Examples:
 - "New codebase → `/spartan:onboard` scans and maps everything before you start."
 
 Then run the command. Don't ask "shall I proceed?" — just do it.
+
+### Preamble Tiers
+
+Not every command needs the same amount of context. Check the command/skill's `preamble-tier` field:
+
+| Tier | Context Weight | Use for | Examples |
+|------|---------------|---------|----------|
+| **1** | Minimal — just run | Toggles, simple actions | `/spartan:careful`, `/spartan:freeze`, `/spartan:sessions` |
+| **2** | Light — project context only | Quick tasks, status checks | `/spartan:daily`, `/spartan:contribute`, `/spartan:context-save` |
+| **3** | Standard — project + stack context | Most commands | `/spartan:build`, `/spartan:fix`, `/spartan:review` |
+| **4** | Full — everything, deep context | Complex workflows, multi-phase | `/spartan:project`, `/spartan:phase`, `/spartan:onboard` |
+
+**How tiers affect behavior:**
+- **Tier 1:** Skip project detection (Step 1). Just run.
+- **Tier 2:** Run Step 1 but skip stack-specific context loading.
+- **Tier 3:** Full Step 1 + load relevant stack skills. (Default if no tier specified.)
+- **Tier 4:** Full Step 1 + load all relevant skills + check `.memory/` + check `.planning/`.
+
+### Contributor Mode Check
+
+After a command finishes, check if contributor mode is active:
+
+```bash
+[ -f ~/.spartan/contributor-mode ] && echo "CONTRIBUTOR_MODE=on"
+```
+
+If active, silently file a field report (see `/spartan:contribute` for format). Don't ask the user. Don't slow anything down.
+
+---
+
+## Step 2.5: Proactive Suggestions (always active)
+
+You don't have to wait for the user to type `/spartan`. When you notice these patterns in conversation, **suggest the right command** — one line, not pushy.
+
+### When to suggest
+
+| You notice... | Suggest |
+|---|---|
+| User describes a product idea or feature concept | "This sounds like a good fit for `/spartan:think` before we code." |
+| User just finished building/coding something | "Ready to test? `/spartan:qa` can check it in a real browser." |
+| User says something is broken or not working | "Want me to run `/spartan:fix`? It does structured debugging." |
+| User is about to merge or says "ready for PR" | "Run `/spartan:pr-ready` to do the full pre-PR checklist." |
+| User asks about competitors or market | "I can dig deeper with `/spartan:research`." |
+| User mentions deploying or going live | "Want to use `/spartan:deploy` for a proper deploy checklist?" |
+| User is confused about what to do next | "Type `/spartan` and I'll figure out the right workflow." |
+| User just finished a big feature, no tests mentioned | "Should we add tests? `/spartan:e2e` for browser tests, or unit tests first." |
+| User has been coding for a while, no review mentioned | "Want a quick review before moving on? `/spartan:review`" |
+
+### How to suggest
+
+- **One line.** Don't write a paragraph about why they should use the command.
+- **Suggest, don't force.** Say "want me to run X?" not "I'm running X now."
+- **Max once per conversation turn.** Don't spam 3 suggestions at once.
+- **Skip if obvious.** If the user clearly knows what they're doing, don't suggest.
+- **Context matters.** Don't suggest `/spartan:qa` if there's no frontend. Don't suggest `/spartan:deploy` for a library.
+
+---
+
+## Structured Question Format (all skills must follow)
+
+When any `/spartan:*` command needs to ask the user a question, follow this format. Every time. No exceptions.
+
+### The Format
+
+1. **Simplify** — State the question in plain English. No jargon. One sentence.
+2. **Recommend** — Give your recommendation. Say which option you'd pick and why.
+3. **Options** — List 2-3 lettered options (A/B/C). Each option = one line with a clear trade-off.
+4. **One decision** — Never bundle two unrelated questions. One question per turn.
+
+### Example
+
+**Bad (vague, no options):**
+> "How would you like to handle the authentication flow? There are several approaches we could take depending on your requirements."
+
+**Good (structured):**
+> "How should login work?
+>
+> I'd go with **B** — it's simpler and covers 90% of cases.
+>
+> - **A) Session-based** — server stores state, simpler frontend, harder to scale
+> - **B) JWT tokens** — stateless, easy to scale, needs refresh logic
+> - **C) OAuth only** — delegate to Google/GitHub, no password management"
+
+### Rules
+
+- **Always pick a side.** Don't say "it depends." Say which option you'd choose and why.
+- **Trade-offs, not descriptions.** Each option should say what you gain AND what you lose.
+- **Short options.** One line each. If you need more detail, the user will ask.
+- **Never ask without options.** If you can't think of options, you probably don't need to ask.
+- **Skip questions when possible.** If there's an obvious best choice, just do it and explain why.
 
 ---
 
