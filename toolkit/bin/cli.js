@@ -49,10 +49,13 @@ function blue(s) { return `${C.blue}${s}${C.reset}`; }
 // ── Pack definitions (loaded from YAML manifests) ───────────────
 import { PACKS, PACK_ORDER } from '../lib/packs.js';
 import { assembleCLAUDEmd, assembleAGENTSmd } from '../lib/assembler.js';
-import { resolve as resolveDeps, resolveAliases, loadManifests } from '../lib/resolver.js';
+import { resolve as resolveDeps, resolveAliases, loadManifests, loadExternalPacks } from '../lib/resolver.js';
 import { detectStacks } from '../lib/detector.js';
 
 const manifests = loadManifests(join(PKG_ROOT, 'packs'));
+
+// Maps community pack names to their source directory (for file resolution)
+const externalPackSources = {};
 
 // ── Parse args ──────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -64,12 +67,14 @@ let mode = 'global';  // default for claude-code
 let showHelp = false;
 let format = '';  // '' = default, 'agents-md' = export AGENTS.md
 let autoDetect = false;
+let packDirArg = '';  // external community pack directory
 
 for (const arg of args) {
   if (arg === '--help' || arg === '-h') showHelp = true;
   else if (arg.startsWith('--agent=')) agent = arg.split('=')[1];
   else if (arg.startsWith('--packs=')) packsArg = arg.split('=')[1];
   else if (arg.startsWith('--format=')) format = arg.split('=')[1];
+  else if (arg.startsWith('--pack-dir=')) packDirArg = arg.split('=')[1];
   else if (arg === '--all') installAll = true;
   else if (arg === '--auto') autoDetect = true;
   else if (arg === '--global') mode = 'global';
@@ -106,6 +111,7 @@ if (showHelp) {
     --packs=LIST    Comma-separated packs (claude-code only)
                     Example: --packs=backend-micronaut,product
     --auto          Auto-detect tech stack and suggest packs (no menu)
+    --pack-dir=DIR  Load community packs from an external directory
     --format=NAME   Output format: agents-md (exports AGENTS.md for cross-tool use)
     --all           Install all packs
     --global        Install to home dir (default for claude-code/codex)
@@ -233,6 +239,11 @@ function copyDir(src, dest) {
   cpSync(src, dest, { recursive: true });
 }
 
+/** Get the source root for a pack (built-in uses PKG_ROOT, community uses pack-dir). */
+function getPackSource(packName) {
+  return externalPackSources[packName] || PKG_ROOT;
+}
+
 /** Get all items for a category across selected packs, deduplicated. */
 function gatherItems(selectedPacks, category) {
   const seen = new Set();
@@ -244,6 +255,24 @@ function gatherItems(selectedPacks, category) {
       if (!seen.has(item)) {
         seen.add(item);
         result.push(item);
+      }
+    }
+  }
+  return result;
+}
+
+/** Like gatherItems but includes the source root for each item (for community pack support). */
+function gatherItemsWithSource(selectedPacks, category) {
+  const seen = new Set();
+  const result = [];
+  for (const pack of selectedPacks) {
+    const def = PACKS[pack];
+    if (!def) continue;
+    const srcRoot = getPackSource(pack);
+    for (const item of def[category]) {
+      if (!seen.has(item)) {
+        seen.add(item);
+        result.push({ item, srcRoot });
       }
     }
   }
@@ -409,9 +438,9 @@ async function installFull() {
     cmdCount++;
   }
 
-  const selectedCommands = gatherItems(selectedPacks, 'commands');
-  for (const cmd of selectedCommands) {
-    const src = join(SRC.commandsSub, `${cmd}.md`);
+  const selectedCommands = gatherItemsWithSource(selectedPacks, 'commands');
+  for (const { item: cmd, srcRoot } of selectedCommands) {
+    const src = join(srcRoot, 'commands', 'spartan', `${cmd}.md`);
     if (existsSync(src)) {
       copyFile(src, join(targets.commands, `${cmd}.md`));
       console.log(`  ${green('+')} /spartan:${cmd}`);
@@ -423,14 +452,13 @@ async function installFull() {
   console.log(`  ${bold(cmdCount + ' commands')} installed\n`);
 
   // 3) Rules (now with subdirectory structure)
-  const selectedRules = gatherItems(selectedPacks, 'rules');
-  if (selectedRules.length > 0) {
+  const rulesWithSource = gatherItemsWithSource(selectedPacks, 'rules');
+  if (rulesWithSource.length > 0) {
     console.log(`${blue('[3/5]')} ${bold('Installing rules...')}`);
     let ruleCount = 0;
 
-    for (const rule of selectedRules) {
-      // Rules now have subdir paths like "database/SCHEMA.md"
-      const src = join(SRC.rules, rule);
+    for (const { item: rule, srcRoot } of rulesWithSource) {
+      const src = join(srcRoot, 'rules', rule);
       const dest = join(targets.rules, rule);
       if (existsSync(src)) {
         copyFile(src, dest);
@@ -444,14 +472,14 @@ async function installFull() {
   }
 
   // 4) Skills
-  const selectedSkills = gatherItems(selectedPacks, 'skills');
-  if (selectedSkills.length > 0) {
+  const skillsWithSource = gatherItemsWithSource(selectedPacks, 'skills');
+  if (skillsWithSource.length > 0) {
     console.log(`${blue('[4/5]')} ${bold('Installing skills...')}`);
     ensureDir(targets.skills);
     let skillCount = 0;
 
-    for (const skill of selectedSkills) {
-      const src = join(SRC.skills, skill);
+    for (const { item: skill, srcRoot } of skillsWithSource) {
+      const src = join(srcRoot, 'skills', skill);
       if (existsSync(src)) {
         copyDir(src, join(targets.skills, skill));
         console.log(`  ${green('+')} ${skill}`);
@@ -464,14 +492,14 @@ async function installFull() {
   }
 
   // 5) Agents
-  const selectedAgents = gatherItems(selectedPacks, 'agents');
-  if (selectedAgents.length > 0) {
+  const agentsWithSource = gatherItemsWithSource(selectedPacks, 'agents');
+  if (agentsWithSource.length > 0) {
     console.log(`${blue('[5/5]')} ${bold('Installing agents...')}`);
     ensureDir(targets.agents);
     let agentCount = 0;
 
-    for (const agentFile of selectedAgents) {
-      const src = join(SRC.agents, agentFile);
+    for (const { item: agentFile, srcRoot } of agentsWithSource) {
+      const src = join(srcRoot, 'agents', agentFile);
       if (existsSync(src)) {
         copyFile(src, join(targets.agents, agentFile));
         console.log(`  ${green('+')} ${agentFile.replace('.md', '')}`);
@@ -579,6 +607,49 @@ async function main() {
   if (nodeVer < 18) {
     console.error(`\n  ${C.red}Node.js ${process.versions.node} is too old. Need >= 18.${C.reset}\n`);
     process.exit(1);
+  }
+
+  // Load community packs if --pack-dir is set
+  if (packDirArg) {
+    const packDirPath = pathResolve(process.cwd(), packDirArg);
+    const builtinNames = new Set(manifests.keys());
+    console.log(`\n  ${blue('Loading community packs from')} ${dim(packDirPath)}`);
+    const { loaded, errors } = loadExternalPacks(packDirPath, builtinNames);
+
+    if (errors.length > 0) {
+      for (const err of errors) {
+        console.log(`  ${yellow('!')} ${err}`);
+      }
+    }
+
+    if (loaded.size > 0) {
+      for (const [name, manifest] of loaded) {
+        manifests.set(name, manifest);
+        externalPackSources[name] = packDirPath;
+        // Add to PACKS and PACK_ORDER so menus and install work
+        PACKS[name] = {
+          description: manifest.description,
+          category: manifest.category || 'Community',
+          priority: manifest.priority ?? 500,
+          hidden: manifest.hidden || false,
+          comingSoon: manifest['coming-soon'] || false,
+          depends: manifest.depends || [],
+          commands: manifest.commands || [],
+          rules: manifest.rules || [],
+          skills: manifest.skills || [],
+          agents: manifest.agents || [],
+          claudeSections: manifest['claude-sections'] || [],
+        };
+        PACK_ORDER.push(name);
+      }
+      // Re-sort PACK_ORDER by priority
+      PACK_ORDER.sort((a, b) => (PACKS[a]?.priority ?? 999) - (PACKS[b]?.priority ?? 999));
+
+      const names = [...loaded.keys()].join(', ');
+      console.log(`  ${green('+')} Loaded: ${bold(names)}\n`);
+    } else {
+      console.log(`  ${dim('No valid community packs found')}\n`);
+    }
   }
 
   let selectedPacks;
