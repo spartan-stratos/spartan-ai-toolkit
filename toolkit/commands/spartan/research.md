@@ -75,6 +75,25 @@ Options:
 
 **Goal:** Find real data from real sources. Track everything.
 
+### Agent Teams boost (if enabled)
+
+```bash
+echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
+```
+
+**If Agent Teams is enabled**, run parallel research agents for faster, broader coverage:
+
+1. Use `TeamCreate` with name `research-{topic-slug}`
+2. Spawn 2-3 agents based on the source strategy from Stage 1:
+   - **breadth-researcher** — runs direct + alternative + adjacent queries, collects 8-15 sources
+   - **depth-researcher** — picks the top 3-5 sources from breadth, goes deep on each
+   - **contrarian-researcher** (optional) — searches for counterarguments, failures, criticism
+3. Each agent tracks sources with credibility scores (see format below)
+4. After all report back, merge source lists and continue to Stage 3 (Analyze)
+5. Clean up team with `TeamDelete`
+
+**If Agent Teams is NOT enabled**, gather sequentially:
+
 ### Search strategy
 Use the `deep-research` skill. Run multiple search queries — not just one:
 

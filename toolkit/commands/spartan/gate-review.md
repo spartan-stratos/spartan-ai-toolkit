@@ -76,7 +76,34 @@ Note any issues you find. Fix what you can before calling the reviewer.
 
 ---
 
-## Step 3: Spawn the Reviewer
+## Step 3: Spawn the Reviewer(s)
+
+### Agent Teams boost (if enabled)
+
+```bash
+echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
+```
+
+**If Agent Teams is enabled AND the diff has 10+ changed files or touches 3+ modules:**
+
+Offer to use a review team for parallel review:
+> "This is a big change ([N] files across [N] modules). Want a parallel review team?
+>
+> I'd go with **A** — multiple reviewers catch different things.
+>
+> - **A) Review team** — quality reviewer + test reviewer + security reviewer, all in parallel
+> - **B) Single reviewer** — one phase-reviewer agent (cheaper, faster for small changes)"
+
+If user picks A → run `/spartan:team review` internally. Three agents review in parallel:
+1. **quality-reviewer** — code design, SOLID, clean code, stack conventions
+2. **test-reviewer** — test coverage, edge cases, test quality
+3. **security-reviewer** — auth, input validation, data handling
+
+After all report back, synthesize findings and continue to Step 4 (Discussion).
+
+If user picks B (or Agent Teams not enabled) → use single reviewer below.
+
+### Single reviewer (default)
 
 Spawn the `phase-reviewer` agent as a subagent. Give it:
 

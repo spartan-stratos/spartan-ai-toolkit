@@ -128,6 +128,26 @@ Based on results:
 
 ## Stage 3: Dig
 
+### Agent Teams boost (if enabled)
+
+```bash
+echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
+```
+
+**If Agent Teams is enabled**, run market research and competitor teardowns in parallel:
+
+1. Use `TeamCreate` with name `research-{idea-slug}`
+2. Spawn 2-3 agents:
+   - **market-researcher** — TAM/SAM/SOM, growth signals, adjacent markets
+   - **competitor-analyst** — teardown 3+ competitors, find gaps
+   - **contrarian** (optional) — challenge assumptions, find risks
+3. After all report back, synthesize into a single research doc
+4. Clean up team with `TeamDelete`
+
+Skip to step 11 (synthesis) after team reports back.
+
+**If Agent Teams is NOT enabled**, run sequentially:
+
 9. Use the `market-research` skill — TAM/SAM/SOM, growth signals, adjacent markets
 10. Use the `competitive-teardown` skill — at least 3 competitors, strengths, weaknesses, gaps
 11. Write synthesis:
