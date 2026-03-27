@@ -1,6 +1,10 @@
 ---
 name: idea-validation
 description: Validate a startup idea with competitor analysis, market signals, and risk assessment. Be brutally honest. Use when the user wants to test if an idea is worth building.
+allowed_tools:
+  - WebSearch
+  - WebFetch
+  - Read
 ---
 
 # Idea Validation
@@ -13,6 +17,8 @@ Kill bad ideas fast. Save time for good ones.
 - Before building anything
 - Before spending money on research
 - When choosing between ideas
+
+> See `example-report.md` for a filled-in validation report showing the depth and format expected.
 
 ## Process
 
@@ -101,6 +107,14 @@ This is a two-way talk:
 - Back opinions with data when you can.
 - If you can't find data, say so.
 - Don't let the user's excitement bias your analysis.
+
+## Gotchas
+
+- **Confirmation bias is the #1 killer.** The user wants to hear "GO." Your job is to find reasons to say "PASS." Start with reasons it won't work.
+- **TAM without math is fiction.** "The market is $50B" means nothing. Show the calculation: X users x Y price x Z frequency.
+- **"No competitors" is a red flag, not a green one.** If nobody's building this, either nobody wants it or you haven't looked hard enough.
+- **Don't validate ideas -- validate problems.** An idea can be wrong while the problem is real. Always separate problem validation from solution validation.
+- **Quick test > more research.** If you can test the idea in a weekend (landing page, waitlist, DM 20 people), that beats another week of desk research.
 
 ## Output
 

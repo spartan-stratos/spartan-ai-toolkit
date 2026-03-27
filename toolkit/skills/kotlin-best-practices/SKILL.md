@@ -1,145 +1,58 @@
 ---
 name: kotlin-best-practices
 description: Kotlin coding standards including null safety, Either error handling, coroutines, and Exposed ORM patterns. Use when writing Kotlin code, reviewing code quality, or learning project patterns.
+allowed_tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
 ---
 
 # Kotlin Best Practices — Quick Reference
 
 ## Null Safety
 
-```kotlin
-// NEVER — banned, pre-commit hook rejects it
-val x = foo!!.bar
+`!!` is banned. Use `?.`, `?:`, or null check for smart cast.
 
-// GOOD — safe call + elvis
-val x = foo?.bar ?: defaultValue
-
-// GOOD — explicit null check (smart cast after)
-if (foo == null) return error.left()
-foo.bar  // smart cast, no ?. needed
-
-// GOOD — let for null-safe chains
-user?.let { generateTokens(it, provider) }
-  ?: return AuthError.AUTHENTICATION_FAILED.asException().left()
-```
+> See code-patterns.md for all null safety examples.
 
 ## Either Error Handling
 
-```kotlin
-// Managers return Either — never throw
-suspend fun findById(id: UUID): Either<ClientException, UserResponse> {
-  val entity = userRepository.byId(id)
-    ?: return ClientError.USER_NOT_FOUND.asException().left()
-  return UserResponse.from(entity).right()
-}
+Managers return `Either<ClientException, T>` -- never throw. Controllers unwrap with `.throwOrValue()`.
 
-// Controllers unwrap with .throwOrValue()
-@Get("/user")
-suspend fun getUser(@QueryValue id: UUID): UserResponse {
-  return userManager.findById(id).throwOrValue()
-}
-```
+> See code-patterns.md for manager + controller examples.
 
 ## Enum Usage
 
-```kotlin
-// NEVER hardcode strings when an enum exists
-val status = "critical"              // WRONG
-val status = HealthStatus.CRITICAL.value  // RIGHT
+Never hardcode strings when an enum exists. Use `EnumName.VALUE.value` everywhere.
 
-// Define enums with .value
-enum class HealthStatus(val value: String) {
-  HEALTHY("healthy"),
-  AT_RISK("at_risk"),
-  CRITICAL("critical");
-
-  companion object {
-    fun fromValue(v: String) = entries.find { it.value == v }
-  }
-}
-```
+> See code-patterns.md for enum definition and usage patterns.
 
 ## Exposed ORM Patterns
 
-```kotlin
-// Table — extend UUIDTable, use text() not varchar()
-object UsersTable : UUIDTable("users") {
-  val email = text("email")
-  val displayName = text("display_name").nullable()
-  val createdAt = timestamp("created_at")
-  val updatedAt = timestamp("updated_at").nullable()
-  val deletedAt = timestamp("deleted_at").nullable()
-}
+Extend `UUIDTable`, use `text()` not `varchar()`. Always filter `deletedAt.isNull()`. Soft delete via timestamp update, never hard delete.
 
-// Query — ALWAYS check deletedAt.isNull()
-fun byId(id: UUID): UserEntity? {
-  return transaction(db.replica) {
-    UsersTable
-      .selectAll()
-      .where { (UsersTable.id eq id) and UsersTable.deletedAt.isNull() }
-      .singleOrNull()
-      ?.let { convert(it) }
-  }
-}
-
-// Soft delete — NEVER hard delete
-fun deleteById(id: UUID): UserEntity? {
-  return transaction(db.primary) {
-    UsersTable.update(
-      where = { (UsersTable.id eq id) and UsersTable.deletedAt.isNull() }
-    ) {
-      it[deletedAt] = Instant.now()
-      it[updatedAt] = Instant.now()
-    }
-    UsersTable.selectAll()
-      .where { UsersTable.id eq id }
-      .singleOrNull()
-      ?.let { convert(it) }
-  }
-}
-```
+> See code-patterns.md for table, query, and soft delete examples.
 
 ## Transaction Rules
 
-```kotlin
-// Reads use replica, writes use primary
-val user = transaction(db.replica) { userRepository.byId(id) }
-val saved = transaction(db.primary) { userRepository.insert(entity) }
+Reads use `db.replica`, writes use `db.primary`. Multi-table writes go in one transaction block -- all succeed or all rollback.
 
-// Multiple writes in one transaction
-transaction(db.primary) {
-  val user = userRepository.insert(userEntity)
-  profileRepository.insert(profileEntity)
-  // all succeed or all rollback
-}
-```
+> See code-patterns.md for transaction examples.
 
 ## Conversion Pattern
 
-```kotlin
-// Companion object from() on Response DTOs
-data class UserResponse(
-  val id: UUID,
-  val email: String
-) {
-  companion object {
-    fun from(entity: UserEntity) = UserResponse(
-      id = entity.id,
-      email = entity.email
-    )
-  }
-}
+Put `companion object { fun from(entity) }` inside Response DTOs. Never create separate mapper files.
 
-// Use in manager
-return UserResponse.from(entity).right()
-```
+> See code-patterns.md for the full pattern.
 
 ## What to Avoid
 
-- `!!` — always use `?.`, `?:`, or null check
-- `@Suppress` — fix the root cause
-- Throwing exceptions — return `Either.left()` instead
-- `VARCHAR` in SQL — use `TEXT`
+- `!!` -- always use `?.`, `?:`, or null check
+- `@Suppress` -- fix the root cause
+- Throwing exceptions -- return `Either.left()` instead
+- `VARCHAR` in SQL -- use `TEXT`
 - Hardcoded strings for enum values
-- `Table` base class — use `UUIDTable`
-- Field injection — use constructor injection
+- `Table` base class -- use `UUIDTable`
+- Field injection -- use constructor injection

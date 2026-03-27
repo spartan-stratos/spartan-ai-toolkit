@@ -1,6 +1,10 @@
 ---
 name: deep-research
 description: Run deep research on a topic. Web searches, data collection, source checking, and a structured report. Use when the user needs more than a quick answer.
+allowed_tools:
+  - WebSearch
+  - WebFetch
+  - Read
 ---
 
 # Deep Research
@@ -62,6 +66,14 @@ Structure:
 - Include views that disagree with each other
 - Keep your opinion in the Analysis section, not the Findings
 - If the user asks for quick research, skip steps 3-4
+
+## Gotchas
+
+- **Old data kills credibility.** A 2021 market size report is useless in 2026. Always check the publish date. Flag anything older than 18 months.
+- **Press releases aren't research.** Company announcements are marketing. Cross-check with third-party sources, financial filings, or user data.
+- **Conflicting sources are a feature, not a bug.** When two reports disagree, that's where the interesting analysis lives. Don't just pick one.
+- **"I couldn't find data" is a valid finding.** Don't fill gaps with guesses. If the data doesn't exist, say so -- that's useful info for the user.
+- **Synthesis > summary.** Listing 10 findings isn't research. Connect the dots -- what patterns emerge? What's the "so what?"
 
 ## Output
 

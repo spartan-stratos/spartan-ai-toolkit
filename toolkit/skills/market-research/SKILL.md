@@ -1,6 +1,10 @@
 ---
 name: market-research
 description: Run market research, competitive analysis, investor due diligence, and industry scans. Use when the user wants market sizing, competitor comparisons, fund research, or tech scans.
+allowed_tools:
+  - WebSearch
+  - WebFetch
+  - Read
 ---
 
 # Market Research
@@ -79,6 +83,14 @@ Structure every deliverable as:
 - Old data is flagged.
 - The suggestion follows from the facts.
 - Someone can make a decision from this.
+
+## Gotchas
+
+- **Top-down TAM is lazy and always wrong.** "10% of the $X billion market" is not analysis. Bottom-up from real customer numbers or go home.
+- **Analyst reports have built-in bias.** Reports from vendors (like AWS sizing the cloud market) overstate their own segment. Use independent sources.
+- **Revenue proxies are unreliable.** SimilarWeb traffic estimates can be off by 5x. Combine multiple signals: hiring, social, Crunchbase, app store rankings.
+- **Don't confuse market size with addressable market.** The CRM market is $80B, but if you're building for freelancers, your market is a fraction of that.
+- **Recency matters.** A market growing 40% in 2024 might be flat in 2026. Always check the latest data points, not just the headline number.
 
 ## Output
 

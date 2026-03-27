@@ -1,6 +1,9 @@
 ---
 name: startup-pipeline
-description: The full startup idea pipeline from brainstorm to investor outreach. Defines the stages, gates, and file structure. Auto-activates when working through the pipeline.
+description: "Coordinates the full startup idea pipeline from brainstorm to investor outreach. Use when the user starts a new idea project, asks for the 'full pipeline', or references stages/gates."
+allowed_tools:
+  - WebSearch
+  - Read
 ---
 
 # Startup Pipeline
@@ -22,6 +25,22 @@ STAGE 1: DISCOVER          STAGE 2: FILTER           STAGE 3: DIG              S
 
    📁 01-brainstorm/      📁 03-validation/        📁 02-research/           📁 04-build/
 ```
+
+## Setup
+
+On first run, check for a `config.json` in the project root. If it doesn't exist, ask the user and create one:
+
+```json
+{
+  "projectName": "my-idea",
+  "outputDir": "projects/my-idea",
+  "defaultAudience": "B2B SaaS founders",
+  "fundingGoal": "bootstrap",
+  "currentStage": 1
+}
+```
+
+Update `currentStage` as the user progresses through gates. This lets the pipeline resume across sessions.
 
 ## Stage Gates
 
@@ -115,6 +134,14 @@ This is a two-way talk:
 - Say "it depends" without picking a side
 - Skip the gate check
 - Pretend every idea deserves Stage 4
+
+## Gotchas
+
+- **Don't let excitement skip gates.** Users will want to jump from brainstorm to pitch deck. The gates exist to kill bad ideas early -- enforce them.
+- **"TEST MORE" is the most common verdict, not GO.** Most ideas need cheap validation before deep research. Don't treat the pipeline as a straight path.
+- **Stage 3 kills are normal and healthy.** Finding out a market is too small during research is a success, not a failure. You saved weeks of building.
+- **Pipeline files get stale.** If the user comes back after a week, re-read all prior stage files before continuing. Context drifts fast.
+- **One idea at a time through stages 3-4.** Brainstorm many, validate a few, but only deep-dive one at a time. Parallel research = shallow research.
 
 ## Rules
 

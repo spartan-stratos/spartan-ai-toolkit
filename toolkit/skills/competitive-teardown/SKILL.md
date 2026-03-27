@@ -1,6 +1,10 @@
 ---
 name: competitive-teardown
 description: Deep competitor analysis. Tear apart a specific competitor or compare multiple competitors. Use when the user names a competitor or asks "who else is doing this?"
+allowed_tools:
+  - WebSearch
+  - WebFetch
+  - Read
 ---
 
 # Competitive Teardown
@@ -13,6 +17,8 @@ Study competitors like you're planning to beat them.
 - "Who else is doing this?"
 - Before building, to find gaps
 - Preparing for investor "competition slide"
+
+> See `example-analysis.md` for a filled-in competitor teardown showing the format and depth expected.
 
 ## Single Competitor Teardown
 
@@ -72,6 +78,14 @@ After analysis, answer:
 - Look for patterns in complaints, not single reviews
 - Be fair. Give credit where it's due.
 - If a competitor is way ahead, say so. Don't hide it.
+
+## Gotchas
+
+- **Don't just read the landing page.** Sign up for free trials. Watch demo videos. Read user forums. The landing page is marketing, not the product.
+- **One-star reviews are gold, but look for patterns.** A single angry review means nothing. Ten people saying the same thing is a signal.
+- **Funding ≠ success.** A competitor with $50M raised and no revenue is weaker than one with $2M raised and growing 20% monthly.
+- **Don't confuse features with moat.** A feature can be copied in a sprint. Distribution, data, and network effects can't.
+- **Check if they're growing or coasting.** Recent job postings, new features, blog activity — these signal momentum. Silence signals trouble.
 
 ## Output
 

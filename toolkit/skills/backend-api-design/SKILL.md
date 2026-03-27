@@ -1,6 +1,12 @@
 ---
 name: backend-api-design
 description: Design RPC-style APIs with layered architecture (Controller → Manager → Repository). Use when creating new API endpoints, designing API contracts, or reviewing API patterns.
+allowed_tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
 ---
 
 # Backend API Design — Quick Reference
@@ -23,36 +29,6 @@ POST /api/v1/sync/employees         # Action
 - **Singular for single resource** — `/employee` not `/employees/{id}`
 - **Plural for collections** — `/employees`
 - **Verb sub-paths for actions** — `/delete`, `/restore`, `/sync`
-
-## Controller Template
-
-```kotlin
-@ExecuteOn(TaskExecutors.IO)    // REQUIRED for suspend
-@Validated
-@Controller("/api/v1/admin")
-@Secured(OAuthSecurityRule.ADMIN)
-class EmployeeController(
-  private val employeeManager: EmployeeManager  // Managers ONLY
-) {
-  @Get("/employee")
-  suspend fun getEmployee(@QueryValue id: UUID): EmployeeResponse {
-    return employeeManager.findById(id).throwOrValue()
-  }
-
-  @Get("/employees")
-  suspend fun listEmployees(
-    @QueryValue page: Int?,
-    @QueryValue limit: Int?,
-    @QueryValue status: String?
-  ): EmployeeListResponse {
-    return employeeManager.list(
-      page = page ?: 1,
-      limit = (limit ?: 20).coerceAtMost(100),
-      status = status
-    ).throwOrValue()
-  }
-}
-```
 
 ## Layered Architecture
 
@@ -81,107 +57,28 @@ Repository  →  data access only, no business logic
 - `db.replica` for reads, `db.primary` for writes
 - Always checks `deletedAt.isNull()`
 
-## Response Models
+## Quick Code Reference
 
-All in `module-client/response/{domain}/`:
-
-```kotlin
-data class EmployeeResponse(
-  val id: UUID,
-  val name: String,
-  val email: String,
-  val status: String,
-  val createdAt: Instant
-) {
-  companion object {
-    fun from(entity: EmployeeEntity) = EmployeeResponse(
-      id = entity.id,
-      name = entity.name,
-      email = entity.email,
-      status = entity.status,
-      createdAt = entity.createdAt
-    )
-  }
-}
-
-data class EmployeeListResponse(
-  val items: List<EmployeeResponse>,
-  val total: Int,
-  val page: Int,
-  val limit: Int,
-  val hasMore: Boolean
-)
-```
-
-## Pagination Pattern
+The core controller delegation pattern:
 
 ```kotlin
-override suspend fun list(
-  page: Int,
-  limit: Int,
-  status: String?
-): Either<ClientException, EmployeeListResponse> {
-  val offset = (page - 1) * limit
-
-  val (items, total) = transaction(db.replica) {
-    val query = EmployeesTable
-      .selectAll()
-      .where { EmployeesTable.deletedAt.isNull() }
-
-    if (status != null) {
-      query.andWhere { EmployeesTable.status eq status }
-    }
-
-    val total = query.count().toInt()
-    val items = query
-      .orderBy(EmployeesTable.createdAt to SortOrder.DESC)
-      .limit(limit)
-      .offset(offset.toLong())
-      .map { convert(it) }
-
-    items to total
-  }
-
-  return EmployeeListResponse(
-    items = items.map { EmployeeResponse.from(it) },
-    total = total,
-    page = page,
-    limit = limit,
-    hasMore = (page * limit) < total
-  ).right()
+@Get("/employee")
+suspend fun getEmployee(@QueryValue id: UUID): EmployeeResponse {
+  return employeeManager.findById(id).throwOrValue()
 }
 ```
 
-## Error Pattern
+- **Response models** — `companion object { fun from(entity) }` in `module-client/response/{domain}/`
+- **Pagination** — offset-based, manager returns `EmployeeListResponse` with `items`, `total`, `page`, `limit`, `hasMore`
+- **Errors** — return `ClientError.NOT_FOUND.asException().left()` from managers, never throw
+- **Factory beans** — `@Factory` class with `@Singleton` method, wire repos + db into manager
 
-```kotlin
-// Not found
-val entity = repository.byId(id)
-  ?: return ClientError.NOT_FOUND.asException().left()
+> See code-patterns.md for complete controller, response model, pagination, error handling, and factory bean templates.
 
-// Already exists
-val existing = repository.byEmail(email)
-if (existing != null) {
-  return ClientError.ALREADY_EXISTS.asException().left()
-}
+## Gotchas
 
-// Validation
-if (request.name.isBlank()) {
-  return ClientError.INVALID_INPUT.asException("Name is required").left()
-}
-```
-
-## Factory Bean
-
-```kotlin
-@Factory
-class EmployeeManagerFactory {
-  @Singleton
-  fun provideEmployeeManager(
-    employeeRepository: EmployeeRepository,
-    db: DatabaseContext
-  ): EmployeeManager {
-    return DefaultEmployeeManager(employeeRepository, db)
-  }
-}
-```
+- **Multi-word `@QueryValue` params MUST have explicit snake_case names.** The frontend axios interceptor sends `project_id` but Micronaut matches the literal param name. Write `@QueryValue("project_id") projectId: UUID`, not bare `@QueryValue projectId: UUID`.
+- **Don't use `@Put`, `@Delete`, or `@Patch`.** This is RPC-style — all mutations are `@Post`. The only `@Get` is for reads.
+- **Controllers that inject repositories are a code smell.** If you see `private val fooRepository: FooRepository` in a controller, move it to the manager.
+- **`andWhere {}` not second `.where {}`.** Calling `.where {}` twice replaces the first condition. Use `.andWhere {}` to chain.
+- **Don't forget `@ExecuteOn(TaskExecutors.IO)`.** Without it, suspend functions may hang or run on the wrong thread pool. Every controller needs it.
