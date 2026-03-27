@@ -409,10 +409,35 @@ image_tag      = "latest"
 #### secrets.tfvars
 
 ```hcl
-# NEVER commit this file — add to .gitignore
+# Encrypted via git-secret-protector — committed to git, decrypted at CI/CD time
 db_password      = ""
 redis_auth_token = ""
 ```
+
+#### git-secret-protector Setup
+
+Secrets are encrypted in git using [git-secret-protector](https://github.com/nicovince/git-secret-protector), NOT `.gitignore`.
+
+```bash
+# 1. Install git-secret-protector
+pip install git-secret-protector
+
+# 2. Initialize per-environment filters
+git-secret-protector init --filter secrets-dev
+git-secret-protector init --filter secrets-prod
+
+# 3. Add .gitattributes rules for auto-encrypt on commit
+cat >> .gitattributes <<'EOF'
+terraform/live/envs/dev/secrets.tfvars filter=secrets-dev
+terraform/live/envs/prod/secrets.tfvars filter=secrets-prod
+EOF
+
+# 4. Store encryption keys securely (CI/CD secrets, NOT in repo)
+# GitHub Actions: store as repository secret GIT_SECRET_PROTECTOR_KEY_DEV / _PROD
+```
+
+The secrets file IS committed to git (encrypted). On checkout, the smudge filter decrypts it
+if the key is available. In CI/CD, decrypt before terraform plan/apply.
 
 ### 6. Generate CI/CD Workflow
 
@@ -428,7 +453,8 @@ on:
     paths: ['terraform/**']
 
 env:
-  TF_VERSION: '1.5.0'
+  TF_VERSION: '1.11'
+  ENVIRONMENT: dev
 
 jobs:
   plan:
@@ -439,10 +465,23 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
+      - name: Decrypt secrets
+        run: |
+          pip install git-secret-protector
+          git-secret-protector reveal --filter secrets-${{ env.ENVIRONMENT }}
+        env:
+          GIT_SECRET_PROTECTOR_KEY: ${{ secrets.GIT_SECRET_PROTECTOR_KEY_DEV }}
       - name: Init
-        run: terraform -chdir=terraform/live init -backend-config=../envs/${{ env.ENV }}/state.config
+        run: |
+          cd terraform/live
+          terraform init -backend-config=envs/${{ env.ENVIRONMENT }}/state.config
       - name: Plan
-        run: terraform -chdir=terraform/live plan -var-file=../envs/${{ env.ENV }}/terraform.tfvars -no-color
+        run: |
+          cd terraform/live
+          terraform plan \
+            -var-file=envs/${{ env.ENVIRONMENT }}/terraform.tfvars \
+            -var-file=envs/${{ env.ENVIRONMENT }}/secrets.tfvars \
+            -no-color
 
   apply:
     runs-on: ubuntu-latest
@@ -452,10 +491,23 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
+      - name: Decrypt secrets
+        run: |
+          pip install git-secret-protector
+          git-secret-protector reveal --filter secrets-${{ env.ENVIRONMENT }}
+        env:
+          GIT_SECRET_PROTECTOR_KEY: ${{ secrets.GIT_SECRET_PROTECTOR_KEY_DEV }}
       - name: Init
-        run: terraform -chdir=terraform/live init -backend-config=../envs/${{ env.ENV }}/state.config
+        run: |
+          cd terraform/live
+          terraform init -backend-config=envs/${{ env.ENVIRONMENT }}/state.config
       - name: Apply
-        run: terraform -chdir=terraform/live apply -var-file=../envs/${{ env.ENV }}/terraform.tfvars -auto-approve
+        run: |
+          cd terraform/live
+          terraform apply \
+            -var-file=envs/${{ env.ENVIRONMENT }}/terraform.tfvars \
+            -var-file=envs/${{ env.ENVIRONMENT }}/secrets.tfvars \
+            -auto-approve
 ```
 
 ### 7. Output Checklist

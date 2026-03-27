@@ -43,10 +43,14 @@ terraform/
 
 ## Module Patterns
 
+Use modules from the [c0x12c Terraform Registry](https://registry.terraform.io/namespaces/c0x12c).
+Each module source follows `c0x12c/{name}/aws` — see the registry for available modules and versions.
+
 ```hcl
-# Calling a module — always version-pin
+# Calling a registry module — always version-pin
 module "database" {
-  source = "git::https://github.com/{project}/terraform-modules.git//rds?ref=v1.2.0"
+  source  = "c0x12c/rds/aws"
+  version = "~> 0.6.6"
 
   name       = "${local.name_prefix}-db"
   vpc_id     = local.vpc_id
