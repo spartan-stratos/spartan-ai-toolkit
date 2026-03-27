@@ -1,6 +1,10 @@
 ---
 name: investor-materials
 description: Create pitch decks, one-pagers, memos, financial models, and fundraising materials. Use when the user needs investor-facing docs.
+allowed_tools:
+  - Read
+  - Write
+  - WebSearch
 ---
 
 # Investor Materials
@@ -14,6 +18,8 @@ Build investor materials that are consistent, real, and hard to poke holes in.
 - Building financial projections
 - Answering accelerator applications
 - Making sure all fundraising docs tell the same story
+
+> See `example-outline.md` for an example seed deck outline showing slide structure and content depth.
 
 ## Golden Rule
 
@@ -68,13 +74,14 @@ If numbers don't match across docs, stop and fix that first.
 - Spending tied to milestones
 - Sensitivity analysis where the answer depends on guesses
 
-## Red Flags to Avoid
+## Gotchas
 
-- Claims nobody can verify
-- Market sizing with no math
-- Team titles that don't match LinkedIn
-- Revenue math that doesn't add up
-- Fake certainty about fragile assumptions
+- **Numbers that don't match across docs are a deal-killer.** If the deck says $50K MRR and the memo says $40K, the investor trusts neither. Check every number against one source of truth.
+- **Market sizing without math is the #1 slide that gets called out.** "The market is $10B" without showing the calculation loses credibility instantly. Always show: X users × Y price × Z frequency.
+- **Fake certainty about assumptions kills trust.** "We will reach 100K users in 12 months" — no, you won't know that. Say "we assume" and show bear/base/bull cases.
+- **Team titles that don't match LinkedIn get checked.** Investors will look. If your CTO is listed as "Senior Developer" on LinkedIn, they'll notice.
+- **Revenue math that doesn't work backwards is obvious.** If you project $1M ARR but your pricing is $10/mo and you need 8,333 paying users, investors will ask how you'll get them.
+- **Hype language ("revolutionary", "disruptive") signals first-time founder.** Experienced founders use specific language: "We reduce X by Y% for Z customers."
 
 ## Interaction Style
 

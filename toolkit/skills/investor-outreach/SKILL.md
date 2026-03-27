@@ -1,6 +1,10 @@
 ---
 name: investor-outreach
 description: Draft cold emails, warm intro blurbs, follow-ups, and investor communications. Use when the user needs to write to angels, VCs, or accelerators.
+allowed_tools:
+  - Read
+  - Write
+  - WebSearch
 ---
 
 # Investor Outreach
@@ -13,6 +17,8 @@ Write investor emails that are short, personal, and easy to act on.
 - Making a warm intro request
 - Following up after a meeting or no reply
 - Writing investor updates
+
+> See `examples.md` for good vs bad email examples (cold outreach, warm intro, and follow-up).
 
 ## Rules
 
@@ -88,6 +94,14 @@ This is a two-way talk:
 - Say "it depends" without picking a side
 - Let a weak ask slide into the email
 - Skip the "this won't land because..." feedback
+
+## Gotchas
+
+- **Generic emails get deleted instantly.** "I'm reaching out because I admire your work" — every founder writes this. Reference a specific deal, post, or thesis point.
+- **The email is too long.** If it's more than 5 sentences, cut it. Investors scan, they don't read. The first email's job is to get a reply, not explain your whole company.
+- **The ask is too big for a cold email.** Don't ask for a 30-minute call in the first email. Ask for a quick reply, a 15-minute chat, or just to see the deck.
+- **No proof point = no interest.** "We're building X for Y" isn't enough. Include one concrete number: users, revenue, growth rate, waitlist size, or a notable customer.
+- **Follow-ups with no new information are annoying.** Don't just say "following up." Each follow-up needs something new: a milestone, a press mention, a new metric.
 
 ## Before You Deliver
 
