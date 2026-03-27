@@ -98,15 +98,70 @@ module "irsa" {
 
 ### git-secret-protector
 
-Sensitive variable files are encrypted in git using `.gitattributes` smudge/clean filters.
+Secrets are encrypted in git using [git-secret-protector](https://github.com/nicovince/git-secret-protector) smudge/clean filters. The encrypted file IS committed — not gitignored. It auto-decrypts on checkout when the key is available.
+
+#### Setup
+
+```bash
+# 1. Install
+pip install git-secret-protector
+
+# 2. Initialize per-environment filters
+git-secret-protector init --filter secrets-dev
+git-secret-protector init --filter secrets-prod
+
+# 3. Configure .gitattributes — one rule per environment
+cat >> .gitattributes <<'EOF'
+live/envs/dev/secrets.tfvars filter=secrets-dev
+live/envs/prod/secrets.tfvars filter=secrets-prod
+EOF
+
+# 4. Store encryption keys
+# Local: keys are cached in .git_secret_protector/cache/ (gitignored)
+# CI/CD: store as GitHub repository secrets (GIT_SECRET_PROTECTOR_KEY_DEV, etc.)
+```
+
+#### CI/CD Integration
+
+```yaml
+# Decrypt before terraform plan/apply
+- name: Decrypt secrets
+  run: |
+    pip install git-secret-protector
+    git-secret-protector reveal --filter secrets-${{ env.ENVIRONMENT }}
+  env:
+    GIT_SECRET_PROTECTOR_KEY: ${{ secrets.GIT_SECRET_PROTECTOR_KEY_DEV }}
+
+# Then pass both var files to terraform
+- name: Plan
+  run: |
+    terraform plan \
+      -var-file=envs/${{ env.ENVIRONMENT }}/terraform.tfvars \
+      -var-file=envs/${{ env.ENVIRONMENT }}/secrets.tfvars
+```
+
+#### Key Rules
+
+- `secrets.tfvars` — encrypted in git, decrypted during CI/CD. Contains DB passwords, API keys, tokens.
+- `terraform.tfvars` — public, version-controlled, non-sensitive values.
+- Use separate filters per environment (`secrets-dev`, `secrets-prod`) — different keys.
+- NEVER store encryption keys in the repo. Use GitHub secrets or AWS SSM.
+- `.git_secret_protector/cache/` must be in `.gitignore`.
+
+#### WRONG — Secrets in .gitignore
+
+```bash
+# .gitignore
+secrets.tfvars  # File NOT in git = lost on new clone, no audit trail
+```
+
+#### CORRECT — Secrets encrypted in git
 
 ```
 # .gitattributes
-envs/*/secrets.tfvars filter=git-secret-protector diff=git-secret-protector
+live/envs/dev/secrets.tfvars filter=secrets-dev
+live/envs/prod/secrets.tfvars filter=secrets-prod
 ```
-
-- `secrets.tfvars` -- encrypted in git, decrypted during CI/CD
-- `terraform.tfvars` -- public, version-controlled, non-sensitive values
 
 ### Sensitive Variables
 
