@@ -1,0 +1,40 @@
+name: infrastructure
+description: "Terraform + AWS infrastructure"
+category: Ops
+priority: 30
+hidden: false
+depends: []
+
+commands:
+  - tf-scaffold
+  - tf-module
+  - tf-review
+  - tf-plan
+  - tf-deploy
+  - tf-import
+  - tf-drift
+  - tf-cost
+  - tf-security
+
+rules:
+  - infrastructure/STRUCTURE.md
+  - infrastructure/MODULES.md
+  - infrastructure/STATE_AND_BACKEND.md
+  - infrastructure/NAMING.md
+  - infrastructure/SECURITY.md
+  - infrastructure/VARIABLES.md
+  - infrastructure/PROVIDERS.md
+
+skills:
+  - terraform-service-scaffold
+  - terraform-module-creator
+  - terraform-review
+  - terraform-security-audit
+  - terraform-best-practices
+
+agents:
+  - infrastructure-expert.md
+  - sre-architect.md
+
+claude-sections:
+  - 30-infrastructure.md

@@ -1,4 +1,5 @@
 ---
+name: spartan:commit-message
 description: Create a commit message and PR description by analyzing git diffs
 allowed-tools: Bash(git status:*), Bash(git diff --staged), Bash(git diff:*), Bash(git log:*), Bash(git commit:*), Bash(git add:*), Bash(git push:*)
 ---
