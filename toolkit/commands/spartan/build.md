@@ -224,6 +224,8 @@ Uses skills: `ui-ux-pro-max`, frontend rules
 
 **Full-stack mode** — backend tasks first, then frontend tasks. Mark the integration point clearly (where frontend starts depending on backend API).
 
+**CRITICAL: Full-stack means BOTH layers must complete.** Don't move to Gate 3 after finishing backend only. The plan must include frontend tasks and ALL tasks must be done before review. If the spec mentions UI changes, API responses shown to users, or any user-facing behavior — frontend tasks are mandatory.
+
 ### Create branch
 
 ```bash
@@ -299,7 +301,24 @@ Call the right skills based on what you're doing:
 | React components | `ui-ux-pro-max` |
 | Security-sensitive code | `security-checklist` |
 
-### After all tasks
+### After all tasks — Verify Definition of Done
+
+**Before moving to Gate 3, verify ALL layers are complete:**
+
+| Mode | Must be done before review |
+|------|---------------------------|
+| **Backend** | Migration applied, entity/table/repo created, manager with business logic, controller with endpoints, all tests passing (`./gradlew test`) |
+| **Frontend** | Types defined, API client updated, components built, page/routing wired, build passes (`yarn build` or `npm run build`) |
+| **Full-stack** | ALL backend items above + ALL frontend items above + frontend calls the new backend API correctly |
+
+**Full-stack verification (MANDATORY if mode is full-stack):**
+1. Backend tests pass: `./gradlew test`
+2. Frontend builds: `yarn build` or `npm run build`
+3. Frontend types match backend response DTOs
+4. API client has methods for all new endpoints
+5. UI shows the data from the new endpoints
+
+**If any layer is incomplete**, go back and finish it. Do NOT proceed to Gate 3 with only backend done.
 
 Run the full test suite:
 ```bash
@@ -307,14 +326,16 @@ Run the full test suite:
 ./gradlew test
 
 # Frontend
-npm test
+npm test && npm run build
 
-# Both
-./gradlew test && npm test
+# Both (full-stack)
+./gradlew test && npm test && npm run build
 ```
 
 **GATE 3 — STOP and ask:**
 > "All [N] tasks done. [X] tests passing. Ready for review?"
+>
+> **Full-stack:** "Backend: [N] tasks done, tests passing. Frontend: [N] tasks done, build passing. Ready for review?"
 >
 > If 3+ tasks were completed: "I'll run a self-review now. For a deeper dual-agent review, say 'gate review'."
 >
@@ -401,3 +422,37 @@ If a previous session was interrupted (context overflow, user stopped, etc.), th
 - **Frontend checks for backend needs.** If a new page needs data that doesn't exist yet, say so at Stage 2 and add backend tasks first.
 - **Don't over-plan.** If the whole thing is 1-2 files and 30 minutes of work, don't force it into this workflow. Just do it. This workflow is for features that need structure — at least 2-3 tasks.
 - **Save state for big work.** If 5+ tasks, save artifacts to `.planning/` so future sessions can resume.
+- **Full-stack = both layers done.** If the feature touches both backend and frontend, you MUST implement both before creating the PR. Backend-only completion is NOT "done" for a full-stack feature.
+
+---
+
+## Definition of Done
+
+A feature is NOT done until every applicable item is checked:
+
+### Backend
+- [ ] Database migration (if new/changed table)
+- [ ] Kotlin entity, table object, repository with tests
+- [ ] Manager with business logic and Either error handling
+- [ ] Controller with proper annotations (@ExecuteOn, @Secured, @Validated)
+- [ ] Integration tests for all endpoints (happy path, 404, 401)
+- [ ] `./gradlew test` passes
+
+### Frontend
+- [ ] TypeScript types/interfaces match backend DTOs
+- [ ] API client methods for all new/changed endpoints
+- [ ] Components built and connected to data
+- [ ] Page routing and navigation working
+- [ ] `yarn build` (or `npm run build`) passes with no errors
+- [ ] Loading, empty, and error states handled
+
+### Full-Stack (ALL of the above, plus)
+- [ ] Frontend calls backend API correctly (snake_case conversion, auth headers)
+- [ ] Response data renders in the UI
+- [ ] End-to-end flow works: user action → API call → backend processing → response → UI update
+- [ ] Both `./gradlew test` AND `yarn build` pass
+
+### Always
+- [ ] Atomic commits (one per task)
+- [ ] Self-review passed (backend review + frontend review if applicable)
+- [ ] PR created with summary and test plan

@@ -1,6 +1,10 @@
 ---
 name: article-writing
 description: Write blog posts, guides, tutorials, and long-form content. Sounds like a real person, not AI. Use when the user wants polished written content.
+allowed_tools:
+  - Read
+  - Write
+  - WebSearch
 ---
 
 # Article Writing
@@ -13,6 +17,8 @@ Write long-form content that sounds like a person wrote it.
 - Turning notes or research into an article
 - Matching an existing voice from examples
 - Cleaning up and tightening existing writing
+
+> See `examples.md` for good vs bad writing examples that show what "sounds human" actually means.
 
 ## Rules
 
@@ -81,6 +87,14 @@ This is a two-way talk:
 - Say "it depends" without picking a side
 - Skip the "this part is weak" feedback
 - Write AI-sounding content and call it done
+
+## Gotchas
+
+- **The intro is where most articles die.** If the first paragraph starts with "In this article, we'll explore..." — delete it and start with a story, stat, or code block.
+- **AI-written articles all sound the same.** They hedge ("it's important to note"), use transition words nobody says out loud ("Moreover"), and avoid strong opinions. Cut all of that.
+- **Don't explain the obvious.** If your audience is developers, don't explain what an API is. Write for the person, not the lowest common denominator.
+- **Long ≠ thorough.** A 3,000-word article with 1,500 words of filler is worse than a 1,500-word article where every sentence earns its spot.
+- **Every section needs evidence.** A claim without a number, example, or code block is just an opinion. Back it up or cut it.
 
 ## Before You Deliver
 

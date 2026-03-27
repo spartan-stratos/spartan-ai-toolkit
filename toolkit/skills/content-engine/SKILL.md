@@ -1,6 +1,10 @@
 ---
 name: content-engine
 description: Turn one idea into platform-native content for X, LinkedIn, TikTok, YouTube, newsletters. Use when the user wants social posts, threads, scripts, or content calendars.
+allowed_tools:
+  - Read
+  - Write
+  - WebSearch
 ---
 
 # Content Engine
@@ -15,6 +19,8 @@ Turn one idea into strong content for each platform. Don't cross-post the same t
 - Turning articles or demos into social content
 - Building a content plan around a launch
 
+> See `examples.md` for platform-specific post examples showing the same idea adapted for X, LinkedIn, and newsletter.
+
 ## First Questions
 
 Ask:
@@ -22,6 +28,22 @@ Ask:
 - Audience: Builders, investors, customers, or general?
 - Platform: X, LinkedIn, TikTok, YouTube, newsletter, or all?
 - Goal: Awareness, conversion, recruiting, or engagement?
+
+## Setup
+
+If the user runs this skill often, store preferences in a `content-config.json`:
+
+```json
+{
+  "defaultPlatforms": ["x", "linkedin"],
+  "brandVoice": "direct and technical",
+  "audience": "developers and technical founders",
+  "avoidWords": ["excited", "thrilled", "game-changer"],
+  "hashtagPolicy": "max 2 per post"
+}
+```
+
+Read this config at the start of every content session. Skip the "First Questions" step for any field that's already configured.
 
 ## Rules
 
@@ -92,6 +114,14 @@ This is a two-way talk:
 - Say "it depends" without picking a side
 - Skip the "this post won't get engagement because..." feedback
 - Let hype language into social content
+
+## Gotchas
+
+- **Cross-posting is lazy and it shows.** A LinkedIn post copy-pasted to X looks like spam. Every platform has different norms — adapt the format, length, and hook.
+- **Weak hooks sink good content.** "Here's what I learned about X" is invisible on any feed. Open with tension, a number, or a contrarian take.
+- **Corporate-speak kills engagement.** "We're excited to announce" gets zero engagement. Say what you did, what happened, and why it matters.
+- **Too many CTAs = no action.** Pick one CTA per post. "Like, share, comment, and sign up" is noise. One clear ask.
+- **Hashtag spam on LinkedIn and X is counterproductive.** 1-3 relevant hashtags max. A wall of hashtags signals low-quality content.
 
 ## Before You Deliver
 

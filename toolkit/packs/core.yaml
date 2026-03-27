@@ -26,6 +26,7 @@ commands:
 
 rules:
   - core/NAMING_CONVENTIONS.md
+  - core/SKILL_AUTHORING.md
 
 skills: []
 agents:

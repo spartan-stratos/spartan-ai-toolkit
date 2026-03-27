@@ -1,6 +1,6 @@
 ---
 name: browser-qa
-description: Real browser QA patterns using Playwright. How to test web apps like a real user — page loads, forms, navigation, responsive layout, console errors, and network failures.
+description: "Run real browser QA with Playwright. Use when testing a frontend feature, verifying UI before PR, smoke testing after deploy, or investigating reported visual bugs."
 allowed_tools:
   - Read
   - Write
@@ -64,110 +64,17 @@ Every page gets these checks:
 - Loading states show during data fetch
 - Error states show when API fails
 
-## Playwright Patterns
+## Playwright Patterns & Report Template
 
-### Basic Page Test
-```typescript
-import { chromium } from 'playwright'
+> See playwright-snippets.md for ready-to-use Playwright code (page tests, mobile viewport, form testing, screenshot on failure) and the QA report template.
 
-const browser = await chromium.launch({ headless: true })
-const page = await browser.newPage()
+## Gotchas
 
-// Collect errors
-const errors: string[] = []
-page.on('console', msg => {
-  if (msg.type() === 'error') errors.push(msg.text())
-})
-page.on('requestfailed', req => {
-  errors.push(`NETWORK: ${req.url()} — ${req.failure()?.errorText}`)
-})
-
-await page.goto('http://localhost:3000')
-await page.waitForLoadState('networkidle')
-
-// Check for errors
-if (errors.length > 0) {
-  console.log('BUGS FOUND:', errors)
-}
-
-await browser.close()
-```
-
-### Mobile Viewport Test
-```typescript
-const context = await browser.newContext({
-  viewport: { width: 375, height: 812 },
-  userAgent: 'Mozilla/5.0 (iPhone 14)',
-})
-const page = await context.newPage()
-await page.goto('http://localhost:3000')
-
-// Check for horizontal scroll (layout bug)
-const hasHScroll = await page.evaluate(() =>
-  document.documentElement.scrollWidth > document.documentElement.clientWidth
-)
-if (hasHScroll) {
-  console.log('BUG: Horizontal scroll on mobile')
-}
-```
-
-### Form Test
-```typescript
-// Test empty submit (should show validation)
-await page.click('button[type="submit"]')
-const validationVisible = await page.locator('.error, [role="alert"]').count()
-
-// Test valid submit
-await page.fill('input[name="email"]', 'test@example.com')
-await page.fill('input[name="password"]', 'password123')
-await page.click('button[type="submit"]')
-await page.waitForURL('**/dashboard')
-```
-
-### Screenshot on Failure
-```typescript
-try {
-  await page.goto(url)
-  // ... checks ...
-} catch (e) {
-  await page.screenshot({ path: `qa-failure-${Date.now()}.png`, fullPage: true })
-  throw e
-}
-```
-
-## QA Report Template
-
-```markdown
-## QA Report
-Date: YYYY-MM-DD
-Target: http://localhost:3000
-
-### Summary
-| Metric | Count |
-|--------|-------|
-| Pages tested | N |
-| Bugs found | N |
-| Warnings | N |
-| Passed | N |
-
-### Bugs
-BUG-1: [title]
-- Page: [URL]
-- Steps: [reproduce]
-- Expected: [what should happen]
-- Actual: [what happened]
-- Severity: blocker / major / minor
-- Auto-fixable: yes / no
-
-### Warnings
-WARN-1: [title]
-- Page: [URL]
-- Issue: [description]
-
-### Passed
-- /page-a — all checks clear
-- /page-b — all checks clear
-```
+- **`networkidle` waits forever on apps with websockets or polling.** Use `domcontentloaded` or a specific element selector instead if the app has live connections.
+- **`page.click()` on invisible elements passes silently.** Always verify the element is visible before interacting. Use `await expect(locator).toBeVisible()` first.
+- **Mobile viewport test without touch simulation misses real bugs.** Set `hasTouch: true` in the browser context, not just the viewport size.
+- **Console warnings are not console errors.** Don't report React hydration warnings or deprecation notices as bugs. Only `console.error` and failed network requests are bugs.
+- **Screenshots on CI look different than local.** Font rendering, antialiasing, and DPI differ between macOS and Linux. Use visual comparison thresholds, not pixel-perfect matching.
 
 ## Rules
 

@@ -1,6 +1,8 @@
 ---
 name: brainstorm
 description: Run a structured brainstorm session for startup ideas. Takes a theme or problem and generates ideas with quick gut-checks. Use when the user wants to explore a space or generate new ideas.
+allowed_tools:
+  - WebSearch
 ---
 
 # Brainstorm
@@ -77,6 +79,14 @@ This is a two-way talk:
 - "Interesting" is not enough. Need a real pain point.
 - If the user already has a direction, skip to expanding that
 - Don't fall in love with clever solutions to fake problems
+
+## Gotchas
+
+- **Don't brainstorm solutions — brainstorm problems.** Founders jump to features too fast. Force "what pain?" before "what product?"
+- **"Interesting" ≠ real demand.** If you can't find anyone searching for it, paying for alternatives, or complaining online, the problem might be fake.
+- **Avoid clever-founder bias.** Technical founders fall in love with clever solutions to problems nobody has. Test the problem first.
+- **Don't skip "Why now?"** Every good idea needs a timing argument. If this could've been built 5 years ago and nobody did, ask why.
+- **Too many ideas = no decision.** If you generate 15 ideas and can't pick 3, the frame is too broad. Narrow the space.
 
 ## Output
 
