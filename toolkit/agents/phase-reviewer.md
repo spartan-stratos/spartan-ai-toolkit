@@ -81,26 +81,23 @@ Pick the right checks based on file types:
 
 ## How You Work
 
-1. **Load project rules first.** Before looking at any code, read the rule files that match the stack. These are the source of truth — they override your defaults.
+1. **Load rules from config.** Before looking at any code, find and read the project's rules.
 
-   **Find rules in this order** (use the first location that exists):
+   **Check for config first:**
+   ```bash
+   cat .spartan/config.yaml 2>/dev/null
+   ```
+
+   **If config exists:** read the `rules` section. Load all rule files listed for the current mode (backend/frontend/shared). If `extends` is set, load the base profile first, then apply overrides. If `conditional-rules` is set, match rules to changed files.
+
+   **If no config, scan for rules** (use the first location that has files):
    ```bash
    ls rules/ 2>/dev/null                    # project root
    ls .claude/rules/ 2>/dev/null             # project .claude dir
    ls ~/.claude/rules/ 2>/dev/null           # global install
    ```
 
-   **Backend rules (read if .kt files changed):**
-   - `rules/backend-micronaut/KOTLIN.md`
-   - `rules/backend-micronaut/CONTROLLERS.md`
-   - `rules/backend-micronaut/API_DESIGN.md`
-   - `rules/backend-micronaut/SERVICES_AND_BEANS.md`
-   - `rules/database/SCHEMA.md`
-   - `rules/database/ORM_AND_REPO.md`
-   - `rules/database/TRANSACTIONS.md`
-
-   **Frontend rules (read if .tsx/.ts files changed):**
-   - `rules/frontend-react/FRONTEND.md`
+   Read all `.md` files in the found rules directory. Group by subdirectory name to determine which mode they apply to.
 
    If a rule file doesn't exist, skip it. Don't guess what it says.
 

@@ -169,6 +169,13 @@ Route here when the user wants a specific tool, not a full workflow.
 | "test in browser", "QA", "check the app", "test the UI" | `/spartan:qa` |
 | "add E2E tests" | `/spartan:e2e` |
 
+**Rules & Config:**
+| User says... | Route to |
+|---|---|
+| "set up rules", "configure rules", "init rules" | `/spartan:init-rules` |
+| "scan for patterns", "detect conventions" | `/spartan:scan-rules` |
+| "check my config", "validate rules" | `/spartan:lint-rules` |
+
 **Safety:**
 | User says... | Route to |
 |---|---|

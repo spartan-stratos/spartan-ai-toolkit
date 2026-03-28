@@ -403,29 +403,46 @@ npm test && npm run build
 
 **This is NOT a self-review.** Spawn a separate review agent to get a fresh perspective. The reviewer finds issues, you fix them, repeat until clean.
 
-### Step 1: Gather review context
+### Step 1: Load rules from config
 
-Before spawning the reviewer, collect everything it needs:
+The review uses **configurable rules**. Load them in this order:
 
 ```bash
-# 1. Get changed files by type
-git diff main...HEAD --name-only | grep '\.kt$'   # backend files
-git diff main...HEAD --name-only | grep '\.tsx\?$' # frontend files
-git diff main...HEAD --name-only | grep '\.sql$'   # migration files
+# 1. Check for project config (source of truth)
+cat .spartan/config.yaml 2>/dev/null
 
-# 2. Find spec and plan for this feature
-ls .planning/specs/*.md .planning/plans/*.md .planning/designs/*.md 2>/dev/null
-
-# 3. Find installed rules (pick based on mode)
-ls rules/backend-micronaut/ rules/database/ rules/frontend-react/ 2>/dev/null
-# Also check ~/.claude/rules/ if project rules/ not found
+# 2. If no config, scan for installed rules
+ls rules/ .claude/rules/ ~/.claude/rules/ 2>/dev/null
 ```
 
-### Step 2: Spawn the review agent
+**If `.spartan/config.yaml` exists:**
+- Read the `rules` section → get rule file paths for the current mode
+- Read the `review-stages` section → get which stages to run
+- Read `file-types` section → classify changed files by mode
+- If `extends` is set, load the base profile first, then apply overrides (`rules-add`, `rules-remove`, `rules-override`)
+- If `conditional-rules` is set, match rules to changed files by glob pattern
 
-Use the `Agent` tool to spawn a reviewer. **The prompt changes based on mode.**
+**If no config exists (fallback):**
+- Scan `rules/` directory for all `.md` files
+- Group by subdirectory: `rules/backend-micronaut/` → backend, `rules/frontend-react/` → frontend, `rules/database/` → backend, `rules/core/` → shared
+- If no `rules/` dir, check `.claude/rules/` then `~/.claude/rules/`
+- Use all 7 default review stages
 
-Build the prompt from these blocks — include only what matches the mode:
+### Step 2: Gather review context
+
+```bash
+# Get changed files by type (use file-types from config if available)
+git diff main...HEAD --name-only
+
+# Find spec and plan for this feature
+ls .planning/specs/*.md .planning/plans/*.md .planning/designs/*.md 2>/dev/null
+```
+
+Classify each changed file into backend/frontend/migration using the `file-types` from config (or defaults: `.kt/.java/.go/.py` = backend, `.tsx/.ts/.vue` = frontend, `.sql` = migration).
+
+### Step 3: Spawn the review agent
+
+Use the `Agent` tool to spawn a reviewer. **The prompt is built from the config.**
 
 ```
 Agent:
@@ -435,9 +452,9 @@ Agent:
     You are reviewing code changes for the feature: {feature name}.
 
     ## What changed
-    - Backend files: {list .kt files from git diff, or "none"}
-    - Frontend files: {list .tsx/.ts files from git diff, or "none"}
-    - Migration files: {list .sql files from git diff, or "none"}
+    - Backend files: {list from git diff, classified by file-types config}
+    - Frontend files: {list from git diff}
+    - Migration files: {list from git diff}
     - Design doc: {path if exists, or "none"}
 
     ## Spec and plan
@@ -448,62 +465,65 @@ Agent:
     ## Rules to check against
     Read these rule files BEFORE reviewing code. They are the source of truth.
 
-    {IF backend or full-stack mode, include:}
-    **Backend rules (read all of these):**
-    - `rules/backend-micronaut/KOTLIN.md` — null safety, Either error handling, coroutines, no `!!`
-    - `rules/backend-micronaut/CONTROLLERS.md` — thin controllers, @ExecuteOn, @Secured, delegate to Manager
-    - `rules/backend-micronaut/API_DESIGN.md` — query params only, RPC-style URLs, no path params
-    - `rules/backend-micronaut/SERVICES_AND_BEANS.md` — Manager returns Either, service layer patterns
-    - `rules/database/SCHEMA.md` — TEXT not VARCHAR, no FK, soft deletes, UUID PKs, standard columns
-    - `rules/database/ORM_AND_REPO.md` — Exposed ORM, repository pattern
-    - `rules/database/TRANSACTIONS.md` — transaction(db.primary) {} for multi-table ops
+    {List ALL rule paths from config, grouped by mode. Example:}
 
-    {IF frontend or full-stack mode, include:}
-    **Frontend rules (read all of these):**
-    - `rules/frontend-react/FRONTEND.md` — build check before commit, API case conversion, null safety, optimistic updates
+    **Backend rules (from .spartan/config.yaml):**
+    {for each rule in config.rules.backend + config.rules.shared:}
+    - `{rule path}`
+    {end for}
 
-    {IF design doc exists, include:}
+    **Frontend rules (from .spartan/config.yaml):**
+    {for each rule in config.rules.frontend + config.rules.shared:}
+    - `{rule path}`
+    {end for}
+
+    **Conditional rules (if any):**
+    {for each conditional rule where changed files match applies-to:}
+    - `{rule path}` — applies to files matching `{glob}`
+    {end for}
+
+    {IF design doc exists:}
     **Design compliance:**
     - Read the design doc at {path}. Check that UI matches the approved design.
-    - Flag any component that looks different from the design spec.
 
-    ## Review stages (check all that apply)
+    ## Review stages
+    {List ONLY the stages that are enabled in config.review-stages.
+     For each stage, include its name and description from config.
+     If no config, use all 7 defaults below.}
 
     **Stage 1 — Correctness & Requirements**
     - Does the code match the spec? Any missing requirements?
     - Are all edge cases handled?
-    - Is error handling using Either (not thrown exceptions)?
+    - Error handling follows the project's approach (check the rules)?
 
     **Stage 2 — Stack Conventions**
-    {backend}: Controllers thin? Manager has business logic? Either<ClientException, T>? No `!!`? @ExecuteOn on blocking calls? @Secured on controllers?
-    {frontend}: Strict TypeScript? No `any`? Hooks rules followed? Server vs client components correct?
+    - Code follows the patterns described in the loaded rule files?
+    - Stack idioms are correct for this language/framework?
 
     **Stage 3 — Test Coverage**
-    - New endpoints have @MicronautTest integration tests?
+    - Tests exist for new code?
     - Tests are independent (no order dependency)?
-    - Edge cases tested? Happy path + error paths?
-    - Frontend: components tested with Testing Library?
+    - Edge cases covered? Happy path + error paths?
 
     **Stage 4 — Architecture & Clean Code**
-    - Layered: Controller → Manager → Service/Repository?
-    - No business logic in controllers or repositories?
+    - Architecture matches what the config says (layered, hexagonal, etc.)?
+    - Proper separation between layers?
     - Functions small and focused? No deep nesting?
     - No duplication, no dead code?
 
     **Stage 5 — Database & API**
-    - Migration uses TEXT not VARCHAR? No FK constraints?
-    - Soft delete with deleted_at? Standard columns (id, created_at, updated_at, deleted_at)?
-    - UUID primary keys? Input validation on public endpoints?
-    - API URLs follow RPC style?
+    - Schema follows the rules? (check loaded database rules)
+    - API design follows the rules? (check loaded API rules)
+    - Input validation on public endpoints?
 
     **Stage 6 — Security**
     - Auth checks on all endpoints?
     - Input validated and sanitized?
-    - No sensitive data logged or exposed in responses?
-    - No SQL injection, XSS, or command injection risks?
+    - No sensitive data logged or exposed?
+    - No injection risks?
 
     **Stage 7 — Documentation Gaps**
-    - New pattern used that should be documented? → flag for rules update
+    - New pattern that should be documented? → flag for rules update
     - New convention established? → flag for .memory/patterns/
     - Recurring issue that should become a rule? → flag it
 
@@ -512,13 +532,13 @@ Agent:
     For each issue:
     - File and line number
     - What's wrong
-    - Which rule it breaks (with rule file reference)
+    - Which rule it breaks (with rule file path)
     - Severity: HIGH (must fix) / MEDIUM (should fix) / LOW (nice to have)
     - Suggested fix
 
     End with:
     - **PASS** or **NEEDS CHANGES** (list all HIGH/MEDIUM issues)
-    - **Documentation updates needed** (list any rule/pattern updates from Stage 7, or "none")
+    - **Documentation updates needed** (list any from Stage 7, or "none")
     - **What's clean** (always include — praise good code)
 ```
 

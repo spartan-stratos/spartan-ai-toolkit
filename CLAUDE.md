@@ -27,7 +27,8 @@ spartan-ai-toolkit/
 │   ├── agents/                  # 4 agent definitions
 │   ├── rules/{pack}/            # 11 coding standard files (grouped by pack)
 │   ├── frameworks/              # 13 startup/product frameworks
-│   ├── templates/               # 13 reusable templates
+│   ├── profiles/                # 8 stack profiles (config presets)
+│   ├── templates/               # 14 reusable templates
 │   ├── claude-md/               # CLAUDE.md sections (assembled per pack)
 │   ├── .claude-plugin/          # Claude Code plugin manifest
 │   ├── packs/*.yaml             # Pack manifests (source of truth)
@@ -81,6 +82,66 @@ Hidden packs don't show in the CLI menu — they get pulled in as dependencies.
 ### Single Source of Truth
 YAML manifests in `toolkit/packs/*.yaml` are the source of truth. `toolkit/lib/packs.js` loads them.
 Backward-compatible aliases: `backend` → `backend-micronaut`, `frontend` → `frontend-react`.
+
+## Configurable Rules System
+
+The toolkit is **stack-agnostic**. Any project can configure its own rules, architecture, and review stages via `.spartan/config.yaml`. Without this file, the toolkit falls back to auto-detecting rules from the `rules/` directory.
+
+### How it works
+
+```
+.spartan/config.yaml  →  build/review commands read it  →  reviewer checks against configured rules
+         ↑
+   /spartan:init-rules (generates from profile + user answers)
+   /spartan:scan-rules (auto-generates from code patterns)
+```
+
+### Config file: `.spartan/config.yaml`
+
+Template lives at `toolkit/templates/spartan-config.yaml`. Key sections:
+
+| Section | What it does |
+|---------|-------------|
+| `stack` | Your tech stack (kotlin-micronaut, go-standard, python-django, etc.) |
+| `architecture` | Arch pattern (layered, hexagonal, clean, mvc, custom) |
+| `extends` | Inherit from a built-in profile (optional) |
+| `rules` | Rule file paths grouped by mode: `backend`, `frontend`, `shared` |
+| `rules-add/remove/override` | Customize inherited profile rules |
+| `conditional-rules` | Rules that apply only to files matching a glob |
+| `file-types` | Map file extensions to modes |
+| `review-stages` | Which review stages to run (enable/disable) |
+| `commands` | Test, build, and lint commands for your stack |
+| `skill-routing` | Map work types to skills |
+
+### Stack profiles: `toolkit/profiles/`
+
+Pre-built configs for common stacks. Users pick one during `/spartan:init-rules`:
+
+| Profile | Stack |
+|---------|-------|
+| `kotlin-micronaut.yaml` | Kotlin + Micronaut (existing rules) |
+| `react-nextjs.yaml` | React + Next.js (existing rules) |
+| `go-standard.yaml` | Go (clean arch, table-driven tests) |
+| `python-django.yaml` | Python + Django (MTV, pytest-django) |
+| `python-fastapi.yaml` | Python + FastAPI (async, Pydantic) |
+| `java-spring.yaml` | Java + Spring Boot (JPA, @SpringBootTest) |
+| `typescript-node.yaml` | TypeScript + Node.js (Express/Fastify) |
+| `custom.yaml` | Blank template |
+
+### Rule loading order (used by build, review, phase-reviewer)
+
+1. Read `.spartan/config.yaml` → use configured rules
+2. If no config → scan `rules/` directory → group by subdirectory
+3. If no `rules/` → check `.claude/rules/` then `~/.claude/rules/`
+4. If nothing found → use generic review checklist (no stack-specific checks)
+
+### Commands
+
+| Command | What it does |
+|---------|-------------|
+| `/spartan:init-rules` | Interactive wizard → generates `.spartan/config.yaml` from a profile |
+| `/spartan:scan-rules` | Scans codebase → auto-generates rule files from patterns found |
+| `/spartan:lint-rules` | Validates config + rule files → reports errors and warnings |
 
 ---
 
@@ -200,6 +261,12 @@ toolkit/rules/
 - Include command tables, tech stack, decision guides
 - Assembly order: header (00) + core (01) + pack sections + footer (90)
 
+### Profile Format
+
+**Location:** `toolkit/profiles/{stack-name}.yaml`
+
+Profiles are pre-built `.spartan/config.yaml` files for common stacks. Follow the schema defined in `toolkit/templates/spartan-config.yaml`. Each profile must have: stack, architecture, rules (with paths), file-types, review-stages, and commands.
+
 ### Framework and Template Format
 
 - Frameworks: `toolkit/frameworks/{NN}-{name}.md` — numbered, standalone reference docs
@@ -238,6 +305,7 @@ claude-sections: [15-my-pack.md]
 | Skills | `kebab-case` directory | `toolkit/skills/market-research/` |
 | Agents | `kebab-case.md` | `idea-killer.md` |
 | Rules | `UPPER_SNAKE_CASE.md` | `CORE_RULES.md` |
+| Profiles | `kebab-case.yaml` | `go-standard.yaml` |
 | Claude-md | `{NN}-{name}.md` | `60-research.md` |
 | Frameworks | `{NN}-{name}.md` | `01-lean-canvas.md` |
 | Templates | `kebab-case.md` | `competitor-analysis.md` |

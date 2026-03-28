@@ -1,0 +1,72 @@
+# Java + Spring Boot backend stack
+# Spring Data JPA, Spring Security, Testcontainers, Flyway migrations
+
+stack: java-spring
+architecture: layered
+
+rules:
+  shared:
+    - rules/core/NAMING_CONVENTIONS.md
+
+  backend:
+    - rules/java-spring/CONTROLLERS.md
+    - rules/java-spring/SERVICES.md
+    - rules/java-spring/REPOSITORIES.md
+    - rules/java-spring/SECURITY.md
+    - rules/java-spring/TESTING.md
+    - rules/java-spring/ERROR_HANDLING.md
+    - rules/database/SCHEMA.md
+
+  frontend: []
+
+file-types:
+  backend: [".java"]
+  frontend: []
+  migration: [".sql"]
+  config: [".yaml", ".yml", ".json", ".properties", ".xml"]
+
+review-stages:
+  - name: correctness
+    description: "Does the code match the spec? Edge cases handled?"
+    enabled: true
+
+  - name: stack-conventions
+    description: "Follows Spring idioms — annotations, DI, ResponseEntity"
+    enabled: true
+
+  - name: test-coverage
+    description: "@SpringBootTest, MockMvc, Testcontainers, edge cases"
+    enabled: true
+
+  - name: architecture
+    description: "Proper layer separation — Controller → Service → Repository"
+    enabled: true
+
+  - name: database-api
+    description: "JPA entities, custom queries, schema rules, API design"
+    enabled: true
+
+  - name: security
+    description: "Spring Security config, @PreAuthorize, OWASP top 10"
+    enabled: true
+
+  - name: documentation-gaps
+    description: "New patterns that should be documented"
+    enabled: true
+
+commands:
+  test:
+    backend: "./gradlew test"
+    frontend: ""
+  build:
+    backend: "./gradlew build"
+    frontend: ""
+  lint:
+    backend: "./gradlew checkstyleMain"
+    frontend: ""
+
+skill-routing:
+  database-migration: database-patterns
+  backend-code: software-architecture
+  writing-tests: testing-strategies
+  security: security-checklist

@@ -1,0 +1,70 @@
+# Python + FastAPI backend stack
+# Async-first, Pydantic validation, dependency injection, SQLAlchemy
+
+stack: python-fastapi
+architecture: layered
+
+rules:
+  shared:
+    - rules/core/NAMING_CONVENTIONS.md
+
+  backend:
+    - rules/python-fastapi/ENDPOINTS.md
+    - rules/python-fastapi/PYDANTIC.md
+    - rules/python-fastapi/ASYNC.md
+    - rules/python-fastapi/TESTING.md
+    - rules/python-fastapi/ERROR_HANDLING.md
+
+  frontend: []
+
+file-types:
+  backend: [".py"]
+  frontend: []
+  migration: [".sql"]
+  config: [".yaml", ".yml", ".json", ".toml"]
+
+review-stages:
+  - name: correctness
+    description: "Does the code match the spec? Edge cases handled?"
+    enabled: true
+
+  - name: stack-conventions
+    description: "Follows FastAPI idioms — routers, Depends(), Pydantic models"
+    enabled: true
+
+  - name: test-coverage
+    description: "httpx AsyncClient tests, pytest-asyncio, edge cases"
+    enabled: true
+
+  - name: architecture
+    description: "Proper layer separation — routers → services → repositories"
+    enabled: true
+
+  - name: database-api
+    description: "Schema rules, SQLAlchemy patterns, API design"
+    enabled: true
+
+  - name: security
+    description: "Auth, injection, data exposure, OWASP top 10"
+    enabled: true
+
+  - name: documentation-gaps
+    description: "New patterns that should be documented"
+    enabled: true
+
+commands:
+  test:
+    backend: "pytest"
+    frontend: ""
+  build:
+    backend: "mypy ."
+    frontend: ""
+  lint:
+    backend: "ruff check ."
+    frontend: ""
+
+skill-routing:
+  database-migration: database-patterns
+  backend-code: software-architecture
+  writing-tests: testing-strategies
+  security: security-checklist

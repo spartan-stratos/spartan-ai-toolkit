@@ -27,6 +27,7 @@ const SRC = {
   rules:      join(PKG_ROOT, 'rules'),
   skills:     join(PKG_ROOT, 'skills'),
   agents:     join(PKG_ROOT, 'agents'),
+  profiles:   join(PKG_ROOT, 'profiles'),
   claudeMd:   join(PKG_ROOT, 'claude-md'),
   version:    join(PKG_ROOT, 'VERSION'),
   claudePlugin: join(PKG_ROOT, '.claude-plugin'),
@@ -411,7 +412,7 @@ async function installFull() {
   console.log('');
 
   // 1) Assemble & install CLAUDE.md
-  console.log(`${blue('[1/5]')} ${bold('Assembling CLAUDE.md...')}`);
+  console.log(`${blue('[1/6]')} ${bold('Assembling CLAUDE.md...')}`);
 
   if (existsSync(targets.claudeMd)) {
     const backupPath = `${targets.claudeMd}.${Date.now()}.bak`;
@@ -427,7 +428,7 @@ async function installFull() {
   console.log(`  ${green('+')} CLAUDE.md assembled (${sectionCount} sections)\n`);
 
   // 2) Commands
-  console.log(`${blue('[2/5]')} ${bold('Installing commands...')}`);
+  console.log(`${blue('[2/6]')} ${bold('Installing commands...')}`);
   ensureDir(targets.commands);
   let cmdCount = 0;
 
@@ -454,7 +455,7 @@ async function installFull() {
   // 3) Rules (now with subdirectory structure)
   const rulesWithSource = gatherItemsWithSource(selectedPacks, 'rules');
   if (rulesWithSource.length > 0) {
-    console.log(`${blue('[3/5]')} ${bold('Installing rules...')}`);
+    console.log(`${blue('[3/6]')} ${bold('Installing rules...')}`);
     let ruleCount = 0;
 
     for (const { item: rule, srcRoot } of rulesWithSource) {
@@ -468,13 +469,13 @@ async function installFull() {
     }
     console.log(`  ${bold(ruleCount + ' rules')} installed\n`);
   } else {
-    console.log(`${blue('[3/5]')} ${bold('Rules')} — ${dim('no rule packs selected, skipping')}\n`);
+    console.log(`${blue('[3/6]')} ${bold('Rules')} — ${dim('no rule packs selected, skipping')}\n`);
   }
 
   // 4) Skills
   const skillsWithSource = gatherItemsWithSource(selectedPacks, 'skills');
   if (skillsWithSource.length > 0) {
-    console.log(`${blue('[4/5]')} ${bold('Installing skills...')}`);
+    console.log(`${blue('[4/6]')} ${bold('Installing skills...')}`);
     ensureDir(targets.skills);
     let skillCount = 0;
 
@@ -488,13 +489,13 @@ async function installFull() {
     }
     console.log(`  ${bold(skillCount + ' skills')} installed\n`);
   } else {
-    console.log(`${blue('[4/5]')} ${bold('Skills')} — ${dim('no skill packs selected, skipping')}\n`);
+    console.log(`${blue('[4/6]')} ${bold('Skills')} — ${dim('no skill packs selected, skipping')}\n`);
   }
 
   // 5) Agents
   const agentsWithSource = gatherItemsWithSource(selectedPacks, 'agents');
   if (agentsWithSource.length > 0) {
-    console.log(`${blue('[5/5]')} ${bold('Installing agents...')}`);
+    console.log(`${blue('[5/6]')} ${bold('Installing agents...')}`);
     ensureDir(targets.agents);
     let agentCount = 0;
 
@@ -508,7 +509,27 @@ async function installFull() {
     }
     console.log(`  ${bold(agentCount + ' agents')} installed\n`);
   } else {
-    console.log(`${blue('[5/5]')} ${bold('Agents')} — ${dim('no agent packs selected, skipping')}\n`);
+    console.log(`${blue('[5/6]')} ${bold('Agents')} — ${dim('no agent packs selected, skipping')}\n`);
+  }
+
+  // 6) Generate .spartan/config.yaml from best matching profile
+  const configDir = mode === 'global'
+    ? join(homedir(), '.spartan')
+    : join(process.cwd(), '.spartan');
+  const configPath = join(configDir, 'config.yaml');
+
+  if (!existsSync(configPath)) {
+    const profile = pickProfile(selectedPacks);
+    const profileSrc = join(SRC.profiles, `${profile}.yaml`);
+
+    if (existsSync(profileSrc)) {
+      ensureDir(configDir);
+      copyFile(profileSrc, configPath);
+      console.log(`${blue('[6/6]')} ${bold('Generated .spartan/config.yaml')} from ${cyan(profile)} profile`);
+      console.log(`  ${dim('Edit this file to customize rules, review stages, and build commands')}\n`);
+    }
+  } else {
+    console.log(`${blue('[6/6]')} ${bold('.spartan/config.yaml')} — ${dim('already exists, kept as-is')}\n`);
   }
 
   // Save pack selection + version
@@ -518,6 +539,24 @@ async function installFull() {
   }
 
   return selectedPacks;
+}
+
+// ── Profile picker ─────────────────────────────────────────────
+// Maps selected packs to the best matching stack profile.
+function pickProfile(selectedPacks) {
+  const packSet = new Set(selectedPacks);
+
+  // Check for specific stack packs first
+  if (packSet.has('backend-micronaut') && packSet.has('frontend-react')) {
+    return 'kotlin-micronaut'; // full-stack defaults to backend profile
+  }
+  if (packSet.has('backend-micronaut')) return 'kotlin-micronaut';
+  if (packSet.has('frontend-react'))    return 'react-nextjs';
+  if (packSet.has('backend-nodejs'))    return 'typescript-node';
+  if (packSet.has('backend-python'))    return 'python-fastapi';
+
+  // No stack-specific pack → use custom
+  return 'custom';
 }
 
 // ── Install for cursor / windsurf / copilot ─────────────────────
