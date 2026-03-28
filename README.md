@@ -1,60 +1,102 @@
 <p align="center">
   <h1 align="center">Spartan AI Toolkit</h1>
   <p align="center">
-    <strong>Workflow-first engineering discipline for AI coding tools</strong>
+    <strong>Stop AI coding agents from shipping sloppy code.</strong>
     <br />
-    Any Stack &middot; Configurable Rules &middot; Quality Gates &middot; Agent Memory
-  </p>
-  <p align="center">
-    <a href="#install">Install</a> &middot;
-    <a href="#configure-your-rules">Configure</a> &middot;
-    <a href="#pick-your-packs">Packs</a> &middot;
-    <a href="#how-it-works">How It Works</a> &middot;
-    <a href="#all-commands">Commands</a> &middot;
-    <a href="CONTRIBUTING.md">Contributing</a>
+    Structured workflows &middot; Configurable rules &middot; Quality gates &middot; Any stack
   </p>
   <p align="center">
     <a href="https://www.npmjs.com/package/@c0x12c/spartan-ai-toolkit"><img src="https://img.shields.io/npm/v/@c0x12c/spartan-ai-toolkit.svg" alt="npm version"></a>
     <a href="https://www.npmjs.com/package/@c0x12c/spartan-ai-toolkit"><img src="https://img.shields.io/npm/dm/@c0x12c/spartan-ai-toolkit.svg" alt="npm downloads"></a>
-    <a href="https://github.com/spartan-stratos/spartan-ai-toolkit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/spartan-stratos/spartan-ai-toolkit.svg" alt="license"></a>
     <a href="https://github.com/spartan-stratos/spartan-ai-toolkit/stargazers"><img src="https://img.shields.io/github/stars/spartan-stratos/spartan-ai-toolkit.svg" alt="GitHub stars"></a>
+    <a href="https://github.com/spartan-stratos/spartan-ai-toolkit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/spartan-stratos/spartan-ai-toolkit.svg" alt="license"></a>
   </p>
 </p>
 
 ---
 
-## Why Spartan?
+AI coding agents are fast. They're also careless. They skip tests, ignore your coding standards, push without review, and forget everything between sessions.
 
-Most AI coding tools give you **skills** &mdash; a better prompt for writing tests, a smarter code review, a prettier design. That's nice. But skills alone don't solve problems. They're just steps. Nobody ships a feature by running "write test" in isolation.
+**Spartan fixes that.** One command runs a full engineering workflow &mdash; spec, plan, TDD, code review, PR &mdash; with quality gates between each step. Your rules, your standards, enforced every time.
 
-Real work needs **workflows** &mdash; end-to-end pipelines that take you from "I need to build X" to "PR merged." Workflows connect the steps in the right order, with quality gates between each one, and agent memory that carries knowledge across sessions.
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --local
+```
 
-**Spartan is workflow-first.** One command runs the full pipeline. Skills and rules still exist, but they're nodes in the pipeline &mdash; not the product.
-
-| Without Spartan | With Spartan |
-|----------------|-------------|
-| "Build this feature" &rarr; jumps to code, no plan, no tests | `/spartan:build` &rarr; spec, plan, TDD, gate review, PR |
-| "Fix this bug" &rarr; guesses a fix, hopes for the best | `/spartan:debug` &rarr; reproduce, root-cause, test-first fix, PR |
-| Team of 5 devs &rarr; each gets different code style | Configurable rules &rarr; same standards for everyone, any stack |
-| 3-week feature &rarr; lost context between sessions | `/spartan:project` &rarr; roadmap, phases, agent memory across sessions |
-
-> Not everything needs a workflow. Questions, small code changes (&lt; 30 min) &mdash; just talk to your AI. Workflows are for **structured work where missing steps cause real problems**.
+Works with **Claude Code**, **Codex**, **Cursor**, **Windsurf**, and **Copilot**. Rules are plain markdown &mdash; works with any AI tool.
 
 ---
 
-## What You Get
+## Before & After
 
-| What | Description |
-|------|-------------|
-| **Workflows** | End-to-end pipelines: spec &rarr; design &rarr; plan &rarr; build &rarr; review &rarr; ship |
-| **Configurable rules** | Your coding standards, your architecture, your review checklist &mdash; any stack |
-| **Quality gates** | Automated checkpoints between each step. Nothing ships without review. |
-| **Agent memory** | Decisions and patterns survive across sessions. The AI builds on what it knows. |
-| **8 stack profiles** | Go, Python, Java, Kotlin, React, TypeScript &mdash; pick one and go |
+| Without Spartan | With Spartan |
+|----------------|-------------|
+| "Build this feature" &rarr; jumps straight to code, no plan, no tests, pushes broken code | `/spartan:build` &rarr; writes spec, plans tasks, TDD for each, code review, then PR |
+| "Fix this bug" &rarr; guesses a fix, no repro, no test, hopes for the best | `/spartan:debug` &rarr; reproduces first, finds root cause, writes test, then fixes |
+| 5 devs on the team &rarr; AI writes different code style for each person | Configurable rules &rarr; same standards for everyone, checked automatically |
+| 3-week feature &rarr; AI forgets all context between sessions | `/spartan:project` &rarr; agent memory carries decisions across sessions |
+| Code review catches AI slop &rarr; back-and-forth for days | Quality gates &rarr; review happens before PR, not after |
 
-### Works with any stack
+---
 
-Spartan isn't locked to one language. Configure your own rules or pick a built-in profile:
+## Quick Start
+
+```bash
+# 1. Install (30 seconds, interactive menu)
+npx @c0x12c/spartan-ai-toolkit@latest --local
+
+# 2. Set up rules for your stack
+/spartan:init-rules
+
+# 3. Build something
+/spartan:build "add user authentication"
+```
+
+That's it. The `/spartan:build` command handles the full pipeline:
+
+```
+spec → design (if UI) → plan → TDD → code review → PR
+  |         |              |      |         |          |
+Gate 1   Design Gate    Gate 2  Gate 3   Gate 3.5   Gate 4
+```
+
+Nothing ships without passing every gate.
+
+---
+
+## What's Inside
+
+| What | Count | Description |
+|------|-------|-------------|
+| **Slash commands** | 56 | End-to-end workflows, not just prompts |
+| **Coding rules** | 12 | Your standards, enforced automatically |
+| **Skills** | 22 | Domain knowledge (Kotlin, React, DB, security, etc.) |
+| **Agents** | 7 | Specialized reviewers, researchers, planners |
+| **Stack profiles** | 8 | Pre-built configs for Go, Python, Java, Kotlin, React, etc. |
+| **Quality gates** | 5 | Automated checkpoints between every step |
+| **Agent memory** | &mdash; | Decisions survive across sessions |
+
+---
+
+## 5 Workflow Leaders
+
+Each leader runs a full pipeline. One command &mdash; it handles the rest.
+
+| Leader | Command | What happens |
+|--------|---------|-------------|
+| **Build** | `/spartan:build "feature"` | spec &rarr; design &rarr; plan &rarr; TDD &rarr; review &rarr; PR |
+| **Debug** | `/spartan:debug "symptom"` | reproduce &rarr; root cause &rarr; test-first fix &rarr; PR |
+| **Startup** | `/spartan:startup "idea"` | brainstorm &rarr; validate &rarr; research &rarr; pitch |
+| **Onboard** | `/spartan:onboard` | scan codebase &rarr; map architecture &rarr; save to memory |
+| **Research** | `/spartan:research "topic"` | frame question &rarr; gather sources &rarr; analyze &rarr; report |
+
+Or just type `/spartan` &mdash; the smart router figures out what you need.
+
+---
+
+## Works With Any Stack
+
+Pick a built-in profile or write your own rules in markdown:
 
 | Profile | Stack | Rules included |
 |---------|-------|---------------|
@@ -67,7 +109,25 @@ Spartan isn't locked to one language. Configure your own rules or pick a built-i
 | `typescript-node` | TypeScript + Node.js | Express/Fastify, Zod, strict mode |
 | `custom` | Anything | Blank template &mdash; bring your own rules |
 
-Not on this list? Create your own rules in markdown, point the config at them. The toolkit reads whatever you give it.
+Not on this list? Create rules in markdown, point the config at them. The toolkit reads whatever you give it.
+
+```yaml
+# .spartan/config.yaml — you control everything
+stack: go-standard
+architecture: clean
+
+rules:
+  backend:
+    - rules/go/ERROR_HANDLING.md
+    - rules/go/INTERFACES.md
+    - rules/custom/OUR_AUTH_RULES.md
+
+commands:
+  test:
+    backend: "go test ./..."
+  lint:
+    backend: "golangci-lint run"
+```
 
 ---
 
@@ -81,7 +141,7 @@ Three ways. Pick one.
 npx @c0x12c/spartan-ai-toolkit@latest --local
 ```
 
-Interactive menu. Pick your AI tool and packs. Done in 30 seconds. Files go into `.claude/` in your project.
+Interactive menu. Pick your AI tool and packs. Done in 30 seconds.
 
 ```bash
 # Pick specific packs
@@ -128,142 +188,54 @@ npx @c0x12c/spartan-ai-toolkit@latest --local --agent=copilot      # rules only
 
 ---
 
-## Configure Your Rules
+## How It Works
 
-**This is automatic.** When you install, the CLI generates `.spartan/config.yaml` from the best matching profile for your packs. Build and review commands use it right away &mdash; no extra setup needed.
+### Review uses your rules
 
-```
-npx @c0x12c/spartan-ai-toolkit@latest --local --packs=backend-micronaut
+When `/spartan:build` reaches the review step:
+1. Reads `.spartan/config.yaml` to find your rules
+2. Spawns a separate review agent (fresh eyes, not the same AI that wrote the code)
+3. The reviewer reads all your rule files, then checks the code against them
+4. Issues found &rarr; fix &rarr; re-review &rarr; repeat until clean
 
-[1/6] Assembling CLAUDE.md...
-[2/6] Installing commands...
-[3/6] Installing rules...
-[4/6] Installing skills...
-[5/6] Installing agents...
-[6/6] Generated .spartan/config.yaml from kotlin-micronaut profile   <-- auto-generated
-```
+No config? The reviewer still runs &mdash; it just uses a generic checklist.
 
-### Want a different stack? Switch profiles.
+### Skills: domain knowledge at each step
 
-```
-/spartan:init-rules go-standard
-/spartan:init-rules python-fastapi
-/spartan:init-rules java-spring
-```
+Leaders call the right skill at the right time based on your stack:
 
-This wizard detects your stack, lets you pick a profile, and regenerates `.spartan/config.yaml`.
+| Skill | When the leader calls it |
+|-------|------------------------|
+| `kotlin-best-practices` | During build (Kotlin files) |
+| `database-patterns` | During plan + build (migration tasks) |
+| `ui-ux-pro-max` | During design + build (React components) |
+| `testing-strategies` | During build (test tasks) |
+| `security-checklist` | During review (security scan) |
 
-### What's in the config?
+### Agent memory: context across sessions
 
-`.spartan/config.yaml` controls everything:
-
-```yaml
-stack: go-standard
-architecture: clean
-
-rules:
-  shared:
-    - rules/core/NAMING_CONVENTIONS.md
-  backend:
-    - rules/go/ERROR_HANDLING.md
-    - rules/go/INTERFACES.md
-    - rules/go/CONCURRENCY.md
-
-file-types:
-  backend: [".go"]
-  migration: [".sql"]
-
-review-stages:
-  - name: correctness
-    enabled: true
-  - name: stack-conventions
-    enabled: true
-  # ... more stages
-
-commands:
-  test:
-    backend: "go test ./..."
-  build:
-    backend: "go build ./..."
-  lint:
-    backend: "golangci-lint run"
-```
-
-### Auto-detect rules from your code
-
-Already have conventions in your codebase? Let the scanner find them:
+AI forgets everything when you close the terminal. Agent memory fixes that.
 
 ```
-/spartan:scan-rules
+.memory/
+  index.md     — Quick reference to all knowledge
+  decisions/   — Architecture decisions
+  patterns/    — Code patterns found
+  knowledge/   — Domain facts, gotchas
+  blockers/    — Known issues
 ```
 
-It reads 15-20 files, finds repeating patterns (error handling, naming, architecture), and generates rule files for you.
+Leaders read and write memory automatically. Decisions from one session carry forward to the next.
 
-### Extend a profile
+### Configurable rules
 
-Start from a profile and add your own rules on top:
+Rules load every session. The AI follows them without you asking.
 
-```yaml
-extends: kotlin-micronaut
-
-rules-add:
-  backend:
-    - rules/custom/OUR_AUTH_RULES.md
-
-rules-remove:
-  backend:
-    - rules/backend-micronaut/RETROFIT_PLACEMENT.md
+```bash
+/spartan:init-rules go-standard      # Pick a profile
+/spartan:scan-rules                   # Or auto-detect from your code
+/spartan:lint-rules                   # Validate your config
 ```
-
-### Conditional rules
-
-Rules that only apply to certain files:
-
-```yaml
-conditional-rules:
-  - rule: rules/custom/BATCH_RULES.md
-    applies-to: "src/**/batch/**"
-  - rule: rules/custom/API_V2_RULES.md
-    applies-to: "src/api/v2/**"
-```
-
-### Validate your config
-
-```
-/spartan:lint-rules
-```
-
-Checks that your config is valid, all rule files exist, and the format is correct.
-
-### Writing your own rules
-
-Rules are just markdown files. Put them anywhere and reference them in the config.
-
-```markdown
-# Error Handling
-
-All errors must be wrapped with context before returning.
-
-## CORRECT
-` `` go
-return fmt.Errorf("failed to create user: %w", err)
-` ``
-
-## WRONG
-` `` go
-return err
-` ``
-```
-
-The reviewer reads these files before checking your code. Whatever you write in the rule, the reviewer checks for it.
-
-### No config? Still works.
-
-If you don't create a config, the toolkit falls back to:
-1. Scanning `rules/` directory in your project
-2. Then `.claude/rules/`
-3. Then `~/.claude/rules/`
-4. If nothing found, uses a generic review checklist
 
 ---
 
@@ -298,98 +270,11 @@ Packs group commands, rules, skills, and agents by use case. **Core is always in
 
 ---
 
-## How It Works
-
-After installing, type `/spartan`. The smart router figures out what you need.
-
-### 5 Workflow Leaders
-
-Each leader runs a full pipeline. One command &mdash; it handles the rest.
-
-```
-/spartan:build "feature"     One command. The leader handles the rest.
-       |
-       +-- checks .memory/ for relevant decisions
-       +-- checks .planning/ for existing spec/design/plan
-       |
-       +-- SPEC ---------- Gate 1  (inline for small work, full Q&A for big work)
-       +-- DESIGN -------- Design Gate  (auto-detected for UI work)
-       +-- PLAN ---------- Gate 2  (inline or saved to .planning/)
-       +-- IMPLEMENT ----- Gate 3  (TDD, task by task)
-       +-- REVIEW -------- Gate 3.5  (agent review against your configured rules)
-       +-- SHIP ---------- Gate 4  (PR created, patterns saved to .memory/)
-```
-
-| Leader | Command | What it handles |
-|--------|---------|----------------|
-| **Build** | `/spartan:build [feature]` | Spec &rarr; design? &rarr; plan &rarr; TDD &rarr; review &rarr; PR |
-| **Debug** | `/spartan:debug [symptom]` | Reproduce &rarr; root-cause &rarr; test-first fix &rarr; PR |
-| **Startup** | `/spartan:startup [idea]` | Brainstorm &rarr; validate &rarr; research &rarr; pitch |
-| **Onboard** | `/spartan:onboard` | Scan &rarr; map architecture &rarr; save findings to memory |
-| **Research** | `/spartan:research [topic]` | Frame question &rarr; gather sources &rarr; analyze &rarr; report |
-
-### How review uses your rules
-
-When `/spartan:build` reaches the review step, it:
-1. Reads `.spartan/config.yaml` to find your rules
-2. Spawns a separate review agent (fresh eyes, not the same AI that wrote the code)
-3. The reviewer reads all your rule files, then checks the code against them
-4. If issues found &rarr; fix &rarr; re-review &rarr; repeat until clean
-
-No config? The reviewer still runs &mdash; it just uses a generic checklist instead of your custom rules.
-
-### Skills: knowledge at each step
-
-Skills are the domain experts. Leaders call the right skill at the right time based on your stack.
-
-| Skill | When the leader calls it |
-|-------|------------------------|
-| `kotlin-best-practices` | During build (Kotlin files) |
-| `database-patterns` | During plan + build (migration tasks) |
-| `ui-ux-pro-max` | During design + build (React components) |
-| `testing-strategies` | During build (test tasks) |
-| `security-checklist` | During review (security scan) |
-
-### Agent memory: context across sessions
-
-The AI forgets everything when you close the terminal. Agent memory fixes that.
-
-```
-.planning/                          .memory/
-  specs/     -- Feature specs          index.md     -- Quick reference
-  plans/     -- Implementation plans   decisions/   -- Architecture decisions
-  designs/   -- Design docs            patterns/    -- Code patterns found
-  epics/     -- Epic tracking          knowledge/   -- Domain facts, gotchas
-                                       blockers/    -- Known issues
-```
-
-Leaders read and write memory automatically. Decisions from one session carry forward to the next.
-
-### Rules: always-on standards
-
-Rules load automatically every session. The AI follows them without you asking.
-
-```bash
-npx @c0x12c/spartan-ai-toolkit@latest --local --packs=backend-micronaut
-# Now every session follows your Kotlin + Micronaut coding standards
-```
-
-### Getting started
-
-1. **Install:** `npx @c0x12c/spartan-ai-toolkit@latest --local`
-2. **Configure rules:** `/spartan:init-rules` (picks a profile for your stack)
-3. **Onboard:** `/spartan:onboard` (scans and maps your codebase)
-4. **Build:** `/spartan:build "first feature"` (spec, plan, TDD, review, PR)
-
-After that, just use `/spartan` &mdash; the router picks the right leader.
-
----
-
 ## All Commands
 
-Type `/spartan` to get the smart router. Or go direct:
+Type `/spartan` for the smart router. Or go direct:
 
-### Workflow Leaders (start here)
+### Workflow Leaders
 
 | Leader | Command | Pipeline |
 |--------|---------|----------|
