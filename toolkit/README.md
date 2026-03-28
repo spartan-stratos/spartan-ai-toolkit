@@ -108,6 +108,14 @@ You get Next.js scaffolding, Figma-to-code, E2E testing setup, frontend review, 
 npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,frontend-react
 ```
 
+### "I'm managing AWS infrastructure with Terraform"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=infrastructure
+```
+
+You get Terraform scaffolding (ECS + EKS), module creation, security audits, drift detection, cost optimization, and two infrastructure agents. Rules enforce naming, state management, provider placement, and security patterns.
+
 ### "I'm running a multi-week project"
 
 ```bash
@@ -143,6 +151,7 @@ npx @c0x12c/spartan-ai-toolkit@latest --all
 | **frontend-react** | Frontend | — | Design workflow, Next.js scaffold, Figma-to-code, E2E, frontend review, UI/UX + design-workflow skills, design-critic agent |
 | **project-mgmt** | Planning | — | Epics, project lifecycle, phases, workstreams, GSD upgrade, forensics, brownfield, codebase mapping |
 | **product** | Planning | — | Think-before-build, validate, teardown, interview, lean canvas, brainstorm |
+| **infrastructure** | Ops | — | Terraform + AWS: scaffold, modules, review, plan, deploy, import, drift, cost, security. 7 rules, 5 skills, 2 agents |
 | **ops** | Ship | — | Deploy + env-setup |
 | **research** | Research | product | Startup + research workflows, kickoff to investor outreach, 10 skills, 2 agents |
 
@@ -221,6 +230,19 @@ Type `/spartan` to get the smart router — it asks what you need and picks the 
 | `lean-canvas` | Fill out a 9-block Lean Canvas |
 | `brainstorm` | Generate and rank ideas |
 
+### Infrastructure (infrastructure pack)
+| Command | What it does |
+|---------|-------------|
+| `tf-scaffold "service"` | Scaffold service-level Terraform (ECS or EKS) |
+| `tf-module "name"` | Create/extend Terraform modules |
+| `tf-review` | PR review for Terraform changes (8-stage checklist) |
+| `tf-plan "env"` | Guided plan workflow with destructive change flagging |
+| `tf-deploy "env"` | Deployment checklist with pre/post verification |
+| `tf-import "resource"` | Import existing AWS resources into state |
+| `tf-drift "env"` | Detect and categorize infrastructure drift |
+| `tf-cost` | Cost estimation and optimization guidance |
+| `tf-security` | Security audit (IAM, network, encryption, secrets) |
+
 ### Ship (ops pack)
 | Command | What it does |
 |---------|-------------|
@@ -256,6 +278,11 @@ Skills give Claude deeper knowledge in specific areas. They're loaded automatica
 | `testing-strategies` | backend-micronaut | Integration test patterns for Micronaut |
 | `security-checklist` | backend-micronaut | Auth, validation, OWASP prevention |
 | `ui-ux-pro-max` | frontend-react | Design intelligence — styles, palettes, font pairings, stacks |
+| `terraform-service-scaffold` | infrastructure | Scaffold service Terraform (ECR, RDS, Redis, S3, ECS/EKS) |
+| `terraform-module-creator` | infrastructure | Create reusable Terraform modules |
+| `terraform-review` | infrastructure | PR review checklist for Terraform |
+| `terraform-security-audit` | infrastructure | 6-area security audit for Terraform |
+| `terraform-best-practices` | infrastructure | Quick reference for Terraform conventions |
 | `brainstorm` | research | Idea generation and ranking |
 | `idea-validation` | research | Score ideas with structured checklist |
 | `market-research` | research | Market sizing, trends, opportunities |
@@ -275,6 +302,8 @@ Skills give Claude deeper knowledge in specific areas. They're loaded automatica
 |-------|------|-------------|
 | `micronaut-backend-expert` | backend-micronaut | Micronaut framework, database design, API architecture |
 | `solution-architect-cto` | backend-micronaut | System design, scalability, tech decisions |
+| `infrastructure-expert` | infrastructure | AWS + Terraform, c0x12c modules, EKS/ECS, security |
+| `sre-architect` | infrastructure | Multi-account strategy, cost optimization, DR planning |
 | `idea-killer` | research | Stress-test ideas, find weaknesses |
 | `research-planner` | research | Plan and coordinate research workflows |
 
@@ -297,6 +326,13 @@ Rules are enforced automatically every session. No action needed — they're act
 | `API_DESIGN` | backend-micronaut |
 | `RETROFIT_PLACEMENT` | backend-micronaut |
 | `FRONTEND` | frontend-react |
+| `STRUCTURE` | infrastructure |
+| `MODULES` | infrastructure |
+| `STATE_AND_BACKEND` | infrastructure |
+| `NAMING` | infrastructure |
+| `SECURITY` | infrastructure |
+| `VARIABLES` | infrastructure |
+| `PROVIDERS` | infrastructure |
 
 ---
 
@@ -330,6 +366,7 @@ Rules and skills are tuned for this stack, but the command framework works with 
 |-------|-----------|
 | Backend | Kotlin + Micronaut |
 | Frontend | React + Next.js + TypeScript |
+| Infrastructure | Terraform + AWS (EKS/ECS, RDS, ElastiCache, S3) |
 | Database | PostgreSQL |
 | CI/CD | GitHub Actions |
 
