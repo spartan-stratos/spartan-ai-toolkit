@@ -12,16 +12,24 @@ You are the **Build workflow leader** — the main way to go from requirement to
 You decide which steps to run, which skills to call, and when to move forward. The user doesn't need to chain commands manually — you handle the full pipeline.
 
 ```
-PIPELINE:
+SINGLE FEATURE:
 
   Check Context → Spec → Design? → Plan → Implement → Review → Ship
        │            │        │         │        │          │       │
    .memory/    Gate 1    Design    Gate 2   Gate 3    Gate 3.5  Gate 4
    .planning/           Gate (UI)
+
+EPIC (multi-feature — auto-detected):
+
+  Check Context → Epic detected → Combined Plan → Parallel Build → Review → Ship
+       │                │               │               │              │       │
+   .planning/     read all specs   wave grouping   Agent Teams     Gate 3.5  Gate 4
+   epics/         + designs                        (auto)         one PR
 ```
 
 **Fast path:** For small work (< 1 day, ≤ 4 tasks), you do spec + plan inline. No separate commands needed.
 **Full path:** For bigger work, you call `/spartan:spec`, `/spartan:design`, `/spartan:plan` as sub-steps.
+**Epic path:** If the feature name matches an epic with 2+ specs ready, build all features together — one branch, one PR.
 
 ---
 
@@ -66,6 +74,9 @@ ls .planning/specs/*.md 2>/dev/null
 ls .planning/designs/*.md 2>/dev/null
 ls .planning/plans/*.md 2>/dev/null
 
+# Check for epic
+ls .planning/epics/*.md 2>/dev/null
+
 # Check for handoff from a previous session
 ls .handoff/*.md 2>/dev/null
 ```
@@ -78,6 +89,25 @@ ls .handoff/*.md 2>/dev/null
 
 **If spec/design/plan already exist** for this feature, skip those stages and jump ahead. Show what you found:
 > "Found: spec ✓, design ✓, plan ✓ — jumping to Implement."
+
+### Epic detection (auto — no questions)
+
+**If an epic exists** that matches the feature name (or the user passed an epic name):
+
+1. Read the epic file at `.planning/epics/{name}.md`
+2. Find all features listed in the epic's Features table
+3. Check which features have specs ready (status = `spec` or `planned`)
+4. Check which features are already `done` or `skipped`
+
+**If 2+ features have specs ready → switch to Epic mode:**
+> "Found epic **{name}** with {N} features. {X} specs ready, {Y} already done. Building all ready features together — one branch, one PR."
+
+Then jump to **Stage 1E: Epic Build** below. Skip Stages 1-2 (individual spec/plan).
+
+**If only 1 feature has a spec** → build that one normally (single feature mode).
+
+**If no features have specs yet** → tell the user to write specs first:
+> "Epic exists but no specs are ready. Run `/spartan:spec {first-feature}` to start."
 
 ---
 
@@ -166,6 +196,93 @@ If user picks B → continue to Plan.
 If user picks C → read the Figma reference and use it as the design source.
 
 **Auto mode on?** → Still ask this question. Design skipping is the user's call, not yours. The only exception: if the ONLY UI change is a single field addition to an existing component (e.g., adding a column to a table), skip silently.
+
+---
+
+## Stage 1E: Epic Build (multi-feature mode)
+
+**This stage replaces Stages 1–3 when epic mode is active.** It builds all ready features from the epic on one branch and creates one PR.
+
+### Step 1: Collect all features
+
+Read the epic file. For each feature with status `spec`, `planned`, or `building`:
+1. Read its spec from `.planning/specs/`
+2. Read its design from `.planning/designs/` (if exists)
+3. Read its plan from `.planning/plans/` (if exists)
+
+### Step 2: Build a combined plan
+
+Create one unified plan that covers all features:
+
+1. **Dependency order** — respect the epic's dependency table. Feature 3 depends on Feature 1? Build 1 first.
+2. **Group into waves** — features with no dependency between them go in the same wave (parallel).
+3. **Plan each feature** — if a feature has no plan yet, generate one (fast path for small, full path for big).
+
+```markdown
+## Epic Build Plan: [epic name]
+Branch: `feature/[epic-slug]`
+
+### Wave 1 (parallel — no dependencies)
+**Feature: [name-1]** — [N] tasks
+  - Task 1.1: ...
+  - Task 1.2: ...
+
+**Feature: [name-3]** — [N] tasks
+  - Task 3.1: ...
+  - Task 3.2: ...
+
+### Wave 2 (after wave 1)
+**Feature: [name-2]** (depends on #1) — [N] tasks
+  - Task 2.1: ...
+  - Task 2.2: ...
+```
+
+### Step 3: Create branch
+
+```bash
+git checkout -b feature/[epic-slug]
+```
+
+### Step 4: Execute with auto-parallelism
+
+```bash
+echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
+```
+
+**If Agent Teams is enabled AND a wave has 2+ features:**
+
+Use Agent Teams automatically — one agent per feature in the wave. Each agent gets:
+- Its feature's spec, design doc (if exists), and plan
+- Worktree isolation (`isolation: "worktree"`)
+- TDD instructions and relevant rules
+- `.memory/` context
+
+Between waves:
+1. Merge worktrees from completed agents
+2. Run full test suite — all tests must pass before next wave
+3. Update epic Features table (status → `building`)
+
+**If Agent Teams is NOT enabled:**
+
+Build features sequentially in dependency order. Use TDD for each task within each feature. Commit after each task.
+
+### Step 5: After all features built
+
+1. Run full test suite
+2. Update epic Features table — mark all built features as `done`
+3. Continue to **Stage 3.5: Review** and **Stage 4: Ship** as normal — one review, one PR for the whole epic
+
+**GATE 3 (Epic) — STOP and ask:**
+> "All {N} features built. {X} tests passing. Here's what's in it:
+> - Feature 1: [summary]
+> - Feature 2: [summary]
+> - ...
+>
+> Ready for review?"
+>
+> **Auto mode on?** → Continue to Review immediately.
+
+After this, skip to **Stage 3.5: Review**. Don't go through Stage 2/3 individually.
 
 ---
 
@@ -453,6 +570,8 @@ If a previous session was interrupted (context overflow, user stopped, etc.), th
 - **Don't over-plan.** If the whole thing is 1-2 files and 30 minutes of work, don't force it into this workflow. Just do it. This workflow is for features that need structure — at least 2-3 tasks.
 - **Save state for big work.** If 5+ tasks, save artifacts to `.planning/` so future sessions can resume.
 - **Full-stack = both layers done.** If the feature touches both backend and frontend, you MUST implement both before creating the PR. Backend-only completion is NOT "done" for a full-stack feature.
+- **Epic = one branch, one PR.** When building from an epic, all features go on one branch and ship as one PR. Don't create separate PRs per feature. Parallelize independent features with Agent Teams when available.
+- **Epic auto-detection.** If the user's feature name matches an epic in `.planning/epics/`, switch to epic mode automatically. Don't ask.
 
 ---
 
