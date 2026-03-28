@@ -127,6 +127,33 @@ done
 
 ---
 
+## Stage 8: Design Token Compliance
+
+**Only runs if `.planning/design/system/tokens.md` or `.planning/design-config.md` exists.**
+
+Read the design tokens file first. Then check every changed frontend file:
+
+- [ ] Colors use token names or CSS variables, not hardcoded hex or Tailwind defaults
+  - Search for: raw hex values (#xxx), `bg-blue-*`, `bg-purple-*`, `text-gray-*`
+  - Each match: is this value in the token list? If not → flag as **critical**
+- [ ] Font family matches design config, not generic fallbacks
+  - Search for: `font-sans`, `Inter`, `Roboto`, `Arial`, `system-ui`
+  - If project font is different → flag as **critical**
+- [ ] Spacing uses the token scale, not arbitrary values
+  - Random values like `p-[13px]` or `mt-[7px]` → flag as **warning**
+- [ ] Border radius matches token definitions
+- [ ] New components reference the design system, not reinventing styles
+
+```bash
+# Quick scan for hardcoded colors (should be tokens)
+git diff main...HEAD -- "*.tsx" "*.ts" "*.css" | grep -E '#[0-9a-fA-F]{3,8}|bg-(blue|red|green|purple|pink|indigo|violet)-[0-9]' | head -20
+
+# Quick scan for generic fonts
+git diff main...HEAD -- "*.tsx" "*.ts" "*.css" | grep -E "font-sans|Inter|Roboto|Arial|system-ui" | head -10
+```
+
+---
+
 ## Output Format
 
 ```markdown

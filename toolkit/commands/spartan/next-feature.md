@@ -24,6 +24,21 @@ Ask the user:
 
 ---
 
+## Step 1.5: Check for design tokens (silent)
+
+```bash
+ls .planning/design/system/tokens.md .planning/design-config.md 2>/dev/null
+```
+
+If design tokens exist, read them. All scaffolded components MUST use project tokens:
+- Use project colors in default styles, not Tailwind defaults
+- Use project font in any typography
+- Import from the project's design token file if it exists (e.g., `@/lib/design-tokens`)
+
+If NO tokens exist, scaffold with clean, unstyled components. Use `bg-neutral-*` placeholder styles that are obviously temporary. Don't use `bg-blue-500` or other Tailwind color defaults.
+
+---
+
 ## Step 2: Map the directory structure
 
 Based on answers, propose this structure under `app/` or `components/`:

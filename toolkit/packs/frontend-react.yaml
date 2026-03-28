@@ -5,7 +5,6 @@ priority: 20
 hidden: false
 
 commands:
-  - design
   - next-app
   - next-feature
   - fe-review
@@ -17,12 +16,9 @@ rules:
   - frontend-react/FRONTEND.md
 
 skills:
-  - ui-ux-pro-max
-  - design-workflow
   - browser-qa
 
-agents:
-  - design-critic.md
+agents: []
 
 claude-sections:
   - 20-frontend-react.md

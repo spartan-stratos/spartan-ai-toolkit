@@ -84,8 +84,11 @@ ls .memory/decisions/ .memory/patterns/ .memory/knowledge/ .memory/blockers/ 2>/
 
 # Check for existing artifacts
 ls .planning/specs/*.md 2>/dev/null
-ls .planning/designs/*.md 2>/dev/null
+ls .planning/designs/*.md .planning/design/screens/*.md 2>/dev/null
 ls .planning/plans/*.md 2>/dev/null
+
+# Check for design tokens
+ls .planning/design/system/tokens.md .planning/design-config.md 2>/dev/null
 
 # Check for epic
 ls .planning/epics/*.md 2>/dev/null
@@ -331,11 +334,27 @@ ls .planning/designs/*.md 2>/dev/null
 - **pages-dev** — pages + routing + integration (blocked by components-dev)
 
 **Design doc handoff (MANDATORY for frontend/UI agents):**
-If a design doc exists at `.planning/designs/`, EVERY frontend/UI agent MUST get this in its prompt:
+If a design doc exists at `.planning/designs/` or `.planning/design/screens/`, EVERY frontend/UI agent MUST get this in its prompt:
 ```
-Design doc: .planning/designs/{feature}.md — read this FIRST.
+Design doc: .planning/design/screens/{feature}.md — read this FIRST.
 Follow the screen designs, component specs, and visual details exactly.
 Do NOT invent your own layout or design. The design was already reviewed and approved.
+```
+
+**Design token enforcement (MANDATORY for frontend/UI work):**
+```bash
+ls .planning/design/system/tokens.md .planning/design-config.md 2>/dev/null
+```
+If design tokens exist, read them and inject into EVERY frontend/UI agent prompt:
+```
+DESIGN TOKENS — BINDING CONSTRAINTS:
+Read .planning/design/system/tokens.md (or .planning/design-config.md).
+You MUST use these exact values. Do NOT use Tailwind defaults or generic colors.
+- Use token color names, not hex values or bg-blue-500
+- Use the project font, not Inter/Arial/system-ui
+- Use the spacing scale, not arbitrary padding/margin
+- Use the project border radius, not rounded-lg
+Every color, font, and spacing value in your code must come from the token list.
 ```
 
 5. Monitor progress. When all agents finish, merge worktrees and run full test suite.
