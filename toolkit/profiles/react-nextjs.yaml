@@ -1,0 +1,65 @@
+# React + Next.js frontend stack
+# App Router, TypeScript, Tailwind CSS, Vitest + Testing Library
+
+stack: react-nextjs
+architecture: component-based
+
+rules:
+  shared:
+    - rules/core/NAMING_CONVENTIONS.md
+
+  backend: []
+
+  frontend:
+    - rules/frontend-react/FRONTEND.md
+
+file-types:
+  backend: []
+  frontend: [".tsx", ".ts", ".jsx", ".js", ".css"]
+  migration: []
+  config: [".yaml", ".yml", ".json", ".toml"]
+
+review-stages:
+  - name: correctness
+    description: "Does the code match the spec? Edge cases handled?"
+    enabled: true
+
+  - name: stack-conventions
+    description: "Follows Next.js App Router patterns, React idioms, TypeScript strict"
+    enabled: true
+
+  - name: test-coverage
+    description: "Tests exist, are independent, cover edge cases"
+    enabled: true
+
+  - name: architecture
+    description: "Component structure, server vs client boundaries, data flow"
+    enabled: true
+
+  - name: database-api
+    description: "Schema rules, API design, input validation"
+    enabled: false
+
+  - name: security
+    description: "XSS prevention, auth checks, data exposure, OWASP top 10"
+    enabled: true
+
+  - name: documentation-gaps
+    description: "New patterns that should be documented"
+    enabled: true
+
+commands:
+  test:
+    backend: ""
+    frontend: "npm test"
+  build:
+    backend: ""
+    frontend: "npm run build"
+  lint:
+    backend: ""
+    frontend: "npm run lint"
+
+skill-routing:
+  ui-components: ui-ux-pro-max
+  writing-tests: testing-strategies
+  security: security-checklist

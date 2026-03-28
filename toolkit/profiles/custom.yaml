@@ -1,0 +1,72 @@
+# Custom stack — fill in your own rules, commands, and file types
+# Copy this to .spartan/config.yaml and edit to match your project
+
+stack: custom
+architecture: custom # layered, hexagonal, clean, mvc, or custom
+
+rules:
+  shared: []
+    # - rules/core/NAMING_CONVENTIONS.md   # shared across backend + frontend
+
+  backend: []
+    # - rules/your-stack/CONTROLLERS.md
+    # - rules/your-stack/ERROR_HANDLING.md
+    # - rules/database/SCHEMA.md
+
+  frontend: []
+    # - rules/frontend/COMPONENTS.md
+    # - rules/frontend/STATE_MANAGEMENT.md
+
+file-types:
+  backend: [".kt", ".java", ".go", ".py", ".rb", ".rs", ".cs"]
+  frontend: [".tsx", ".ts", ".jsx", ".js", ".vue", ".svelte"]
+  migration: [".sql"]
+  config: [".yaml", ".yml", ".json", ".toml"]
+
+review-stages:
+  - name: correctness
+    description: "Does the code match the spec? Edge cases handled?"
+    enabled: true
+
+  - name: stack-conventions
+    description: "Follows stack-specific patterns and idioms"
+    enabled: true
+
+  - name: test-coverage
+    description: "Tests exist, are independent, cover edge cases"
+    enabled: true
+
+  - name: architecture
+    description: "Proper layer separation, no logic in wrong layers"
+    enabled: true
+
+  - name: database-api
+    description: "Schema rules, API design, input validation"
+    enabled: true
+
+  - name: security
+    description: "Auth, injection, data exposure, OWASP top 10"
+    enabled: true
+
+  - name: documentation-gaps
+    description: "New patterns that should be documented"
+    enabled: true
+
+commands:
+  test:
+    backend: ""     # e.g., "./gradlew test", "go test ./...", "pytest"
+    frontend: ""    # e.g., "npm test", "yarn vitest"
+  build:
+    backend: ""     # e.g., "./gradlew build", "go build ./..."
+    frontend: ""    # e.g., "npm run build", "yarn build"
+  lint:
+    backend: ""     # e.g., "./gradlew ktlintCheck", "golangci-lint run"
+    frontend: ""    # e.g., "npm run lint", "eslint ."
+
+# skill-routing:
+#   database-migration: database-patterns
+#   new-endpoint: api-endpoint-creator
+#   backend-code: your-stack-skill
+#   writing-tests: testing-strategies
+#   ui-components: ui-ux-pro-max
+#   security: security-checklist

@@ -1,15 +1,35 @@
 ---
 name: spartan:fe-review
-description: Thorough PR review for React/Next.js code — App Router conventions, performance, accessibility, TypeScript strictness, and test coverage.
+description: Thorough PR review for frontend code — loads rules from config, defaults to React/Next.js conventions
 argument-hint: "[optional: PR title or focus area]"
 ---
 
 # Frontend PR Review: {{ args[0] | default: "current branch" }}
 
-Performing a comprehensive review of React/Next.js changes.
-Run `git diff main...HEAD` and analyze all modified FE files.
+Performing a thorough review of frontend changes.
+
+## Step 0: Load rules
+
+```bash
+# Check for project config
+cat .spartan/config.yaml 2>/dev/null
+
+# Get changed frontend files
+git diff main...HEAD --name-only | grep -E '\.(tsx?|jsx?|vue|svelte|css)$'
+```
+
+**If `.spartan/config.yaml` exists:**
+- Read `rules.frontend` + `rules.shared` — check against these rules
+- Read `review-stages` — only run enabled stages
+- If `conditional-rules` is set, match rules to changed files
+
+**If no config:** Use the default React/Next.js checklist below + scan for `rules/frontend-react/` or `~/.claude/rules/frontend-react/`.
+
+Read all matched rule files before reviewing code.
 
 ---
+
+Run `git diff main...HEAD` and analyze all modified frontend files.
 
 ## Stage 1: App Router Conventions
 

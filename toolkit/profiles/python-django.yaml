@@ -1,0 +1,70 @@
+# Python + Django backend stack
+# MTV architecture, ORM, pytest-django, factory_boy
+
+stack: python-django
+architecture: mvc
+
+rules:
+  shared:
+    - rules/core/NAMING_CONVENTIONS.md
+
+  backend:
+    - rules/python-django/MODELS.md
+    - rules/python-django/VIEWS.md
+    - rules/python-django/TESTING.md
+    - rules/python-django/SECURITY.md
+    - rules/python-django/ORM.md
+
+  frontend: []
+
+file-types:
+  backend: [".py"]
+  frontend: []
+  migration: [".py"]
+  config: [".yaml", ".yml", ".json", ".toml", ".cfg", ".ini"]
+
+review-stages:
+  - name: correctness
+    description: "Does the code match the spec? Edge cases handled?"
+    enabled: true
+
+  - name: stack-conventions
+    description: "Follows Django idioms — models, managers, CBV/FBV patterns"
+    enabled: true
+
+  - name: test-coverage
+    description: "pytest-django tests, factory_boy fixtures, edge cases"
+    enabled: true
+
+  - name: architecture
+    description: "Proper MTV separation — no business logic in views or templates"
+    enabled: true
+
+  - name: database-api
+    description: "Model design, migrations, N+1 prevention, select_related"
+    enabled: true
+
+  - name: security
+    description: "CSRF, XSS, SQL injection, auth decorators, OWASP top 10"
+    enabled: true
+
+  - name: documentation-gaps
+    description: "New patterns that should be documented"
+    enabled: true
+
+commands:
+  test:
+    backend: "pytest"
+    frontend: ""
+  build:
+    backend: "python manage.py check"
+    frontend: ""
+  lint:
+    backend: "ruff check ."
+    frontend: ""
+
+skill-routing:
+  database-migration: database-patterns
+  backend-code: software-architecture
+  writing-tests: testing-strategies
+  security: security-checklist

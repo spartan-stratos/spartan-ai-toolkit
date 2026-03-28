@@ -1,0 +1,70 @@
+# Go standard backend stack
+# Clean architecture, stdlib-first, goroutines, table-driven tests
+
+stack: go-standard
+architecture: clean
+
+rules:
+  shared:
+    - rules/core/NAMING_CONVENTIONS.md
+
+  backend:
+    - rules/go/ERROR_HANDLING.md
+    - rules/go/INTERFACES.md
+    - rules/go/CONCURRENCY.md
+    - rules/go/PROJECT_LAYOUT.md
+    - rules/go/TESTING.md
+
+  frontend: []
+
+file-types:
+  backend: [".go"]
+  frontend: []
+  migration: [".sql"]
+  config: [".yaml", ".yml", ".json", ".toml"]
+
+review-stages:
+  - name: correctness
+    description: "Does the code match the spec? Edge cases handled?"
+    enabled: true
+
+  - name: stack-conventions
+    description: "Follows Go idioms — error wrapping, interface design, naming"
+    enabled: true
+
+  - name: test-coverage
+    description: "Table-driven tests, subtests, edge cases covered"
+    enabled: true
+
+  - name: architecture
+    description: "Clean boundaries — cmd/, internal/, pkg/ separation"
+    enabled: true
+
+  - name: database-api
+    description: "Schema rules, query patterns, API design"
+    enabled: true
+
+  - name: security
+    description: "Auth, injection, data exposure, OWASP top 10"
+    enabled: true
+
+  - name: documentation-gaps
+    description: "Exported types documented, new patterns captured"
+    enabled: true
+
+commands:
+  test:
+    backend: "go test ./..."
+    frontend: ""
+  build:
+    backend: "go build ./..."
+    frontend: ""
+  lint:
+    backend: "golangci-lint run"
+    frontend: ""
+
+skill-routing:
+  database-migration: database-patterns
+  backend-code: software-architecture
+  writing-tests: testing-strategies
+  security: security-checklist
