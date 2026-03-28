@@ -141,13 +141,22 @@ Then tell the user:
 
 > "Epic saved to `.planning/epics/{{ args[0] }}.md` with [N] features."
 >
-> **The workflow for each feature:**
+> **Next steps:**
+>
+> 1. Write specs for each feature (can do multiple before building):
 > ```
-> /spartan:spec [feature-name]     ← write the spec, pass Gate 1
-> /spartan:design [feature-name]   ← if it has UI work (optional)
-> /spartan:plan [feature-name]     ← write the plan, pass Gate 2
-> /spartan:build [feature-name]    ← build it, TDD, pass Gates 3-4
+> /spartan:spec [feature-1]
+> /spartan:spec [feature-2]
+> /spartan:design [feature-2]   ← if it has UI work
+> /spartan:spec [feature-3]
 > ```
+>
+> 2. When specs are ready, build the whole epic at once:
+> ```
+> /spartan:build {{ args[0] }}   ← builds all ready features, one branch, one PR
+> ```
+>
+> Build auto-detects the epic, plans all features together, parallelizes independent ones with Agent Teams, and ships one PR.
 >
 > **Start with:** `/spartan:spec [first-feature-name]`
 
