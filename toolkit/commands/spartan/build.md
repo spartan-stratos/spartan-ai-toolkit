@@ -14,17 +14,17 @@ You decide which steps to run, which skills to call, and when to move forward. T
 ```
 SINGLE FEATURE:
 
-  Check Context → Spec → Design? → Plan → Implement → Review → Ship
-       │            │        │         │        │          │       │
-   .memory/    Gate 1    Design    Gate 2   Gate 3    Gate 3.5  Gate 4
-   .planning/           Gate (UI)
+  Context → Spec → Design? → Plan → Implement → Review Agent → Fix → Ship
+     │        │        │        │        │            │          │       │
+  .memory/ Gate 1   Design   Gate 2   Gate 3    Spawn agent   Loop   Gate 4
+                    Gate                        fix until OK
 
 EPIC (multi-feature — auto-detected):
 
-  Check Context → Epic detected → Combined Plan → Parallel Build → Review → Ship
-       │                │               │               │              │       │
-   .planning/     read all specs   wave grouping   Agent Teams     Gate 3.5  Gate 4
-   epics/         + designs                        (auto)         one PR
+  Context → Epic detected → Per feature: Spec/Design/Plan → Implement → Review Agent → Fix → Ship
+     │            │                │                             │            │          │       │
+  .planning/  read epic    fill gaps if needed          parallel by      Spawn agent  Loop   one PR
+  epics/                                                dependency       fix until OK
 ```
 
 **Fast path:** For small work (< 1 day, ≤ 4 tasks), you do spec + plan inline. No separate commands needed.
@@ -102,7 +102,7 @@ ls .handoff/*.md 2>/dev/null
 **If 2+ features have specs ready → switch to Epic mode:**
 > "Found epic **{name}** with {N} features. {X} specs ready, {Y} already done. Building all ready features together — one branch, one PR."
 
-Then jump to **Stage 1E: Epic Build** below. Skip Stages 1-2 (individual spec/plan).
+Then jump to **Stage E: Epic Build** below.
 
 **If only 1 feature has a spec** → build that one normally (single feature mode).
 
@@ -168,7 +168,7 @@ Then continue to the next stage automatically (don't tell the user to run a sepa
 
 ---
 
-## Stage 1.5: Design (UI work only — auto-detected)
+## Stage 2: Design (UI work only — auto-detected)
 
 **Only runs if the feature has UI work.** Skip entirely for pure backend.
 
@@ -199,94 +199,7 @@ If user picks C → read the Figma reference and use it as the design source.
 
 ---
 
-## Stage 1E: Epic Build (multi-feature mode)
-
-**This stage replaces Stages 1–3 when epic mode is active.** It builds all ready features from the epic on one branch and creates one PR.
-
-### Step 1: Collect all features
-
-Read the epic file. For each feature with status `spec`, `planned`, or `building`:
-1. Read its spec from `.planning/specs/`
-2. Read its design from `.planning/designs/` (if exists)
-3. Read its plan from `.planning/plans/` (if exists)
-
-### Step 2: Build a combined plan
-
-Create one unified plan that covers all features:
-
-1. **Dependency order** — respect the epic's dependency table. Feature 3 depends on Feature 1? Build 1 first.
-2. **Group into waves** — features with no dependency between them go in the same wave (parallel).
-3. **Plan each feature** — if a feature has no plan yet, generate one (fast path for small, full path for big).
-
-```markdown
-## Epic Build Plan: [epic name]
-Branch: `feature/[epic-slug]`
-
-### Wave 1 (parallel — no dependencies)
-**Feature: [name-1]** — [N] tasks
-  - Task 1.1: ...
-  - Task 1.2: ...
-
-**Feature: [name-3]** — [N] tasks
-  - Task 3.1: ...
-  - Task 3.2: ...
-
-### Wave 2 (after wave 1)
-**Feature: [name-2]** (depends on #1) — [N] tasks
-  - Task 2.1: ...
-  - Task 2.2: ...
-```
-
-### Step 3: Create branch
-
-```bash
-git checkout -b feature/[epic-slug]
-```
-
-### Step 4: Execute with auto-parallelism
-
-```bash
-echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
-```
-
-**If Agent Teams is enabled AND a wave has 2+ features:**
-
-Use Agent Teams automatically — one agent per feature in the wave. Each agent gets:
-- Its feature's spec, design doc (if exists), and plan
-- Worktree isolation (`isolation: "worktree"`)
-- TDD instructions and relevant rules
-- `.memory/` context
-
-Between waves:
-1. Merge worktrees from completed agents
-2. Run full test suite — all tests must pass before next wave
-3. Update epic Features table (status → `building`)
-
-**If Agent Teams is NOT enabled:**
-
-Build features sequentially in dependency order. Use TDD for each task within each feature. Commit after each task.
-
-### Step 5: After all features built
-
-1. Run full test suite
-2. Update epic Features table — mark all built features as `done`
-3. Continue to **Stage 3.5: Review** and **Stage 4: Ship** as normal — one review, one PR for the whole epic
-
-**GATE 3 (Epic) — STOP and ask:**
-> "All {N} features built. {X} tests passing. Here's what's in it:
-> - Feature 1: [summary]
-> - Feature 2: [summary]
-> - ...
->
-> Ready for review?"
->
-> **Auto mode on?** → Continue to Review immediately.
-
-After this, skip to **Stage 3.5: Review**. Don't go through Stage 2/3 individually.
-
----
-
-## Stage 2: Plan
+## Stage 3: Plan
 
 ### Check for saved plan
 
@@ -358,7 +271,7 @@ Write the first failing test for Task 1. Show it fails.
 
 ---
 
-## Stage 3: Implement
+## Stage 4: Implement
 
 ### Auto-parallelize with Agent Teams
 
@@ -450,7 +363,7 @@ Call the right skills based on what you're doing:
 
 ### After all tasks — Verify Definition of Done
 
-**Before moving to Gate 3, verify ALL layers are complete:**
+**Before moving to review, verify ALL layers are complete:**
 
 | Mode | Must be done before review |
 |------|---------------------------|
@@ -465,7 +378,7 @@ Call the right skills based on what you're doing:
 4. API client has methods for all new endpoints
 5. UI shows the data from the new endpoints
 
-**If any layer is incomplete**, go back and finish it. Do NOT proceed to Gate 3 with only backend done.
+**If any layer is incomplete**, go back and finish it. Do NOT proceed to review with only backend done.
 
 Run the full test suite:
 ```bash
@@ -479,40 +392,93 @@ npm test && npm run build
 ./gradlew test && npm test && npm run build
 ```
 
-**GATE 3 — STOP and ask:**
-> "All [N] tasks done. [X] tests passing. Ready for review?"
+**GATE 3 — Implementation complete.**
+> "All [N] tasks done. [X] tests passing. Starting review."
 >
-> **Full-stack:** "Backend: [N] tasks done, tests passing. Frontend: [N] tasks done, build passing. Ready for review?"
->
-> If 3+ tasks were completed: "I'll run a self-review now. For a deeper dual-agent review, say 'gate review'."
->
-> **Auto mode on?** → Continue to Review immediately.
+> **Auto mode on?** → Go straight to review.
 
 ---
 
-## Stage 3.5: Review (auto-runs)
+## Stage 5: Review (agent-based — mandatory)
 
-This stage runs automatically after implementation. You don't wait for the user to run a separate review command.
+**This is NOT a self-review.** Spawn a separate review agent to get a fresh perspective. The reviewer finds issues, you fix them, repeat until clean.
 
-### Self-review
-- **Backend code** → use the approach from `/spartan:review`
-- **Frontend code** → use the approach from `/spartan:fe-review`
-- **Both** → review backend first, then frontend
+### Step 1: Spawn the review agent
 
-Fix any issues found during review. Commit fixes separately:
+Use the `Agent` tool to spawn a reviewer:
+
 ```
-fix([scope]): [what review caught]
+Agent:
+  name: "reviewer"
+  subagent_type: "phase-reviewer"  (or "general-purpose" if phase-reviewer not available)
+  prompt: |
+    You are reviewing code changes for the feature: {feature name}.
+
+    Review scope:
+    - Backend code: {list changed backend files}
+    - Frontend code: {list changed frontend files}
+    - Design doc: {path if exists, or "none"}
+
+    Run `git diff main...HEAD` to see all changes.
+
+    Review checklist:
+    **Code quality:** SOLID, clean code, no duplication, proper error handling
+    **Tests:** adequate coverage, edge cases, test quality
+    **Security:** auth, input validation, injection risks
+    **Stack conventions:** {backend: Kotlin/Micronaut rules | frontend: React/Next.js rules | both}
+    **Design compliance:** if a design doc exists, check that UI matches it
+
+    For each issue found, report:
+    - File and line
+    - What's wrong
+    - Severity: HIGH (must fix) / MEDIUM (should fix) / LOW (nice to have)
+    - Suggested fix
+
+    End with a verdict: **PASS** or **NEEDS CHANGES** (with the list of HIGH/MEDIUM issues).
 ```
 
-### Dual-agent review (optional, on request)
-If the user says "gate review" or if the feature is large (5+ tasks), offer to spawn the gate-review approach:
-> "Want a dual-agent gate review? This spawns a reviewer agent for a second opinion."
+### Step 2: Fix loop
 
-If yes → use the approach from `/spartan:gate-review` internally.
+When the reviewer reports back:
+
+**If PASS** → continue to Ship.
+
+**If NEEDS CHANGES:**
+
+1. Read the reviewer's findings
+2. Fix all HIGH issues. Fix MEDIUM issues if they make sense.
+3. Commit fixes:
+   ```
+   fix([scope]): [what review caught]
+   ```
+4. Run tests again to make sure fixes didn't break anything
+5. Spawn the review agent AGAIN with the updated diff — only the remaining/new changes need review
+6. Repeat until the reviewer says PASS
+
+**Max 3 review rounds.** If still failing after 3 rounds, stop and ask the user:
+> "Review found issues I can't fully fix. Here's what's left: [list]. Want to continue anyway or address these manually?"
+
+### Step 3: Parallel review with Agent Teams
+
+```bash
+echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
+```
+
+**If Agent Teams is enabled**, always spawn parallel review agents for deeper coverage:
+
+```
+Agent 1: "quality-reviewer" — code design, SOLID, conventions, stack rules
+Agent 2: "test-reviewer" — test coverage, edge cases, test quality
+Agent 3: "security-reviewer" (if auth/input/data code changed) — security checklist
+```
+
+All agents review at the same time. Combine their findings. All must PASS before moving to Ship. If any says NEEDS CHANGES → fix loop applies to the combined findings.
+
+**If Agent Teams is NOT enabled**, use a single review agent (Step 1 above).
 
 ---
 
-## Stage 4: Ship
+## Stage 6: Ship
 
 ### Create PR
 Run the approach from `/spartan:pr-ready`:
@@ -540,6 +506,84 @@ Update `.memory/index.md` if you saved anything.
 
 ---
 
+## Stage E: Epic Build (multi-feature mode)
+
+**This replaces Stages 1–4 when epic mode is active.** It builds all ready features from the epic on one branch and creates one PR. Review and Ship still run normally after.
+
+### Step 1: Collect and fill gaps
+
+Read the epic file. For each feature with status `spec`, `planned`, or `building`:
+
+1. Read its spec from `.planning/specs/`
+2. Read its design from `.planning/designs/` (if exists)
+3. Read its plan from `.planning/plans/` (if exists)
+
+**Fill gaps for each feature that's missing something:**
+
+| Missing | Action |
+|---------|--------|
+| Spec | Skip this feature — tell user to run `/spartan:spec {feature}` first |
+| Design (and feature has UI work) | Ask user: create design now or skip? Same logic as Stage 2 |
+| Plan | Generate a plan inline (fast path for small, full path for big) |
+
+**Use Agent Teams to fill gaps in parallel** (if enabled): When 2+ features need plans or designs generated, spawn one agent per feature to do this work at the same time. Each agent runs the spec/design/plan logic for its feature independently.
+
+```bash
+echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
+```
+
+If Agent Teams enabled and 2+ features need plans:
+- Spawn one `general-purpose` agent per feature
+- Each agent generates the design (if needed) and plan for its feature
+- Collect results, save to `.planning/designs/` and `.planning/plans/`
+
+### Step 2: Sort by dependency and create branch
+
+Read the epic's Features table. Sort features by dependency order:
+- Features with no dependencies → can build first
+- Features that depend on others → build after their dependencies are done
+
+```bash
+git checkout -b feature/[epic-slug]
+```
+
+### Step 3: Implement in dependency order
+
+Go through features in dependency order. **When 2+ features have no dependency between them, build them at the same time using Agent Teams** (if enabled). Otherwise build one by one.
+
+```bash
+echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
+```
+
+**For each feature (or group of parallel features):**
+
+1. **If Agent Teams enabled and 2+ features can run at the same time:**
+   - Spawn one agent per feature with `isolation: "worktree"`
+   - Each agent gets: its spec, design doc (if exists), plan, TDD instructions, relevant rules
+   - **Design doc handoff is MANDATORY** — every frontend/UI agent must read the design doc first
+   - Wait for all parallel agents to finish
+   - Merge worktrees, run full test suite
+   - If tests fail → fix before moving on
+
+2. **If sequential (Agent Teams not enabled or only one feature ready):**
+   - Build each task with TDD: test → implement → refactor → commit
+   - Follow the same skill routing as Stage 4
+
+3. **After each feature completes:**
+   - Update epic Features table (status → `done`)
+   - Check: does this unblock the next features? If yes, start those next.
+
+### Step 4: After all features built
+
+Run the full test suite. Then continue to **Stage 5: Review** — the review agent reviews ALL changes across all features. One review, one fix loop, one PR.
+
+**GATE 3 (Epic):**
+> "All {N} features built. {X} tests passing. Starting review."
+>
+> **Auto mode on?** → Go straight to review.
+
+---
+
 ## Resume: Picking Up Where You Left Off
 
 If a previous session was interrupted (context overflow, user stopped, etc.), this workflow can resume.
@@ -547,9 +591,9 @@ If a previous session was interrupted (context overflow, user stopped, etc.), th
 **How resume works:**
 1. Step 0.5 checks for `.handoff/` files and existing `.planning/` artifacts
 2. Determine which stage was completed last:
-   - Has spec but no plan → resume at Stage 2 (Plan)
-   - Has plan but no commits on feature branch → resume at Stage 3 (Implement)
-   - Has commits but no PR → resume at Stage 4 (Ship)
+   - Has spec but no plan → resume at Stage 3 (Plan)
+   - Has plan but no commits on feature branch → resume at Stage 4 (Implement)
+   - Has commits but no PR → resume at Stage 5 (Review) or Stage 6 (Ship)
 3. Show the user: "Resuming from [stage]. Here's what was done: [summary]."
 4. Continue from that point.
 
@@ -565,8 +609,9 @@ If a previous session was interrupted (context overflow, user stopped, etc.), th
 - **Gates are mandatory.** Even small features go through all stages. The stages are fast for small work — that's fine.
 - **TDD by default.** Write the test first. Override only when test-first doesn't make sense for that specific task.
 - **One commit per task.** Don't batch. Each task = one commit with a clear message.
+- **Review is always an agent.** Never self-review. Always spawn a separate review agent for a fresh perspective. Fix issues until the reviewer says PASS.
 - **Security check always runs.** Whether backend or frontend, security patterns get checked during review.
-- **Frontend checks for backend needs.** If a new page needs data that doesn't exist yet, say so at Stage 2 and add backend tasks first.
+- **Frontend checks for backend needs.** If a new page needs data that doesn't exist yet, say so at Stage 3 and add backend tasks first.
 - **Don't over-plan.** If the whole thing is 1-2 files and 30 minutes of work, don't force it into this workflow. Just do it. This workflow is for features that need structure — at least 2-3 tasks.
 - **Save state for big work.** If 5+ tasks, save artifacts to `.planning/` so future sessions can resume.
 - **Full-stack = both layers done.** If the feature touches both backend and frontend, you MUST implement both before creating the PR. Backend-only completion is NOT "done" for a full-stack feature.
@@ -603,5 +648,5 @@ A feature is NOT done until every applicable item is checked:
 
 ### Always
 - [ ] Atomic commits (one per task)
-- [ ] Self-review passed (backend review + frontend review if applicable)
+- [ ] Review agent passed (all HIGH/MEDIUM issues fixed)
 - [ ] PR created with summary and test plan

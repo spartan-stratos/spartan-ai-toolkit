@@ -10,7 +10,7 @@
       "name": "spartan-ai-toolkit",
       "description": "5 workflows, 56 commands, 12 rules, 22 skills, 7 agents — organized in 11 packs with dependencies",
       "source": "./toolkit",
-      "version": "1.6.3"
+      "version": "1.6.4"
     }
   ]
 }
