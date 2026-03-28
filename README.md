@@ -380,6 +380,18 @@ See [`bridges/`](bridges/) for setup.
 
 ---
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=spartan-stratos%2Fspartan-ai-toolkit&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=spartan-stratos/spartan-ai-toolkit&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=spartan-stratos/spartan-ai-toolkit&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=spartan-stratos/spartan-ai-toolkit&type=date&legend=top-left" />
+ </picture>
+</a>
+
+---
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add commands, skills, rules, and agents.
