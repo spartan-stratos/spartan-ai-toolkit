@@ -107,7 +107,7 @@ projects/my-idea/
 | `/kickoff [theme]` | 1 → 2 | Brainstorm + validate top ideas |
 | `/deep-dive [project]` | 3 | Research + teardown competitors |
 | `/fundraise [project]` | 4 | Pitch materials + outreach drafts |
-| `/full-run [theme]` | 1 → 2 → 3 → 4 | Everything, with pauses at each gate |
+| `/startup [theme]` | 1 → 2 → 3 → 4 | Everything, with pauses at each gate |
 
 ## Interaction Style
 

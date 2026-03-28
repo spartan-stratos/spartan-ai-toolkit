@@ -90,7 +90,7 @@ These are the 5 leaders. Each one runs a full pipeline. Route here first.
 | User says something like... | Route to | What the leader does |
 |---|---|---|
 | "build feature X", "add Y", "implement Z", "new endpoint", "new page" | `/spartan:build` | Checks context → spec → design? → plan → implement → review → ship |
-| "bug", "broken", "error", "not working", "fix this", "debug" | `/spartan:fix` | Checks known issues → reproduce → investigate → fix → ship |
+| "bug", "broken", "error", "not working", "fix this", "debug" | `/spartan:debug` | Checks known issues → reproduce → investigate → fix → ship |
 | "research X", "dig into", "find out about", "what's the market for" | `/spartan:research` | Frame question → gather sources → analyze → report |
 | "startup idea", "new idea", "validate idea", "full pipeline" | `/spartan:startup` | Auto-resumes → brainstorm → validate → research → pitch |
 | "new project", "just joined", "understand this codebase", "onboard" | `/spartan:onboard` | Checks memory → scan → map → setup → save findings |
@@ -202,7 +202,7 @@ Before running the routed command, give a 1-sentence reason:
 
 Examples:
 - "Building a feature → `/spartan:build` walks you through understand → plan → implement → ship."
-- "Sounds like a bug → `/spartan:fix` does structured investigation before touching code."
+- "Sounds like a bug → `/spartan:debug` does structured investigation before touching code."
 - "New codebase → `/spartan:onboard` scans and maps everything before you start."
 
 Then run the command. Don't ask "shall I proceed?" — just do it.
@@ -215,7 +215,7 @@ Not every command needs the same amount of context. Check the command/skill's `p
 |------|---------------|---------|----------|
 | **1** | Minimal — just run | Toggles, simple actions | `/spartan:careful`, `/spartan:freeze`, `/spartan:sessions` |
 | **2** | Light — project context only | Quick tasks, status checks | `/spartan:daily`, `/spartan:contribute`, `/spartan:context-save` |
-| **3** | Standard — project + stack context | Most commands | `/spartan:build`, `/spartan:fix`, `/spartan:review` |
+| **3** | Standard — project + stack context | Most commands | `/spartan:build`, `/spartan:debug`, `/spartan:review` |
 | **4** | Full — everything, deep context | Complex workflows, multi-phase | `/spartan:project`, `/spartan:phase`, `/spartan:onboard` |
 
 **How tiers affect behavior:**
@@ -246,7 +246,7 @@ You don't have to wait for the user to type `/spartan`. When you notice these pa
 |---|---|
 | User describes a product idea or feature concept | "This sounds like a good fit for `/spartan:think` before we code." |
 | User just finished building/coding something | "Ready to test? `/spartan:qa` can check it in a real browser." |
-| User says something is broken or not working | "Want me to run `/spartan:fix`? It does structured debugging." |
+| User says something is broken or not working | "Want me to run `/spartan:debug`? It does structured debugging." |
 | User is about to merge or says "ready for PR" | "Run `/spartan:pr-ready` to do the full pre-PR checklist." |
 | User asks about competitors or market | "I can dig deeper with `/spartan:research`." |
 | User mentions deploying or going live | "Want to use `/spartan:deploy` for a proper deploy checklist?" |
@@ -322,7 +322,7 @@ Show the 5 workflow leaders first, then mention commands exist for specific task
 **Build** — `/spartan:build [backend|frontend] [feature]`
 The main orchestrator. Checks for existing specs/plans, runs spec → design → plan → implement → review → ship. For small work, does everything inline. For big work, saves artifacts and can resume across sessions.
 
-**Fix** — `/spartan:fix [symptom]`
+**Debug** — `/spartan:debug [symptom]`
 Checks memory for known issues, then runs reproduce → investigate → fix → ship. Saves recurring patterns for future sessions.
 
 **Startup** — `/spartan:startup [idea]`

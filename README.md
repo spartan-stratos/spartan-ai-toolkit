@@ -57,7 +57,7 @@ AGENT MEMORY    Decisions, patterns, and context that survive across
 | Without Spartan | With Spartan |
 |----------------|-------------|
 | "Build this feature" &rarr; jumps to code, no plan, no tests | `/spartan:build` &rarr; spec, plan, TDD, gate review, PR |
-| "Fix this bug" &rarr; guesses a fix, hopes for the best | `/spartan:fix` &rarr; reproduce, root-cause, test-first fix, PR |
+| "Fix this bug" &rarr; guesses a fix, hopes for the best | `/spartan:debug` &rarr; reproduce, root-cause, test-first fix, PR |
 | Team of 5 devs &rarr; each gets different code style | Rules load every session &rarr; same standards for everyone |
 | 3-week feature &rarr; no plan, lost context between sessions | `/spartan:project` &rarr; roadmap, phases, agent memory across sessions |
 | "Design this page" &rarr; generic AI template | `/spartan:design` &rarr; design config, dual-agent review, Design Gate |
@@ -129,7 +129,7 @@ npx @c0x12c/spartan-ai-toolkit@latest --local --agent=copilot      # rules only
 | **Windsurf** | Rules + AGENTS.md | `.windsurf/rules/` |
 | **Copilot** | Rules + AGENTS.md | `.github/instructions/` |
 
-> **Why the difference?** Slash commands (`/spartan:build`, `/spartan:fix`) and skills are Claude Code features. Cursor, Windsurf, and Copilot don't support them &mdash; but the coding rules and agent definitions work everywhere since they're plain markdown.
+> **Why the difference?** Slash commands (`/spartan:build`, `/spartan:debug`) and skills are Claude Code features. Cursor, Windsurf, and Copilot don't support them &mdash; but the coding rules and agent definitions work everywhere since they're plain markdown.
 
 ---
 
@@ -222,7 +222,7 @@ Each leader runs a full pipeline end-to-end. You don't chain commands manually &
 | Leader | Command | What it handles |
 |--------|---------|----------------|
 | **Build** | `/spartan:build [feature]` | Spec &rarr; design? &rarr; plan &rarr; TDD &rarr; review &rarr; PR. Auto-detects backend/frontend. Resumes across sessions. |
-| **Fix** | `/spartan:fix [symptom]` | Checks known issues &rarr; reproduce &rarr; investigate &rarr; test-first fix &rarr; PR. Saves patterns to memory. |
+| **Debug** | `/spartan:debug [symptom]` | Checks known issues &rarr; reproduce &rarr; investigate &rarr; test-first fix &rarr; review agent &rarr; PR. Saves patterns to memory. |
 | **Startup** | `/spartan:startup [idea]` | Brainstorm &rarr; validate &rarr; research &rarr; pitch. Auto-resumes from where you left off. |
 | **Onboard** | `/spartan:onboard` | Scan &rarr; map architecture &rarr; setup tooling &rarr; save findings to memory for future sessions. |
 | **Research** | `/spartan:research [topic]` | Frame question &rarr; gather sources &rarr; analyze &rarr; structured report. |
@@ -273,7 +273,7 @@ The AI forgets everything when you close the terminal. Agent memory fixes that.
 
 **Leaders read and write memory automatically:**
 - `/spartan:build` checks `.planning/` for saved artifacts. If a spec exists, it skips the Q&A. After shipping, it saves new patterns to `.memory/`.
-- `/spartan:fix` checks `.memory/blockers/` for known issues before investigating. After fixing, it saves recurring patterns.
+- `/spartan:debug` checks `.memory/blockers/` for known issues before investigating. After fixing, it saves recurring patterns.
 - `/spartan:onboard` saves architecture findings to `.memory/knowledge/` so future sessions start with context.
 - `/spartan:startup` scans the project folder and auto-resumes from the last completed stage.
 

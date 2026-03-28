@@ -10,7 +10,6 @@ commands:
   - startup
   - kickoff
   - deep-dive
-  - full-run
   - fundraise
   - research
   - pitch

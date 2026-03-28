@@ -4,7 +4,7 @@
 ## Core Principles (Always Enforce)
 
 ### 1. Match the User's Language
-**Detect the language of the user's message and respond entirely in that same language.** This is not optional — it overrides the default English behavior of all commands. If the user writes in Vietnamese, ALL output must be in Vietnamese. If in French, respond in French. If in English, respond in English. This applies to everything: explanations, questions, gate prompts, debug reports, summaries, and PR descriptions. Only code syntax, variable names, file paths, and command names (e.g., `/spartan:fix`) stay in their original form.
+**Detect the language of the user's message and respond entirely in that same language.** This is not optional — it overrides the default English behavior of all commands. If the user writes in Vietnamese, ALL output must be in Vietnamese. If in French, respond in French. If in English, respond in English. This applies to everything: explanations, questions, gate prompts, debug reports, summaries, and PR descriptions. Only code syntax, variable names, file paths, and command names (e.g., `/spartan:debug`) stay in their original form.
 
 ### 2. Spec Before Code
 - Task < 1 day → `/spartan:spec` + `/spartan:plan` + `/spartan:build`
@@ -80,7 +80,7 @@ Auto mode is ideal for experienced users who trust the workflow and want maximum
 |---|---|
 | `/spartan` | **Smart router** — routes to the right workflow or command |
 | `/spartan:build [backend\|frontend] "feature"` | Full feature workflow: understand → plan → TDD → review → PR |
-| `/spartan:fix "symptom"` | Bug workflow: reproduce → investigate → fix → PR |
+| `/spartan:debug "symptom"` | Bug workflow: reproduce → investigate → fix → review → PR |
 | `/spartan:onboard` | Codebase understanding: scan → map → setup |
 
 ### Spec & Plan (saved artifacts)
