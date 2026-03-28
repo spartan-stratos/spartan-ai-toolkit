@@ -1,0 +1,21 @@
+name: ux-design
+description: "UX design workflow — research, define, ideate, design system, prototype, test"
+category: Design
+priority: 25
+hidden: false
+
+commands:
+  - ux
+
+skills:
+  - design-intelligence
+  - design-workflow
+
+agents:
+  - design-critic.md
+
+rules:
+  - ux-design/DESIGN_PROCESS.md
+
+claude-sections:
+  - 25-ux-design.md

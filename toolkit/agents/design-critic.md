@@ -34,6 +34,18 @@ This is your #1 job. Does this design look like every other AI-generated page?
 - [ ] Copy is specific to the project domain (not generic marketing fluff)
 - [ ] Would you remember this design tomorrow? (If no, it's too generic)
 
+### Design Token Compliance (ZERO tolerance if tokens exist)
+
+Check `.planning/design/system/tokens.md` and `.planning/design-config.md`:
+
+- [ ] **EVERY** color in the design matches the token list EXACTLY (not "close enough")
+- [ ] **EVERY** font reference matches the project font EXACTLY (not a substitute)
+- [ ] Spacing values align with the token scale (no arbitrary numbers)
+- [ ] Border radius matches token definitions
+- [ ] Shadow levels match token definitions
+
+**Hard fail:** If even ONE color or font doesn't match the tokens → NEEDS CHANGES. The whole point of tokens is consistency. No exceptions.
+
 ### Brand Compliance (If design-config exists)
 
 - [ ] Colors match the design-config palette exactly (not approximations)

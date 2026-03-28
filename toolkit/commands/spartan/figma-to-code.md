@@ -13,6 +13,22 @@ You are converting a Figma design into production React/Next.js code using **Fig
 
 ---
 
+## Phase 0: Check for existing design tokens (silent)
+
+```bash
+ls .planning/design/system/tokens.md .planning/design-config.md 2>/dev/null
+```
+
+If design tokens already exist, read them FIRST. When extracting from Figma:
+- **MERGE** Figma colors with existing tokens — don't create a second conflicting token set
+- Use existing token NAMES (e.g., `--color-primary`) even if Figma uses different hex values
+- If Figma colors differ from tokens, flag the mismatch and ask the user which to keep
+- Any NEW tokens from Figma get added to the existing file, not written to a separate one
+
+If NO tokens exist, proceed normally — extract from Figma and create new tokens.
+
+---
+
 ## Phase 1: Extract Design Data (single MCP call)
 
 Call Figma MCP to get the screen data:
