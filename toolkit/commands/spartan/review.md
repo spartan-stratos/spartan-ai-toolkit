@@ -14,12 +14,9 @@ Perform a thorough review of the current changes. Use `git diff` to inspect all 
 
 ```bash
 # 1. Check for project config
-cat .spartan/config.yaml 2>/dev/null
+cat .spartan/config.yaml 2>/dev/null || cat ~/.spartan/config.yaml 2>/dev/null
 
-# 2. If no config, scan for installed rules
-ls rules/ .claude/rules/ ~/.claude/rules/ 2>/dev/null
-
-# 3. Classify changed files
+# 2. Classify changed files
 git diff main...HEAD --name-only
 ```
 
@@ -30,7 +27,15 @@ git diff main...HEAD --name-only
 - If `extends` is set, load the base profile, then apply `rules-add`/`rules-remove`/`rules-override`
 - If `conditional-rules` is set, match rules to changed files by glob pattern
 
-**If no config (fallback):**
+**If no config — auto-generate from installed packs:**
+
+```bash
+cat .claude/.spartan-packs 2>/dev/null || cat ~/.claude/.spartan-packs 2>/dev/null
+```
+
+If packs file exists, generate config from the matching profile (same logic as `/spartan:build` Step 1). Copy the profile to `.spartan/config.yaml` and tell the user it was generated.
+
+**If no packs file either (bare fallback):**
 - Scan `rules/` for all `.md` files, group by subdirectory
 - If no `rules/`, check `.claude/rules/` then `~/.claude/rules/`
 - Use all stages below

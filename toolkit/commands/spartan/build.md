@@ -408,11 +408,8 @@ npm test && npm run build
 The review uses **configurable rules**. Load them in this order:
 
 ```bash
-# 1. Check for project config (source of truth)
-cat .spartan/config.yaml 2>/dev/null
-
-# 2. If no config, scan for installed rules
-ls rules/ .claude/rules/ ~/.claude/rules/ 2>/dev/null
+# 1. Check for project config
+cat .spartan/config.yaml 2>/dev/null || cat ~/.spartan/config.yaml 2>/dev/null
 ```
 
 **If `.spartan/config.yaml` exists:**
@@ -422,7 +419,30 @@ ls rules/ .claude/rules/ ~/.claude/rules/ 2>/dev/null
 - If `extends` is set, load the base profile first, then apply overrides (`rules-add`, `rules-remove`, `rules-override`)
 - If `conditional-rules` is set, match rules to changed files by glob pattern
 
-**If no config exists (fallback):**
+**If no config exists — auto-generate from installed packs:**
+
+```bash
+# Check what packs are installed
+cat .claude/.spartan-packs 2>/dev/null || cat ~/.claude/.spartan-packs 2>/dev/null
+```
+
+If a packs file exists, generate config from the matching profile:
+- Has `backend-micronaut` → use `kotlin-micronaut` profile
+- Has `frontend-react` → use `react-nextjs` profile
+- Has `backend-nodejs` → use `typescript-node` profile
+- Has `backend-python` → use `python-fastapi` profile
+- None of the above → use `custom` profile
+
+Look for the profile in the toolkit source:
+```bash
+REPO_PATH=$(cat ~/.claude/.spartan-repo 2>/dev/null || echo "")
+ls "$REPO_PATH/toolkit/profiles/" 2>/dev/null
+```
+
+Copy the matching profile to `.spartan/config.yaml`. Tell the user:
+> "No config found. Generated `.spartan/config.yaml` from {profile} profile. Edit it to customize."
+
+**If no packs file either (bare fallback):**
 - Scan `rules/` directory for all `.md` files
 - Group by subdirectory: `rules/backend-micronaut/` → backend, `rules/frontend-react/` → frontend, `rules/database/` → backend, `rules/core/` → shared
 - If no `rules/` dir, check `.claude/rules/` then `~/.claude/rules/`
