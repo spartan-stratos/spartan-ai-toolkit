@@ -31,6 +31,19 @@ EPIC (multi-feature — auto-detected):
 **Full path:** For bigger work, you call `/spartan:spec`, `/spartan:design`, `/spartan:plan` as sub-steps.
 **Epic path:** If the feature name matches an epic with 2+ specs ready, build all features together — one branch, one PR.
 
+### Stages That MUST NOT Be Skipped
+
+| Stage | When it runs | Can skip? |
+|-------|-------------|-----------|
+| Stage 1 (Spec) | Always | NO — every feature needs a scope |
+| Stage 2 (Design) | Frontend/UI work | NO — must ask user (skip only if pure data change) |
+| Stage 3 (Plan) | Always | NO — every feature needs a plan |
+| Stage 4 (Implement) | Always | NO |
+| Stage 5 (Review) | Always | **NEVER** — this is the most commonly skipped stage. You MUST spawn the review agent. |
+| Stage 6 (Ship) | Always | NO |
+
+**If you finish Stage 4 and are about to commit/PR without running Stage 5 — STOP. You are skipping review. Go back and run it.**
+
 ---
 
 ## Step 0: Detect Mode & Stack (silent — no questions)
@@ -195,7 +208,7 @@ If user picks B → continue to Plan.
 
 If user picks C → read the Figma reference and use it as the design source.
 
-**Auto mode on?** → Still ask this question. Design skipping is the user's call, not yours. The only exception: if the ONLY UI change is a single field addition to an existing component (e.g., adding a column to a table), skip silently.
+**Auto mode on?** → Still ask this question. Design skipping is the user's call, not yours. The only exception: if the change is purely data (adding a column to an existing table, no new screens or layouts), skip silently. If there's ANY new component, screen, modal, or layout change — you MUST ask.
 
 ---
 
@@ -329,6 +342,8 @@ Do NOT invent your own layout or design. The design was already reviewed and app
 
 6. `TeamDelete` to clean up.
 
+7. **MANDATORY: Continue to Stage 5 (Review) NOW.** Do NOT stop here. Do NOT ask "Want me to commit?" or "Should I create a PR?" — implementation is done but review hasn't happened yet. Go straight to Gate 3 → Stage 5.
+
 **If Agent Teams is NOT enabled** (env var not set), continue with sequential execution below.
 
 ### Sequential execution (default)
@@ -392,14 +407,22 @@ npm test && npm run build
 ./gradlew test && npm test && npm run build
 ```
 
-**GATE 3 — Implementation complete.**
+**GATE 3 — Implementation complete. Review is NEXT.**
 > "All [N] tasks done. [X] tests passing. Starting review."
 >
 > **Auto mode on?** → Go straight to review.
+>
+> **CRITICAL: You MUST run Stage 5 (Review) after this gate. No exceptions. Do NOT commit, do NOT create a PR, do NOT ask the user what to do next. The next step is ALWAYS the review agent.**
 
 ---
 
-## Stage 5: Review (agent-based — mandatory)
+## Stage 5: Review (agent-based — MANDATORY, NEVER SKIP)
+
+> **CRITICAL: This stage MUST run for every build. No exceptions.**
+> - Not optional. Not skippable. Not deferrable.
+> - Do NOT ask the user "Want me to skip review?" or "Should I review?"
+> - Do NOT commit or create a PR before this stage completes.
+> - If you catch yourself about to skip this stage, STOP and run it.
 
 **This is NOT a self-review.** Spawn a separate review agent to get a fresh perspective. The reviewer finds issues, you fix them, repeat until clean.
 
@@ -753,7 +776,8 @@ If a previous session was interrupted (context overflow, user stopped, etc.), th
 - **Gates are mandatory.** Even small features go through all stages. The stages are fast for small work — that's fine.
 - **TDD by default.** Write the test first. Override only when test-first doesn't make sense for that specific task.
 - **One commit per task.** Don't batch. Each task = one commit with a clear message.
-- **Review is always an agent.** Never self-review. Always spawn a separate review agent for a fresh perspective. Fix issues until the reviewer says PASS.
+- **Review is ALWAYS an agent. NEVER skip.** This is the #1 rule. After implementation finishes — whether via Agent Teams or sequential — you MUST spawn the review agent (Stage 5). Never self-review. Never skip review. Never ask the user if they want to skip. Never commit or create a PR without review. Fix issues until the reviewer says PASS.
+- **Design gate runs for frontend work.** If the feature has UI work (new components, screens, modals, layouts), you MUST trigger the design question in Stage 2. Only skip for pure data changes (adding a field to an existing table/component).
 - **Security check always runs.** Whether backend or frontend, security patterns get checked during review.
 - **Frontend checks for backend needs.** If a new page needs data that doesn't exist yet, say so at Stage 3 and add backend tasks first.
 - **Don't over-plan.** If the whole thing is 1-2 files and 30 minutes of work, don't force it into this workflow. Just do it. This workflow is for features that need structure — at least 2-3 tasks.
