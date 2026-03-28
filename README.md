@@ -114,14 +114,22 @@ Search for **"Spartan AI Toolkit"** in the Claude Code plugin marketplace.
 The installer supports 5 AI tools:
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --agent=claude-code  # default
-npx @c0x12c/spartan-ai-toolkit@latest --agent=cursor
-npx @c0x12c/spartan-ai-toolkit@latest --agent=windsurf
-npx @c0x12c/spartan-ai-toolkit@latest --agent=codex
-npx @c0x12c/spartan-ai-toolkit@latest --agent=copilot
+npx @c0x12c/spartan-ai-toolkit@latest --local --agent=claude-code  # default, full install
+npx @c0x12c/spartan-ai-toolkit@latest --local --agent=codex        # full install
+npx @c0x12c/spartan-ai-toolkit@latest --local --agent=cursor       # rules only
+npx @c0x12c/spartan-ai-toolkit@latest --local --agent=windsurf     # rules only
+npx @c0x12c/spartan-ai-toolkit@latest --local --agent=copilot      # rules only
 ```
 
-All content is standard markdown &mdash; it works with any AI coding tool.
+| Tool | What gets installed | Where |
+|------|-------------------|-------|
+| **Claude Code** | Commands + rules + skills + agents + CLAUDE.md | `.claude/` |
+| **Codex** | Commands + rules + skills + agents + CLAUDE.md | `.codex/` |
+| **Cursor** | Rules + AGENTS.md | `.cursor/rules/` |
+| **Windsurf** | Rules + AGENTS.md | `.windsurf/rules/` |
+| **Copilot** | Rules + AGENTS.md | `.github/instructions/` |
+
+> **Why the difference?** Slash commands (`/spartan:build`, `/spartan:fix`) and skills are Claude Code features. Cursor, Windsurf, and Copilot don't support them &mdash; but the coding rules and agent definitions work everywhere since they're plain markdown.
 
 ---
 
