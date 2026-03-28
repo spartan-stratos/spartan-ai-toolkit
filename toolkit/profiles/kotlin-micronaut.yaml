@@ -1,0 +1,75 @@
+# Kotlin + Micronaut backend stack
+# Coroutines, Either error handling, Exposed ORM, Flyway migrations
+
+stack: kotlin-micronaut
+architecture: layered
+
+rules:
+  shared:
+    - rules/core/NAMING_CONVENTIONS.md
+    - rules/shared-backend/ARCHITECTURE.md
+
+  backend:
+    - rules/backend-micronaut/KOTLIN.md
+    - rules/backend-micronaut/CONTROLLERS.md
+    - rules/backend-micronaut/SERVICES_AND_BEANS.md
+    - rules/backend-micronaut/API_DESIGN.md
+    - rules/backend-micronaut/RETROFIT_PLACEMENT.md
+    - rules/database/SCHEMA.md
+    - rules/database/ORM_AND_REPO.md
+    - rules/database/TRANSACTIONS.md
+
+  frontend: []
+
+file-types:
+  backend: [".kt"]
+  frontend: []
+  migration: [".sql"]
+  config: [".yaml", ".yml", ".json", ".toml"]
+
+review-stages:
+  - name: correctness
+    description: "Does the code match the spec? Edge cases handled?"
+    enabled: true
+
+  - name: stack-conventions
+    description: "Follows Kotlin/Micronaut idioms — coroutines, Either, DI"
+    enabled: true
+
+  - name: test-coverage
+    description: "Tests exist, are independent, cover edge cases"
+    enabled: true
+
+  - name: architecture
+    description: "Proper layer separation — Controller → Manager → Repository"
+    enabled: true
+
+  - name: database-api
+    description: "Schema rules, Exposed ORM patterns, API design"
+    enabled: true
+
+  - name: security
+    description: "Auth, injection, data exposure, OWASP top 10"
+    enabled: true
+
+  - name: documentation-gaps
+    description: "New patterns that should be documented"
+    enabled: true
+
+commands:
+  test:
+    backend: "./gradlew test"
+    frontend: ""
+  build:
+    backend: "./gradlew build"
+    frontend: ""
+  lint:
+    backend: "./gradlew ktlintCheck"
+    frontend: ""
+
+skill-routing:
+  database-migration: database-patterns
+  new-endpoint: api-endpoint-creator
+  backend-code: kotlin-best-practices
+  writing-tests: testing-strategies
+  security: security-checklist

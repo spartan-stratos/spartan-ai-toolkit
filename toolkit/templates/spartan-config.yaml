@@ -1,0 +1,164 @@
+# .spartan/config.yaml — Configurable Rules for Spartan AI Toolkit
+#
+# This file tells the toolkit which rules to check during build, review,
+# and other workflows. Without this file, the toolkit auto-detects your
+# stack and uses default rules.
+#
+# Generate this file: /spartan:init-rules
+# Validate this file: /spartan:lint-rules
+# Auto-detect rules from code: /spartan:scan-rules
+
+# ─── Stack & Architecture ───────────────────────────────────────────
+
+# Your tech stack. Used for auto-routing skills and review stages.
+# Built-in: kotlin-micronaut, react-nextjs, go-standard, python-django,
+#           python-fastapi, java-spring, typescript-node
+# Or set to "custom" and define everything yourself.
+stack: custom
+
+# Architecture pattern. Guides how build plans tasks and review checks layers.
+# Built-in: layered, hexagonal, clean, mvc, custom
+architecture: layered
+
+# ─── Inherit from a Profile (optional) ──────────────────────────────
+
+# Start from a built-in profile and customize on top.
+# Profiles live in toolkit/profiles/ — each has sensible defaults.
+# extends: kotlin-micronaut
+
+# ─── Rules ──────��───────────────────────────────────────────────────
+
+# Rules are markdown files that the reviewer reads before checking code.
+# Paths are relative to the project root (or ~/.claude/ for global rules).
+#
+# Group rules by mode. During review:
+#   backend mode  → backend + shared rules
+#   frontend mode → frontend + shared rules
+#   full-stack    → all rules
+
+rules:
+  shared: []
+    # - rules/core/NAMING_CONVENTIONS.md
+
+  backend: []
+    # - rules/backend/CONTROLLERS.md
+    # - rules/backend/ERROR_HANDLING.md
+    # - rules/database/SCHEMA.md
+
+  frontend: []
+    # - rules/frontend/COMPONENTS.md
+    # - rules/frontend/STATE_MANAGEMENT.md
+
+# ─── Override Rules (when extending a profile) ──────────────────────
+
+# Use these to customize an inherited profile without rewriting everything.
+# Only works when "extends" is set above.
+
+# rules-add:
+#   backend:
+#     - rules/custom/OUR_AUTH_RULES.md
+
+# rules-remove:
+#   backend:
+#     - rules/backend-micronaut/RETROFIT_PLACEMENT.md
+
+# rules-override:
+#   backend:
+#     rules/database/SCHEMA.md: rules/custom/OUR_SCHEMA.md
+
+# ─── Conditional Rules (advanced) ───────���───────────────────────────
+
+# Rules that only apply to files matching a glob pattern.
+# Useful for monorepos or projects with mixed concerns.
+
+# conditional-rules:
+#   - rule: rules/backend/BATCH_RULES.md
+#     applies-to: "src/**/batch/**"
+#   - rule: rules/database/SCHEMA.md
+#     applies-to: "*.sql"
+#   - rule: rules/custom/API_V2_RULES.md
+#     applies-to: "src/api/v2/**"
+
+# ─── File Type Mapping ──────────────────────────────────────────────
+
+# Maps file extensions to modes. Used for auto-detecting which rules
+# to apply when reviewing a specific file.
+
+file-types:
+  backend: [".kt", ".java", ".go", ".py", ".rb", ".rs", ".cs"]
+  frontend: [".tsx", ".ts", ".jsx", ".js", ".vue", ".svelte"]
+  migration: [".sql"]
+  config: [".yaml", ".yml", ".json", ".toml"]
+
+# ─── Review Stages ──────────────────────────────────────────────────
+
+# Which stages to run during build review and /spartan:review.
+# Remove stages you don't need. Add custom stages at the end.
+# Order matters — stages run top to bottom.
+
+review-stages:
+  - name: correctness
+    description: "Does the code match the spec? Edge cases handled?"
+    enabled: true
+
+  - name: stack-conventions
+    description: "Follows stack-specific patterns and idioms"
+    enabled: true
+
+  - name: test-coverage
+    description: "Tests exist, are independent, cover edge cases"
+    enabled: true
+
+  - name: architecture
+    description: "Proper layer separation, no logic in wrong layers"
+    enabled: true
+
+  - name: database-api
+    description: "Schema rules, API design, input validation"
+    enabled: true
+
+  - name: security
+    description: "Auth, injection, data exposure, OWASP top 10"
+    enabled: true
+
+  - name: documentation-gaps
+    description: "New patterns that should be documented"
+    enabled: true
+
+  # Add your own stages:
+  # - name: performance
+  #   description: "Check for N+1 queries, unnecessary allocations"
+  #   enabled: true
+  # - name: observability
+  #   description: "Logging, metrics, tracing present for new endpoints"
+  #   enabled: true
+
+# ─── Build Commands ─────────────────────────────────────────────────
+
+# Override the test and build commands for your stack.
+# These are used in /spartan:build Stage 3 verification.
+
+commands:
+  test:
+    backend: ""     # e.g., "./gradlew test", "go test ./...", "pytest"
+    frontend: ""    # e.g., "npm test", "yarn vitest"
+  build:
+    backend: ""     # e.g., "./gradlew build", "go build ./..."
+    frontend: ""    # e.g., "npm run build", "yarn build"
+  lint:
+    backend: ""     # e.g., "./gradlew ktlintCheck", "golangci-lint run"
+    frontend: ""    # e.g., "npm run lint", "eslint ."
+
+# ─── Skill Routing ─────────��────────────────────────────────────────
+
+# Map work types to skills. During build, the toolkit calls the right
+# skill based on what task it's working on.
+# Comment out skills you don't have installed.
+
+# skill-routing:
+#   database-migration: database-patterns
+#   new-endpoint: api-endpoint-creator
+#   backend-code: kotlin-best-practices
+#   writing-tests: testing-strategies
+#   ui-components: ui-ux-pro-max
+#   security: security-checklist

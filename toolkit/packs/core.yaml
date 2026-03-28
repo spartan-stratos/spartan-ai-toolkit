@@ -15,6 +15,9 @@ commands:
   - update
   - pr-ready
   - init-project
+  - init-rules
+  - scan-rules
+  - lint-rules
   - careful
   - freeze
   - unfreeze

@@ -1,0 +1,71 @@
+# TypeScript + Node.js backend stack
+# Express/Fastify, Zod validation, Jest/Vitest, strict TypeScript
+
+stack: typescript-node
+architecture: layered
+
+rules:
+  shared:
+    - rules/core/NAMING_CONVENTIONS.md
+
+  backend:
+    - rules/typescript-node/CONTROLLERS.md
+    - rules/typescript-node/SERVICES.md
+    - rules/typescript-node/VALIDATION.md
+    - rules/typescript-node/ERROR_HANDLING.md
+    - rules/typescript-node/TESTING.md
+    - rules/typescript-node/TYPESCRIPT.md
+
+  frontend: []
+
+file-types:
+  backend: [".ts", ".js"]
+  frontend: []
+  migration: [".sql"]
+  config: [".yaml", ".yml", ".json", ".toml"]
+
+review-stages:
+  - name: correctness
+    description: "Does the code match the spec? Edge cases handled?"
+    enabled: true
+
+  - name: stack-conventions
+    description: "Follows Node.js/TypeScript idioms — strict mode, no any"
+    enabled: true
+
+  - name: test-coverage
+    description: "Jest/Vitest tests, supertest for routes, edge cases"
+    enabled: true
+
+  - name: architecture
+    description: "Proper layer separation — routes → services → repositories"
+    enabled: true
+
+  - name: database-api
+    description: "Schema rules, query patterns, API design"
+    enabled: true
+
+  - name: security
+    description: "Input validation, auth middleware, OWASP top 10"
+    enabled: true
+
+  - name: documentation-gaps
+    description: "New patterns that should be documented"
+    enabled: true
+
+commands:
+  test:
+    backend: "npm test"
+    frontend: ""
+  build:
+    backend: "npm run build"
+    frontend: ""
+  lint:
+    backend: "npm run lint"
+    frontend: ""
+
+skill-routing:
+  database-migration: database-patterns
+  backend-code: software-architecture
+  writing-tests: testing-strategies
+  security: security-checklist
