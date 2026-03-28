@@ -130,23 +130,28 @@ npx @c0x12c/spartan-ai-toolkit@latest --local --agent=copilot      # rules only
 
 ## Configure Your Rules
 
-After installing, set up rules for your stack. This is what makes the build and review commands check your coding standards.
-
-### Quick start: pick a profile
+**This is automatic.** When you install, the CLI generates `.spartan/config.yaml` from the best matching profile for your packs. Build and review commands use it right away &mdash; no extra setup needed.
 
 ```
-/spartan:init-rules
+npx @c0x12c/spartan-ai-toolkit@latest --local --packs=backend-micronaut
+
+[1/6] Assembling CLAUDE.md...
+[2/6] Installing commands...
+[3/6] Installing rules...
+[4/6] Installing skills...
+[5/6] Installing agents...
+[6/6] Generated .spartan/config.yaml from kotlin-micronaut profile   <-- auto-generated
 ```
 
-This wizard detects your stack, lets you pick a profile, and generates `.spartan/config.yaml`. Takes 2 minutes.
-
-Or jump straight to a profile:
+### Want a different stack? Switch profiles.
 
 ```
 /spartan:init-rules go-standard
 /spartan:init-rules python-fastapi
 /spartan:init-rules java-spring
 ```
+
+This wizard detects your stack, lets you pick a profile, and regenerates `.spartan/config.yaml`.
 
 ### What's in the config?
 

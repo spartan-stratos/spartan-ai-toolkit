@@ -73,6 +73,41 @@ cd "$REPO_PATH/toolkit" && ./scripts/setup.sh --global
 
 ---
 
+## Step 4.5: Generate config if missing
+
+After the install finishes, check if `.spartan/config.yaml` exists:
+
+```bash
+ls .spartan/config.yaml 2>/dev/null || ls ~/.spartan/config.yaml 2>/dev/null
+```
+
+**If no config exists**, generate one from the installed packs:
+
+1. Read the saved packs file:
+```bash
+cat ~/.claude/.spartan-packs 2>/dev/null || cat .claude/.spartan-packs 2>/dev/null
+```
+
+2. Pick the matching profile:
+   - Has `backend-micronaut` → copy `toolkit/profiles/kotlin-micronaut.yaml`
+   - Has `frontend-react` → copy `toolkit/profiles/react-nextjs.yaml`
+   - Has `backend-nodejs` → copy `toolkit/profiles/typescript-node.yaml`
+   - Has `backend-python` → copy `toolkit/profiles/python-fastapi.yaml`
+   - None of the above → copy `toolkit/profiles/custom.yaml`
+
+3. Copy the profile:
+```bash
+mkdir -p .spartan 2>/dev/null || mkdir -p ~/.spartan
+cp "$REPO_PATH/toolkit/profiles/{profile}.yaml" .spartan/config.yaml 2>/dev/null || \
+cp "$REPO_PATH/toolkit/profiles/{profile}.yaml" ~/.spartan/config.yaml
+```
+
+Tell the user: "Generated `.spartan/config.yaml` from {profile} profile. Edit it to customize rules and review stages."
+
+**If config already exists**, skip this step.
+
+---
+
 ## Step 5: Confirm
 
 After setup completes, tell the user:
