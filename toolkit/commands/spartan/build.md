@@ -165,7 +165,7 @@ If user picks B → continue to Plan.
 
 If user picks C → read the Figma reference and use it as the design source.
 
-**Auto mode on?** → Skip for small UI changes (adding a column to a table, a toggle). Run for new screens/pages.
+**Auto mode on?** → Still ask this question. Design skipping is the user's call, not yours. The only exception: if the ONLY UI change is a single field addition to an existing component (e.g., adding a column to a table), skip silently.
 
 ---
 
@@ -243,33 +243,63 @@ Write the first failing test for Task 1. Show it fails.
 
 ## Stage 3: Implement
 
-### Agent Teams boost (if enabled)
+### Auto-parallelize with Agent Teams
 
 ```bash
 echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 ```
 
-**If Agent Teams is enabled AND the plan has 4+ tasks AND the feature is full-stack:**
+**If Agent Teams is enabled:** Look at the plan and auto-detect parallelism. If 2+ tasks in the plan can run at the same time (no dependency between them), use Agent Teams automatically. Don't ask — just do it.
 
-Offer to parallelize implementation with Agent Teams:
-> "This has [N] tasks across backend and frontend. Want me to spin up a build team?
->
-> I'd go with **A** — parallel tracks save time on full-stack work.
->
-> - **A) Build team** — one backend agent + one frontend agent, working in parallel (uses more tokens)
-> - **B) Sequential** — I'll do all tasks one by one (cheaper, simpler)"
+**When to parallelize (auto-trigger):**
+- Full-stack: backend + frontend tracks are always parallel (frontend blocked only by its API dependency, not all backend tasks)
+- Backend-only with 4+ tasks: data-layer tasks vs API-layer tasks can often run in parallel
+- Frontend-only with 4+ tasks: independent components/pages can run in parallel
+- Any mode where the plan has 2+ tasks with no dependency on each other
 
-If user picks A:
-1. Use `TeamCreate` with name `build-{feature-slug}`
-2. Create tasks from the plan — backend tasks assigned to `backend-dev`, frontend tasks to `frontend-dev`
-3. Set `addBlockedBy` for frontend tasks that need backend API first
-4. Spawn two agents with `isolation: "worktree"`:
-   - **backend-dev** — gets backend tasks, relevant Kotlin/Micronaut rules
-   - **frontend-dev** — gets frontend tasks, relevant React/Next.js rules
-5. Monitor progress. When both finish, merge worktrees and run full test suite.
-6. After completion, use `TeamDelete` to clean up.
+**When NOT to parallelize:**
+- Only 1-3 small sequential tasks — overhead isn't worth it
+- All tasks depend on each other in a chain
+- Agent Teams env var is not set
 
-If user picks B (or Agent Teams not enabled), continue with sequential execution below.
+**How to run it:**
+
+1. Check for design doc:
+```bash
+ls .planning/designs/*.md 2>/dev/null
+```
+
+2. Use `TeamCreate` with name `build-{feature-slug}`.
+
+3. Create tasks from the plan. Set `addBlockedBy` for real dependencies only.
+
+4. Spawn agents with `isolation: "worktree"`. Split by mode:
+
+**Full-stack** — two agents:
+- **backend-dev** — backend tasks, Kotlin/Micronaut rules
+- **frontend-dev** — frontend tasks, React/Next.js rules, design doc
+
+**Backend-only** — split by layer:
+- **data-layer** — migration + entity + repository
+- **api-layer** — service + controller (blocked by data-layer)
+
+**Frontend-only** — split by concern:
+- **components-dev** — types + components + API client
+- **pages-dev** — pages + routing + integration (blocked by components-dev)
+
+**Design doc handoff (MANDATORY for frontend/UI agents):**
+If a design doc exists at `.planning/designs/`, EVERY frontend/UI agent MUST get this in its prompt:
+```
+Design doc: .planning/designs/{feature}.md — read this FIRST.
+Follow the screen designs, component specs, and visual details exactly.
+Do NOT invent your own layout or design. The design was already reviewed and approved.
+```
+
+5. Monitor progress. When all agents finish, merge worktrees and run full test suite.
+
+6. `TeamDelete` to clean up.
+
+**If Agent Teams is NOT enabled** (env var not set), continue with sequential execution below.
 
 ### Sequential execution (default)
 
