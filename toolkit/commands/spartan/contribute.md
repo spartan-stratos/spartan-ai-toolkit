@@ -117,7 +117,7 @@ If the user asks for deeper analysis, group reports by command and show:
 | Command | Reports | Avg Score | Lowest | Top Issue |
 |---------|---------|-----------|--------|-----------|
 | /spartan:build | N | X.X | X | [most common complaint] |
-| /spartan:fix | N | X.X | X | [most common complaint] |
+| /spartan:debug | N | X.X | X | [most common complaint] |
 
 {% else %}
 ## Unknown argument: {{ args[0] }}

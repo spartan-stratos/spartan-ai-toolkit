@@ -403,45 +403,130 @@ npm test && npm run build
 
 **This is NOT a self-review.** Spawn a separate review agent to get a fresh perspective. The reviewer finds issues, you fix them, repeat until clean.
 
-### Step 1: Spawn the review agent
+### Step 1: Gather review context
 
-Use the `Agent` tool to spawn a reviewer:
+Before spawning the reviewer, collect everything it needs:
+
+```bash
+# 1. Get changed files by type
+git diff main...HEAD --name-only | grep '\.kt$'   # backend files
+git diff main...HEAD --name-only | grep '\.tsx\?$' # frontend files
+git diff main...HEAD --name-only | grep '\.sql$'   # migration files
+
+# 2. Find spec and plan for this feature
+ls .planning/specs/*.md .planning/plans/*.md .planning/designs/*.md 2>/dev/null
+
+# 3. Find installed rules (pick based on mode)
+ls rules/backend-micronaut/ rules/database/ rules/frontend-react/ 2>/dev/null
+# Also check ~/.claude/rules/ if project rules/ not found
+```
+
+### Step 2: Spawn the review agent
+
+Use the `Agent` tool to spawn a reviewer. **The prompt changes based on mode.**
+
+Build the prompt from these blocks — include only what matches the mode:
 
 ```
 Agent:
   name: "reviewer"
-  subagent_type: "phase-reviewer"  (or "general-purpose" if phase-reviewer not available)
+  subagent_type: "phase-reviewer"
   prompt: |
     You are reviewing code changes for the feature: {feature name}.
 
-    Review scope:
-    - Backend code: {list changed backend files}
-    - Frontend code: {list changed frontend files}
+    ## What changed
+    - Backend files: {list .kt files from git diff, or "none"}
+    - Frontend files: {list .tsx/.ts files from git diff, or "none"}
+    - Migration files: {list .sql files from git diff, or "none"}
     - Design doc: {path if exists, or "none"}
 
-    Run `git diff main...HEAD` to see all changes.
+    ## Spec and plan
+    - Spec: {path to spec file, or inline scope block from Stage 1}
+    - Plan: {path to plan file, or inline plan from Stage 3}
+    Check that the code matches what was specified and planned. Flag missing pieces.
 
-    Review checklist:
-    **Code quality:** SOLID, clean code, no duplication, proper error handling
-    **Tests:** adequate coverage, edge cases, test quality
-    **Security:** auth, input validation, injection risks
-    **Stack conventions:** {backend: Kotlin/Micronaut rules | frontend: React/Next.js rules | both}
-    **Design compliance:** if a design doc exists, check that UI matches it
+    ## Rules to check against
+    Read these rule files BEFORE reviewing code. They are the source of truth.
 
-    For each issue found, report:
-    - File and line
+    {IF backend or full-stack mode, include:}
+    **Backend rules (read all of these):**
+    - `rules/backend-micronaut/KOTLIN.md` — null safety, Either error handling, coroutines, no `!!`
+    - `rules/backend-micronaut/CONTROLLERS.md` — thin controllers, @ExecuteOn, @Secured, delegate to Manager
+    - `rules/backend-micronaut/API_DESIGN.md` — query params only, RPC-style URLs, no path params
+    - `rules/backend-micronaut/SERVICES_AND_BEANS.md` — Manager returns Either, service layer patterns
+    - `rules/database/SCHEMA.md` — TEXT not VARCHAR, no FK, soft deletes, UUID PKs, standard columns
+    - `rules/database/ORM_AND_REPO.md` — Exposed ORM, repository pattern
+    - `rules/database/TRANSACTIONS.md` — transaction(db.primary) {} for multi-table ops
+
+    {IF frontend or full-stack mode, include:}
+    **Frontend rules (read all of these):**
+    - `rules/frontend-react/FRONTEND.md` — build check before commit, API case conversion, null safety, optimistic updates
+
+    {IF design doc exists, include:}
+    **Design compliance:**
+    - Read the design doc at {path}. Check that UI matches the approved design.
+    - Flag any component that looks different from the design spec.
+
+    ## Review stages (check all that apply)
+
+    **Stage 1 — Correctness & Requirements**
+    - Does the code match the spec? Any missing requirements?
+    - Are all edge cases handled?
+    - Is error handling using Either (not thrown exceptions)?
+
+    **Stage 2 — Stack Conventions**
+    {backend}: Controllers thin? Manager has business logic? Either<ClientException, T>? No `!!`? @ExecuteOn on blocking calls? @Secured on controllers?
+    {frontend}: Strict TypeScript? No `any`? Hooks rules followed? Server vs client components correct?
+
+    **Stage 3 — Test Coverage**
+    - New endpoints have @MicronautTest integration tests?
+    - Tests are independent (no order dependency)?
+    - Edge cases tested? Happy path + error paths?
+    - Frontend: components tested with Testing Library?
+
+    **Stage 4 — Architecture & Clean Code**
+    - Layered: Controller → Manager → Service/Repository?
+    - No business logic in controllers or repositories?
+    - Functions small and focused? No deep nesting?
+    - No duplication, no dead code?
+
+    **Stage 5 — Database & API**
+    - Migration uses TEXT not VARCHAR? No FK constraints?
+    - Soft delete with deleted_at? Standard columns (id, created_at, updated_at, deleted_at)?
+    - UUID primary keys? Input validation on public endpoints?
+    - API URLs follow RPC style?
+
+    **Stage 6 — Security**
+    - Auth checks on all endpoints?
+    - Input validated and sanitized?
+    - No sensitive data logged or exposed in responses?
+    - No SQL injection, XSS, or command injection risks?
+
+    **Stage 7 — Documentation Gaps**
+    - New pattern used that should be documented? → flag for rules update
+    - New convention established? → flag for .memory/patterns/
+    - Recurring issue that should become a rule? → flag it
+
+    ## Output format
+
+    For each issue:
+    - File and line number
     - What's wrong
+    - Which rule it breaks (with rule file reference)
     - Severity: HIGH (must fix) / MEDIUM (should fix) / LOW (nice to have)
     - Suggested fix
 
-    End with a verdict: **PASS** or **NEEDS CHANGES** (with the list of HIGH/MEDIUM issues).
+    End with:
+    - **PASS** or **NEEDS CHANGES** (list all HIGH/MEDIUM issues)
+    - **Documentation updates needed** (list any rule/pattern updates from Stage 7, or "none")
+    - **What's clean** (always include — praise good code)
 ```
 
-### Step 2: Fix loop
+### Step 3: Fix loop
 
 When the reviewer reports back:
 
-**If PASS** → continue to Ship.
+**If PASS** → save any documentation updates the reviewer flagged, then continue to Ship.
 
 **If NEEDS CHANGES:**
 
@@ -458,23 +543,42 @@ When the reviewer reports back:
 **Max 3 review rounds.** If still failing after 3 rounds, stop and ask the user:
 > "Review found issues I can't fully fix. Here's what's left: [list]. Want to continue anyway or address these manually?"
 
-### Step 3: Parallel review with Agent Teams
+### Step 4: Capture review learnings
+
+After the reviewer says PASS, check its output for:
+
+- **Documentation updates needed** → save to `.memory/knowledge/` so the next build knows
+- **New pattern flagged** → save to `.memory/patterns/`
+- **Rule violation that keeps showing up** → note it for the user to consider adding to rules
+
+### Step 5: Parallel review with Agent Teams
 
 ```bash
 echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 ```
 
-**If Agent Teams is enabled**, always spawn parallel review agents for deeper coverage:
+**If Agent Teams is enabled**, spawn parallel review agents for deeper coverage. Each agent gets the same rule files from Step 1, but focuses on its area:
 
 ```
-Agent 1: "quality-reviewer" — code design, SOLID, conventions, stack rules
-Agent 2: "test-reviewer" — test coverage, edge cases, test quality
-Agent 3: "security-reviewer" (if auth/input/data code changed) — security checklist
+Agent 1: "quality-reviewer"
+  Focus: Stages 1-2, 4 (correctness, stack conventions, architecture)
+  Rules: all backend or frontend rules based on mode
+  Extra: check against spec and plan
+
+Agent 2: "test-reviewer"
+  Focus: Stage 3 (test coverage, edge cases, test quality)
+  Rules: testing-strategies skill patterns
+  Extra: check test independence, proper assertions, no test duplication
+
+Agent 3: "security-reviewer" (only if auth/input/data code changed)
+  Focus: Stage 6 (security)
+  Rules: security-checklist skill + OWASP top 10
+  Extra: check for injection, auth bypass, data exposure
 ```
 
-All agents review at the same time. Combine their findings. All must PASS before moving to Ship. If any says NEEDS CHANGES → fix loop applies to the combined findings.
+All agents review at the same time. Combine their findings. All must PASS before moving to Ship. If any says NEEDS CHANGES → fix loop (Step 3) applies to the combined findings.
 
-**If Agent Teams is NOT enabled**, use a single review agent (Step 1 above).
+**If Agent Teams is NOT enabled**, use a single review agent (Steps 1-2 above).
 
 ---
 

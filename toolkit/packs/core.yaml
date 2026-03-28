@@ -8,12 +8,11 @@ commands:
   - spec
   - plan
   - build
-  - fix
+  - debug
   - onboard
   - daily
   - context-save
   - update
-  - debug
   - pr-ready
   - init-project
   - careful
