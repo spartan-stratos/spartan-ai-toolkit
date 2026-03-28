@@ -147,6 +147,14 @@ npx @c0x12c/spartan-ai-toolkit@latest --packs=frontend-react
 npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,frontend-react
 ```
 
+### "I manage AWS infrastructure with Terraform"
+
+```bash
+npx @c0x12c/spartan-ai-toolkit@latest --packs=infrastructure
+```
+
+Terraform scaffolding (ECS + EKS), module creation, security audits, drift detection, cost optimization. 7 rules, 5 skills, 2 agents.
+
 ### "Multi-week project"
 
 ```bash
@@ -180,6 +188,7 @@ npx @c0x12c/spartan-ai-toolkit@latest --all
 | **frontend-react** | Frontend | &mdash; | React + Next.js: commands, rules, skills |
 | **project-mgmt** | Planning | &mdash; | Project lifecycle, phases, workstreams |
 | **product** | Planning | &mdash; | Product thinking before building |
+| **infrastructure** | Ops | &mdash; | Terraform + AWS: scaffold, review, security audit, drift, cost |
 | **ops** | Ship | &mdash; | Deploy + environment management |
 | **research** | Research | product | Full startup pipeline: idea to investor |
 
@@ -243,6 +252,8 @@ Skills are the domain experts the leaders call on. You don't pick them &mdash; t
 | `design-workflow` | During design step (anti-AI-generic rules) |
 | `testing-strategies` | During build (test tasks) |
 | `security-checklist` | During review (security scan) |
+| `terraform-best-practices` | During build (Terraform files) |
+| `terraform-security-audit` | During review (infrastructure security) |
 
 A skill alone is just a prompt file. Inside a workflow, it's the right knowledge at the right moment.
 
@@ -358,6 +369,19 @@ Leaders call these automatically, but you can also run them directly.
 | `lean-canvas` | Fill out a 9-block Lean Canvas |
 | `brainstorm` | Generate and rank ideas |
 
+### Infrastructure (infrastructure pack)
+| Command | What it does |
+|---------|-------------|
+| `tf-scaffold "service"` | Scaffold service-level Terraform (ECS or EKS) |
+| `tf-module "name"` | Create/extend Terraform modules |
+| `tf-review` | PR review for Terraform changes (8-stage checklist) |
+| `tf-plan "env"` | Guided plan with destructive change flagging |
+| `tf-deploy "env"` | Deployment checklist with pre/post verification |
+| `tf-import "resource"` | Import existing AWS resources into state |
+| `tf-drift "env"` | Detect and categorize infrastructure drift |
+| `tf-cost` | Cost estimation and optimization guidance |
+| `tf-security` | Security audit (IAM, network, encryption, secrets) |
+
 ### Ship (ops pack)
 | Command | What it does |
 |---------|-------------|
@@ -387,6 +411,7 @@ Rules and skills are tuned for:
 |-------|-----------|
 | Backend | Kotlin + Micronaut |
 | Frontend | React + Next.js + TypeScript |
+| Infrastructure | Terraform + AWS (EKS/ECS, RDS, ElastiCache, S3) |
 | Database | PostgreSQL |
 | CI/CD | GitHub Actions |
 
