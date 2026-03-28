@@ -364,12 +364,15 @@ Spin up a parallel implementation team for a feature.
 
 ### Step 1: Understand the feature
 
-Check for existing spec/plan:
+Check for existing artifacts:
 ```bash
 ls .planning/specs/ .planning/PLAN.md 2>/dev/null
+ls .planning/designs/*.md 2>/dev/null
 ```
 
 If no spec exists, tell user: "No spec found. Run `/spartan:spec` first, or describe the feature and I'll split it into parallel work."
+
+If a design doc exists, note its path — you'll pass it to frontend/UI agents in Step 5.
 
 ### Step 2: Detect stack and split work
 
@@ -402,6 +405,7 @@ Each builder agent gets:
 - Instructions to follow TDD
 - References to relevant rules from installed packs
 - `.memory/` context
+- **Design doc path** (if `.planning/designs/*.md` exists) — frontend/UI agents MUST read the design doc before building. Include in prompt: "Read `.planning/designs/{feature}.md` FIRST. Follow screen designs and component specs exactly."
 
 ### Step 6: Integration
 
