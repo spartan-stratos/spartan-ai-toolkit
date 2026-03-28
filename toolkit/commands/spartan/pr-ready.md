@@ -27,16 +27,18 @@ If uncommitted changes exist → commit or stash before continuing.
 ## Step 2: Rebase onto Main
 
 ```bash
-# Fetch latest
+# Fetch latest and detect default branch
 git fetch origin
+DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+[ -z "$DEFAULT_BRANCH" ] && DEFAULT_BRANCH=$(git rev-parse --verify origin/master >/dev/null 2>&1 && echo master || echo main)
 
-# See what's new on main
-git log HEAD..origin/main --oneline
+# See what's new on the default branch
+git log HEAD..origin/$DEFAULT_BRANCH --oneline
 ```
 
-If main has new commits:
+If the default branch has new commits:
 ```bash
-git rebase origin/main
+git rebase origin/$DEFAULT_BRANCH
 ```
 
 **Conflict resolution:**

@@ -18,16 +18,34 @@ echo "Current version: $LOCAL_VER"
 echo "Repo path: $REPO_PATH"
 ```
 
-If `REPO_PATH` is empty or the directory doesn't exist, ask the user where they cloned `spartan-ai-toolkit`:
-"I don't know where the Spartan repo is. Where did you clone it? (e.g., `~/spartan-ai-toolkit`)"
+If `REPO_PATH` is empty or the directory doesn't exist, try to find it:
+
+```bash
+# Common locations
+for dir in ~/spartan-ai-toolkit ~/Documents/Code/Spartan/spartan-ai-toolkit ~/Code/spartan-ai-toolkit; do
+  [ -d "$dir/toolkit" ] && echo "Found: $dir" && break
+done
+```
+
+If still not found, ask the user: "Where did you clone spartan-ai-toolkit?"
 
 ---
 
-## Step 2: Check for updates
+## Step 2: Detect default branch and check for updates
 
 ```bash
-cd "$REPO_PATH" && git fetch origin main --quiet 2>/dev/null
-REMOTE_VER=$(git show origin/main:toolkit/VERSION 2>/dev/null || echo "unknown")
+cd "$REPO_PATH"
+
+# Detect the default branch (master or main)
+DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+if [ -z "$DEFAULT_BRANCH" ]; then
+  # Fallback: check which branch exists
+  git rev-parse --verify origin/master >/dev/null 2>&1 && DEFAULT_BRANCH="master" || DEFAULT_BRANCH="main"
+fi
+echo "Default branch: $DEFAULT_BRANCH"
+
+git fetch origin "$DEFAULT_BRANCH" --quiet 2>/dev/null
+REMOTE_VER=$(git show "origin/$DEFAULT_BRANCH:toolkit/VERSION" 2>/dev/null || echo "unknown")
 echo "Local:  $LOCAL_VER"
 echo "Remote: $REMOTE_VER"
 ```
@@ -56,7 +74,7 @@ Show the user their current packs and ask:
 ## Step 4: Pull and reinstall
 
 ```bash
-cd "$REPO_PATH" && git pull origin main
+cd "$REPO_PATH" && git pull origin "$DEFAULT_BRANCH"
 ```
 
 Then run the setup script with saved packs:

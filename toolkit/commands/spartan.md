@@ -63,7 +63,9 @@ ls .planning/PROJECT.md 2>/dev/null && echo "GSD_ACTIVE"
 LOCAL_VER=$(cat ~/.claude/.spartan-version 2>/dev/null || echo "")
 REPO_PATH=$(cat ~/.claude/.spartan-repo 2>/dev/null || echo "")
 if [ -n "$REPO_PATH" ] && [ -d "$REPO_PATH/.git" ]; then
-  REMOTE_VER=$(cd "$REPO_PATH" && git fetch origin main --quiet 2>/dev/null && git show origin/main:toolkit/VERSION 2>/dev/null || echo "")
+  DEFAULT_BRANCH=$(cd "$REPO_PATH" && git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+  [ -z "$DEFAULT_BRANCH" ] && DEFAULT_BRANCH=$(cd "$REPO_PATH" && git rev-parse --verify origin/master >/dev/null 2>&1 && echo master || echo main)
+  REMOTE_VER=$(cd "$REPO_PATH" && git fetch origin "$DEFAULT_BRANCH" --quiet 2>/dev/null && git show "origin/$DEFAULT_BRANCH:toolkit/VERSION" 2>/dev/null || echo "")
   if [ -n "$REMOTE_VER" ] && [ -n "$LOCAL_VER" ] && [ "$REMOTE_VER" != "$LOCAL_VER" ]; then
     echo "SPARTAN_UPDATE_AVAILABLE=$REMOTE_VER"
   fi
