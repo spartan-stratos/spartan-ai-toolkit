@@ -72,20 +72,22 @@ Three ways to install. Pick one.
 
 ### Option 1: npx (recommended)
 
+Run this from your project root:
+
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest
+npx @c0x12c/spartan-ai-toolkit@latest --local
 ```
 
-This opens an interactive menu. Pick your AI tool and packs. Done in 30 seconds.
+This opens an interactive menu. Pick your AI tool and packs. Done in 30 seconds. Files go into `.claude/` in your project &mdash; visible, reviewable, and shared with your team via git.
 
 You can also skip the menu:
 
 ```bash
 # Pick specific packs
-npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,frontend-react
+npx @c0x12c/spartan-ai-toolkit@latest --local --packs=backend-micronaut,frontend-react
 
 # Install everything
-npx @c0x12c/spartan-ai-toolkit@latest --all
+npx @c0x12c/spartan-ai-toolkit@latest --local --all
 ```
 
 ### Option 2: Setup script
@@ -93,17 +95,19 @@ npx @c0x12c/spartan-ai-toolkit@latest --all
 ```bash
 git clone https://github.com/spartan-stratos/spartan-ai-toolkit.git
 cd spartan-ai-toolkit/toolkit
-chmod +x scripts/setup.sh && ./scripts/setup.sh --global
+chmod +x scripts/setup.sh && ./scripts/setup.sh --local
 ```
 
 ### Option 3: Claude Code plugin
 
 Search for **"Spartan AI Toolkit"** in the Claude Code plugin marketplace.
 
-### Global vs Local
+### Local vs Global
 
-- **`--global`** (default) &mdash; installs to `~/.claude/`, works across all your projects
-- **`--local`** &mdash; installs to `./.claude/` in current project only
+- **`--local`** (recommended) &mdash; installs to `./.claude/` in your project. Your team can see, review, and version-control the setup. Everyone gets the same commands and rules.
+- **`--global`** &mdash; installs to `~/.claude/`, works across all your projects. Good for solo devs who want the same setup everywhere.
+
+> **Why local?** Global installs are hidden in your home directory. Teammates can't see what's installed, can't review changes, and each person has to install separately. Local keeps everything in the repo where it belongs.
 
 ### Not using Claude Code?
 
@@ -130,7 +134,7 @@ Don't overthink it &mdash; find your situation below and copy the command.
 ### "I build Kotlin + Micronaut backends"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut
+npx @c0x12c/spartan-ai-toolkit@latest --local --packs=backend-micronaut
 ```
 
 Pulls in `database` and `shared-backend` automatically. 9 rules, 7 skills, 2 agents.
@@ -138,19 +142,19 @@ Pulls in `database` and `shared-backend` automatically. 9 rules, 7 skills, 2 age
 ### "I build React + Next.js frontends"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --packs=frontend-react
+npx @c0x12c/spartan-ai-toolkit@latest --local --packs=frontend-react
 ```
 
 ### "Full-stack (Kotlin + Next.js)"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,frontend-react
+npx @c0x12c/spartan-ai-toolkit@latest --local --packs=backend-micronaut,frontend-react
 ```
 
 ### "Multi-week project"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,project-mgmt
+npx @c0x12c/spartan-ai-toolkit@latest --local --packs=backend-micronaut,project-mgmt
 ```
 
 Adds milestone tracking, phases, parallel workstreams on top of your stack pack.
@@ -158,7 +162,7 @@ Adds milestone tracking, phases, parallel workstreams on top of your stack pack.
 ### "Exploring startup ideas"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --packs=research
+npx @c0x12c/spartan-ai-toolkit@latest --local --packs=research
 ```
 
 Full pipeline: brainstorm &rarr; validate &rarr; research &rarr; pitch &rarr; outreach.
@@ -166,7 +170,7 @@ Full pipeline: brainstorm &rarr; validate &rarr; research &rarr; pitch &rarr; ou
 ### "Give me everything"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --all
+npx @c0x12c/spartan-ai-toolkit@latest --local --all
 ```
 
 ### All Packs at a Glance
@@ -270,7 +274,7 @@ The AI forgets everything when you close the terminal. Agent memory fixes that.
 Rules cost zero tokens. They load automatically every session. The AI follows them without you asking.
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut
+npx @c0x12c/spartan-ai-toolkit@latest --local --packs=backend-micronaut
 # Now every session follows your Kotlin + Micronaut coding standards
 ```
 
