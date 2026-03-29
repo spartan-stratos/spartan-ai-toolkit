@@ -2,36 +2,17 @@
 # Copy this file to .spartan/build.yaml in your project and customize.
 # All fields are optional. Omit a field to use the default.
 
-# --- Worktree ---
-
-# Worktree isolation (default: true)
-# When true, /spartan:build creates a git worktree per feature.
-# Each terminal gets its own directory, branch, and PR — no conflicts.
-# Set to false to use simple git checkout (single terminal only).
-worktree: true
-
 # Branch prefix (default: "feature")
 # Controls the branch name: [prefix]/[slug] (e.g., "feature/user-auth")
 branch-prefix: "feature"
-
-# Extra directories to symlink into worktrees
-# Gitignored dirs (.planning, .memory, .handoff, .spartan) are always symlinked.
-# Add more here if your project has other shared gitignored dirs.
-# worktree-symlinks:
-#   - .env
-#   - config/local
-
-# --- Build stages ---
 
 # Max review-fix cycles before asking the user (default: 3)
 # max-review-rounds: 3
 
 # Stages to skip (use carefully — most stages exist for a reason)
-# Valid: spec, design, plan, review, ship
-# Note: review can never actually be skipped — it's always enforced
+# Valid: spec, design, plan, ship
+# Note: review can never be skipped — it's always enforced
 # skip-stages: []
-
-# --- Custom prompts ---
 
 # Custom instructions injected into build stages.
 # Claude reads these alongside the built-in workflow instructions.

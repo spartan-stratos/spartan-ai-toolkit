@@ -14,22 +14,23 @@ You decide which steps to run, which skills to call, and when to move forward. T
 ```
 SINGLE FEATURE:
 
-  Context → Spec → Design? → Plan → Implement → Review Agent → Fix → Ship
-     │        │        │        │        │            │          │       │
-  .memory/ Gate 1   Design   Gate 2   Gate 3    Spawn agent   Loop   Gate 4
-                    Gate                        fix until OK
+  Context → Spec → Design? → Plan+Worktree → Implement → Review Agent → Fix → Ship
+     │        │        │           │               │            │          │       │
+  .memory/ Gate 1   Design   git worktree       Gate 3    Spawn agent   Loop   Gate 4
+                    Gate     .worktrees/slug              fix until OK
 
 EPIC (multi-feature — auto-detected):
 
-  Context → Epic detected → Per feature: Spec/Design/Plan → Implement → Review Agent → Fix → Ship
-     │            │                │                             │            │          │       │
-  .planning/  read epic    fill gaps if needed          parallel by      Spawn agent  Loop   one PR
-  epics/                                                dependency       fix until OK
+  Context → Epic → Per feature: Spec/Design/Plan → Worktree → Implement → Review → Ship
+     │        │            │                           │            │          │       │
+  .planning/ read epic  fill gaps                git worktree  parallel    Loop   one PR
+  epics/                                        .worktrees/     by dep
 
-PARALLEL BUILDS (automatic — each build in its own worktree):
+PARALLEL (multiple terminals — automatic):
 
-  /spartan:build auth     → worktree .claude/worktrees/feature-auth/     → PR #1
-  /spartan:build payments → worktree .claude/worktrees/feature-payments/ → PR #2
+  Terminal 1: /spartan:build auth     → .worktrees/auth/     (feature/auth)     → PR #1
+  Terminal 2: /spartan:build payments → .worktrees/payments/  (feature/payments) → PR #2
+  (each gets its own worktree, branch, and PR — no conflicts, no manual setup)
 ```
 
 **Fast path:** For small work (< 1 day, ≤ 4 tasks), you do spec + plan inline. No separate commands needed.
@@ -51,9 +52,7 @@ PARALLEL BUILDS (automatic — each build in its own worktree):
 
 ---
 
-## FIRST: Load Build Config & Enter Worktree
-
-### Load project build config
+## FIRST: Load Build Config (silent — no questions)
 
 Check for a project-level build config that overrides default behavior:
 
@@ -65,11 +64,9 @@ If `.spartan/build.yaml` exists, read it and apply overrides. All fields are opt
 
 | Field | Default | What it does |
 |-------|---------|-------------|
-| `worktree` | `true` | Create a git worktree per build. Set `false` for single-terminal workflow. |
 | `branch-prefix` | `"feature"` | Branch name: `[prefix]/[slug]` (e.g., `feature/user-auth`) |
 | `max-review-rounds` | `3` | Max review-fix cycles before asking the user |
-| `skip-stages` | `[]` | Stages to skip. Valid: `spec`, `design`, `plan`, `review`, `ship` |
-| `worktree-symlinks` | `[]` | Extra gitignored dirs to symlink into worktrees |
+| `skip-stages` | `[]` | Stages to skip. Valid: `spec`, `design`, `plan`, `ship`. Never `review`. |
 | `prompts.spec` | — | Custom instructions injected after spec questions |
 | `prompts.plan` | — | Custom instructions injected into the plan stage |
 | `prompts.implement` | — | Custom instructions injected during implementation |
@@ -79,55 +76,6 @@ If `.spartan/build.yaml` exists, read it and apply overrides. All fields are opt
 **If config has `prompts.*` sections**, inject those instructions at the relevant stage. They run AFTER the built-in instructions.
 
 **If config has `skip-stages`**, skip those stages. But NEVER skip `review` even if listed — review is always mandatory.
-
-### Enter Worktree
-
-**Default: every build runs in a git worktree.** A worktree is a separate directory with its own branch — lets you run `/spartan:build` in multiple terminals without conflicts.
-
-**Check if already in a worktree:**
-
-```bash
-git rev-parse --show-toplevel 2>/dev/null
-git worktree list 2>/dev/null | head -3
-```
-
-If already in a worktree (not the main repo), skip — you're already isolated.
-
-**If `worktree: false` in config**, skip worktree creation. Use `git checkout -b` later in Stage 3 instead.
-
-**Otherwise, create a worktree now:**
-
-Generate a slug from the feature description (e.g., "user auth" → `user-auth`). Use `branch-prefix` from config (default: `feature`).
-
-```
-EnterWorktree(name: "[prefix]-[slug]")
-```
-
-This creates a worktree at `.claude/worktrees/[prefix]-[slug]/` with a new branch and switches your working directory there.
-
-**Symlink shared directories** — gitignored dirs don't appear in worktrees. Symlink them from the main repo:
-
-```bash
-MAIN_REPO="$(git worktree list | head -1 | awk '{print $1}')"
-SYMLINKS=".planning .memory .handoff .spartan"
-
-# Add extra symlinks from config (worktree-symlinks field)
-for dir in $SYMLINKS; do
-  [ -d "$MAIN_REPO/$dir" ] && [ ! -e "$dir" ] && ln -s "$MAIN_REPO/$dir" "$dir"
-done
-```
-
-> "Working in worktree: `[path]` on branch `[prefix]-[slug]`"
-
-**If `EnterWorktree` fails** (e.g., name conflict), fall back to manual worktree:
-
-```bash
-SLUG="[slug]"
-MAIN_REPO="$(pwd)"
-git worktree add "$MAIN_REPO/.worktrees/$SLUG" -b "feature/$SLUG" 2>/dev/null
-```
-
-Then tell the user: "Created worktree at `.worktrees/[slug]/`. Open a new terminal there and run `claude` + `/spartan:build`."
 
 ---
 
@@ -359,22 +307,46 @@ Uses skills: `ui-ux-pro-max`, frontend rules
 
 **CRITICAL: Full-stack means BOTH layers must complete.** Don't move to Gate 3 after finishing backend only. The plan must include frontend tasks and ALL tasks must be done before review. If the spec mentions UI changes, API responses shown to users, or any user-facing behavior — frontend tasks are mandatory.
 
-### Verify workspace
+### Create feature workspace
 
-Confirm you're in the right place:
+Each build runs in its own **git worktree** — a separate directory with its own branch. This happens automatically. The user doesn't set anything up. Multiple terminals running `/spartan:build` get separate worktrees, branches, and PRs.
 
-```bash
-pwd
-git branch --show-current
-```
-
-**If worktree is enabled (default):** You should already be in a worktree from the "FIRST" step. If not, go back and create one.
-
-**If `worktree: false` in config:** Create a branch now:
+Use `branch-prefix` from config (default: `feature`). Generate a slug from the feature name.
 
 ```bash
-git checkout -b feature/[slug]
+SLUG="[slug]"
+BRANCH="feature/$SLUG"
+MAIN_REPO="$(git rev-parse --show-toplevel)"
+WORKSPACE="$MAIN_REPO/.worktrees/$SLUG"
+
+# Create worktree (or reuse if resuming)
+if [ -d "$WORKSPACE" ]; then
+  echo "RESUMING: Worktree exists at $WORKSPACE"
+else
+  git worktree add "$WORKSPACE" -b "$BRANCH" 2>/dev/null || git worktree add "$WORKSPACE" "$BRANCH"
+fi
+
+# Symlink shared dirs (gitignored, won't appear in worktree)
+for dir in .planning .memory .handoff .spartan; do
+  [ -d "$MAIN_REPO/$dir" ] && [ ! -e "$WORKSPACE/$dir" ] && ln -s "$MAIN_REPO/$dir" "$WORKSPACE/$dir"
+done
+
+# Copy .env if exists (API keys, secrets)
+[ -f "$MAIN_REPO/.env" ] && [ ! -f "$WORKSPACE/.env" ] && cp "$MAIN_REPO/.env" "$WORKSPACE/.env"
+
+# Gitignore worktrees dir
+grep -qxF '.worktrees/' "$MAIN_REPO/.gitignore" 2>/dev/null || echo '.worktrees/' >> "$MAIN_REPO/.gitignore"
+
+echo "WORKSPACE=$WORKSPACE"
+echo "BRANCH=$BRANCH"
 ```
+
+**From this point, ALL work happens in `$WORKSPACE`:**
+- Bash commands: `cd $WORKSPACE && ./gradlew test`
+- File reads/writes: use `$WORKSPACE/src/...` absolute paths
+- Git operations: `git -C $WORKSPACE ...`
+
+> "Working in: `$WORKSPACE` on branch `$BRANCH`"
 
 **Custom plan prompts:** If `.spartan/build.yaml` has `prompts.plan`, apply those instructions now.
 
@@ -772,6 +744,20 @@ mkdir -p .memory/decisions .memory/patterns .memory/knowledge
 
 Update `.memory/index.md` if you saved anything.
 
+### Clean up worktree
+
+After PR is created, the worktree stays in case the user needs to push review fixes. Tell the user:
+
+> "PR created. Worktree at `.worktrees/[slug]` is still active for review fixes."
+
+When the user says the PR is merged:
+
+```bash
+MAIN_REPO="$(git worktree list | head -1 | awk '{print $1}')"
+git -C "$MAIN_REPO" worktree remove ".worktrees/[slug]" --force 2>/dev/null
+git -C "$MAIN_REPO" worktree prune 2>/dev/null
+```
+
 **GATE 4 — Done.**
 > "PR created: [link]. Here's what's in it: [summary]."
 
@@ -828,19 +814,29 @@ Agent(
 ```
 Collect results after all finish, then `TeamDelete()`.
 
-### Step 2: Sort by dependency
+### Step 2: Sort by dependency and create workspace
 
 Read the epic's Features table. Sort features by dependency order:
 - Features with no dependencies → can build first
 - Features that depend on others → build after their dependencies are done
 
-**If worktree enabled (default):** You should already be in a worktree from the "FIRST" step.
-**If `worktree: false`:** Create a branch: `git checkout -b feature/[epic-slug]`
+Create a worktree for the epic (same pattern as single-feature builds):
 
 ```bash
-pwd
-git branch --show-current
+SLUG="[epic-slug]"
+BRANCH="feature/$SLUG"
+MAIN_REPO="$(git rev-parse --show-toplevel)"
+WORKSPACE="$MAIN_REPO/.worktrees/$SLUG"
+
+git worktree add "$WORKSPACE" -b "$BRANCH" 2>/dev/null || git worktree add "$WORKSPACE" "$BRANCH"
+
+for dir in .planning .memory .handoff .spartan; do
+  [ -d "$MAIN_REPO/$dir" ] && [ ! -e "$WORKSPACE/$dir" ] && ln -s "$MAIN_REPO/$dir" "$WORKSPACE/$dir"
+done
+[ -f "$MAIN_REPO/.env" ] && [ ! -f "$WORKSPACE/.env" ] && cp "$MAIN_REPO/.env" "$WORKSPACE/.env"
 ```
+
+All epic work happens in `$WORKSPACE`.
 
 ### Step 3: Implement in dependency order
 
@@ -909,13 +905,19 @@ Run the full test suite. Then continue to **Stage 5: Review** — the review age
 If a previous session was interrupted (context overflow, user stopped, etc.), this workflow can resume.
 
 **How resume works:**
-1. Step 0.5 checks for `.handoff/` files and existing `.planning/` artifacts
-2. Determine which stage was completed last:
+1. Check for existing worktrees from a previous build:
+   ```bash
+   ls .worktrees/ 2>/dev/null
+   git worktree list 2>/dev/null
+   ```
+   If a worktree exists for this feature, set `WORKSPACE` to it and work there. Don't create a new one.
+2. Step 0.5 checks for `.handoff/` files and existing `.planning/` artifacts
+3. Determine which stage was completed last:
    - Has spec but no plan → resume at Stage 3 (Plan)
    - Has plan but no commits on feature branch → resume at Stage 4 (Implement)
    - Has commits but no PR → resume at Stage 5 (Review) or Stage 6 (Ship)
-3. Show the user: "Resuming from [stage]. Here's what was done: [summary]."
-4. Continue from that point.
+4. Show the user: "Resuming from [stage] in `$WORKSPACE`. Here's what was done: [summary]."
+5. Continue from that point.
 
 **Don't re-do completed stages.** Read the saved artifacts and move forward.
 
@@ -938,8 +940,8 @@ If a previous session was interrupted (context overflow, user stopped, etc.), th
 - **Full-stack = both layers done.** If the feature touches both backend and frontend, you MUST implement both before creating the PR. Backend-only completion is NOT "done" for a full-stack feature.
 - **Epic = one branch, one PR.** When building from an epic, all features go on one branch and ship as one PR. Don't create separate PRs per feature. Parallelize independent features with Agent Teams when available.
 - **Epic auto-detection.** If the user's feature name matches an epic in `.planning/epics/`, switch to epic mode automatically. Don't ask.
-- **Worktree by default.** The first step is `EnterWorktree` (unless `worktree: false` in `.spartan/build.yaml`). This lets multiple terminals run `/spartan:build` simultaneously. If already in a worktree, skip. If `EnterWorktree` fails, fall back to manual worktree.
-- **Build config is `.spartan/build.yaml`.** Controls worktrees, branch prefix, max review rounds, skip stages, custom prompts per stage, and extra worktree symlinks. All fields optional.
+- **Build config is `.spartan/build.yaml`.** Controls branch prefix, max review rounds, skip stages, and custom prompts per stage. All fields optional.
+- **Every build creates a worktree automatically.** `git worktree add .worktrees/[slug]` runs at Stage 3. All work happens in the worktree using `$WORKSPACE` paths. Multiple terminals get separate worktrees, branches, and PRs. No conflicts. Cleanup happens after PR merge.
 
 ---
 
@@ -974,7 +976,3 @@ A feature is NOT done until every applicable item is checked:
 - [ ] Review agent passed (all HIGH/MEDIUM issues fixed)
 - [ ] PR created with summary and test plan
 
-### Worktree
-- [ ] Worktree created and working directory switched (automatic unless `worktree: false`)
-- [ ] All commits pushed to feature branch
-- [ ] Worktree cleaned up after PR merged (`git worktree remove .claude/worktrees/[slug]`)

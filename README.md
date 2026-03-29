@@ -239,16 +239,16 @@ Rules load every session. The AI follows them without you asking.
 
 ### Parallel builds
 
-Build 2+ features at the same time. Each `/spartan:build` creates a **git worktree** &mdash; a separate directory with its own branch. Run them in different terminals, no conflicts.
+Build 2+ features at the same time. Each `/spartan:build` automatically creates a git worktree &mdash; no manual setup:
 
 ```bash
 # Terminal 1                          # Terminal 2
-claude                                claude
-> /spartan:build auth                 > /spartan:build payments
-# → worktree + branch + PR #1        # → worktree + branch + PR #2
+/spartan:build auth                   /spartan:build payments
+# → .worktrees/auth/ (feature/auth)  # → .worktrees/payments/ (feature/payments)
+# → PR #1                            # → PR #2
 ```
 
-Disable with `worktree: false` in `.spartan/build.yaml` if you only use one terminal.
+Each build creates its own worktree, branch, and PR. No conflicts. Worktrees are cleaned up after PR merge.
 
 ### Project config
 
@@ -257,7 +257,6 @@ Customize any command per project. Two config files in `.spartan/`:
 **`.spartan/build.yaml`** &mdash; controls the build workflow:
 
 ```yaml
-worktree: true              # git worktree per feature (default: true)
 branch-prefix: "feature"    # branch name: [prefix]/[slug]
 max-review-rounds: 3        # review-fix cycles before asking user
 skip-stages: []             # skip: spec, design, plan, ship (never review)
