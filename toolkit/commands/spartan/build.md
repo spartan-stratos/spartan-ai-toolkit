@@ -14,17 +14,23 @@ You decide which steps to run, which skills to call, and when to move forward. T
 ```
 SINGLE FEATURE:
 
-  Context → Spec → Design? → Plan → Implement → Review Agent → Fix → Ship
-     │        │        │        │        │            │          │       │
-  .memory/ Gate 1   Design   Gate 2   Gate 3    Spawn agent   Loop   Gate 4
-                    Gate                        fix until OK
+  Context → Spec → Design? → Plan+Worktree → Implement → Review Agent → Fix → Ship
+     │        │        │           │               │            │          │       │
+  .memory/ Gate 1   Design      Gate 2          Gate 3    Spawn agent   Loop   Gate 4
+                    Gate      EnterWorktree               fix until OK
 
 EPIC (multi-feature — auto-detected):
 
-  Context → Epic detected → Per feature: Spec/Design/Plan → Implement → Review Agent → Fix → Ship
-     │            │                │                             │            │          │       │
-  .planning/  read epic    fill gaps if needed          parallel by      Spawn agent  Loop   one PR
-  epics/                                                dependency       fix until OK
+  Context → Epic detected → Per feature: Spec/Design/Plan → Worktree → Implement → Review → Ship
+     │            │                │                            │            │          │       │
+  .planning/  read epic    fill gaps if needed          EnterWorktree  parallel by    Loop   one PR
+  epics/                                                             dependency
+
+PARALLEL BUILDS (multiple terminals):
+
+  Terminal 1: /spartan:build auth     → worktree .claude/worktrees/feature-auth/     → branch feature/auth     → PR #1
+  Terminal 2: /spartan:build payments → worktree .claude/worktrees/feature-payments/ → branch feature/payments → PR #2
+  (each terminal gets its own worktree, branch, and PR — no conflicts)
 ```
 
 **Fast path:** For small work (< 1 day, ≤ 4 tasks), you do spec + plan inline. No separate commands needed.
@@ -272,11 +278,28 @@ Uses skills: `ui-ux-pro-max`, frontend rules
 
 **CRITICAL: Full-stack means BOTH layers must complete.** Don't move to Gate 3 after finishing backend only. The plan must include frontend tasks and ALL tasks must be done before review. If the spec mentions UI changes, API responses shown to users, or any user-facing behavior — frontend tasks are mandatory.
 
-### Create branch
+### Create feature workspace
+
+Every build runs in its own **git worktree** — a separate directory with its own branch. This lets you run `/spartan:build` in multiple terminals on the same repo. Each terminal gets its own worktree, branch, and PR. No conflicts.
+
+Use `EnterWorktree` to create the worktree. The name should be the feature branch slug:
+
+```
+EnterWorktree(name: "feature-[slug]")
+```
+
+This creates a worktree at `.claude/worktrees/feature-[slug]/` on a new branch and switches your working directory to it. All file reads, writes, and bash commands now happen inside the worktree.
+
+**Symlink shared directories** — `.planning/`, `.memory/`, `.handoff/`, and `.spartan/` are gitignored and won't appear in the worktree. Symlink them from the main repo so specs, plans, and memory are shared:
 
 ```bash
-git checkout -b feature/[slug]
+MAIN_REPO="$(git worktree list | head -1 | awk '{print $1}')"
+for dir in .planning .memory .handoff .spartan; do
+  [ -d "$MAIN_REPO/$dir" ] && [ ! -e "$dir" ] && ln -s "$MAIN_REPO/$dir" "$dir"
+done
 ```
+
+> "Working in worktree: `.claude/worktrees/feature-[slug]/` on branch `feature-[slug]`"
 
 Write the first failing test for Task 1. Show it fails.
 
@@ -668,6 +691,22 @@ mkdir -p .memory/decisions .memory/patterns .memory/knowledge
 
 Update `.memory/index.md` if you saved anything.
 
+### Clean up worktree
+
+After the PR is created, exit the worktree. Keep it around in case the user needs to make PR review fixes:
+
+```
+ExitWorktree(action: "keep")
+```
+
+> "PR created. Worktree kept at `.claude/worktrees/feature-[slug]/` in case you need to push fixes. To clean up later: `git worktree remove .claude/worktrees/feature-[slug]`"
+
+If the user says the PR is merged and they're done, clean up:
+
+```
+ExitWorktree(action: "remove")
+```
+
 **GATE 4 — Done.**
 > "PR created: [link]. Here's what's in it: [summary]."
 
@@ -724,14 +763,25 @@ Agent(
 ```
 Collect results after all finish, then `TeamDelete()`.
 
-### Step 2: Sort by dependency and create branch
+### Step 2: Sort by dependency and create workspace
 
 Read the epic's Features table. Sort features by dependency order:
 - Features with no dependencies → can build first
 - Features that depend on others → build after their dependencies are done
 
+Create a worktree for the epic:
+
+```
+EnterWorktree(name: "feature-[epic-slug]")
+```
+
+Symlink shared directories:
+
 ```bash
-git checkout -b feature/[epic-slug]
+MAIN_REPO="$(git worktree list | head -1 | awk '{print $1}')"
+for dir in .planning .memory .handoff .spartan; do
+  [ -d "$MAIN_REPO/$dir" ] && [ ! -e "$dir" ] && ln -s "$MAIN_REPO/$dir" "$dir"
+done
 ```
 
 ### Step 3: Implement in dependency order
@@ -801,13 +851,19 @@ Run the full test suite. Then continue to **Stage 5: Review** — the review age
 If a previous session was interrupted (context overflow, user stopped, etc.), this workflow can resume.
 
 **How resume works:**
-1. Step 0.5 checks for `.handoff/` files and existing `.planning/` artifacts
-2. Determine which stage was completed last:
+1. Check for existing worktrees from a previous build:
+   ```bash
+   git worktree list
+   ls .claude/worktrees/ 2>/dev/null
+   ```
+   If a worktree exists for this feature, re-enter it with `EnterWorktree(name: "feature-[slug]")`. Don't create a new one.
+2. Step 0.5 checks for `.handoff/` files and existing `.planning/` artifacts
+3. Determine which stage was completed last:
    - Has spec but no plan → resume at Stage 3 (Plan)
    - Has plan but no commits on feature branch → resume at Stage 4 (Implement)
    - Has commits but no PR → resume at Stage 5 (Review) or Stage 6 (Ship)
-3. Show the user: "Resuming from [stage]. Here's what was done: [summary]."
-4. Continue from that point.
+4. Show the user: "Resuming from [stage] in worktree `[path]`. Here's what was done: [summary]."
+5. Continue from that point.
 
 **Don't re-do completed stages.** Read the saved artifacts and move forward.
 
@@ -830,6 +886,8 @@ If a previous session was interrupted (context overflow, user stopped, etc.), th
 - **Full-stack = both layers done.** If the feature touches both backend and frontend, you MUST implement both before creating the PR. Backend-only completion is NOT "done" for a full-stack feature.
 - **Epic = one branch, one PR.** When building from an epic, all features go on one branch and ship as one PR. Don't create separate PRs per feature. Parallelize independent features with Agent Teams when available.
 - **Epic auto-detection.** If the user's feature name matches an epic in `.planning/epics/`, switch to epic mode automatically. Don't ask.
+- **Every build uses a worktree.** Always create a worktree with `EnterWorktree` before writing code. This lets multiple `/spartan:build` sessions run in parallel — each terminal gets its own worktree, branch, and PR. Never `git checkout -b` in the main repo.
+- **Worktree cleanup.** After PR is created, `ExitWorktree(action: "keep")` so the user can push fixes. After PR is merged, `ExitWorktree(action: "remove")` to clean up. Users can also clean up manually: `git worktree remove .claude/worktrees/feature-[slug]`.
 
 ---
 
