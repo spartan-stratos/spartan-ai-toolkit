@@ -289,134 +289,43 @@ Write the first failing test for Task 1. Show it fails.
 
 ## Stage 4: Implement
 
-### MANDATORY: Check for Agent Teams BEFORE any task execution
+### FIRST: Check for parallelism and route
 
-**STOP. Do this check FIRST — before writing any code.**
+**Before writing any code, analyze the plan from Stage 3.**
+
+Look at the dependency table:
+- Group tasks that share the same dependency (e.g., tasks 3, 4, 5 all depend on task 2 → parallel group)
+- Tasks at the end with no dependency on each other → another parallel group
+- Full-stack plans ALWAYS have parallel groups (backend + frontend tracks)
 
 ```bash
 echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 ```
 
-**Then analyze the plan for parallel groups.** Look at the dependency table from Stage 3:
-- Group tasks that share the same dependency (e.g., tasks 3, 4, 5 all depend on task 2 → they form a parallel group)
-- Tasks at the end with no dependency on each other → another parallel group
-- Full-stack plans ALWAYS have parallel groups (backend track + frontend track)
+**Route decision:**
 
-**Decision rule:**
-
-| Env var set? | Parallel groups found? | Action |
+| Env var set? | Parallel groups? | Route |
 |---|---|---|
-| YES | YES (2+ tasks in any group) | **MUST use Agent Teams. Do NOT use sequential.** |
-| YES | NO (all tasks in a chain) | Sequential execution |
-| NO | - | Sequential execution |
+| YES | YES (2+ tasks in any group) | **Tell the user: "This plan has parallel groups. I'm creating an agent team to run them at the same time." Then use `TeamCreate` to create a team and spawn teammates.** |
+| YES | NO (strict chain) | Sequential execution below |
+| NO | — | Sequential execution below |
 
-**If the plan has 5+ tasks and you can see parallel groups but you're about to run them one-by-one — STOP. You're doing it wrong. Use Agent Teams.**
+**How Agent Teams works** (when routing to teams):
 
-> **Sub-agents vs Agent Teams — know the difference:**
-> - `Agent(run_in_background: true)` = sub-agent. Same session, 1 node. You do all the work yourself with helpers. **NOT what you want for parallel tasks.**
-> - `Agent(team_name: "...", name: "...")` = teammate. Separate session, own node, works independently. **This is what you MUST use.**
-> - `TaskCreate` WITHOUT `TeamCreate` first = just your personal to-do list. NOT Agent Teams.
-> - `TeamCreate` THEN `TaskCreate` THEN `Agent(team_name: ...)` = real Agent Teams with shared task list.
+Agent Teams are separate Claude Code sessions (not background tasks). They show as multiple **nodes** in the status bar, not "local agents." Each teammate works independently with its own context.
 
-### Agent Teams execution (when parallel groups exist)
+Tell the user you're creating a team, then:
+1. Call `TeamCreate` to create the team
+2. Call `TaskCreate` for each work item, with `addBlockedBy` for dependencies
+3. Spawn teammates with `Agent` using `team_name` and `name` params — each handles a parallel track
+4. Split by mode: full-stack = backend-dev + frontend-dev, backend-only = data-layer + api-layer, frontend-only = components-dev + pages-dev
+5. Frontend/UI teammates MUST get design doc path and design tokens in their prompt
+6. Monitor via incoming messages (auto-delivered). Use `SendMessage` to redirect if needed.
+7. When all done, merge worktrees, run full test suite, `TeamDelete` to clean up
 
-**How to run it (follow this exact sequence):**
+**After team completes → continue to Stage 5 (Review). Do NOT stop.**
 
-1. Check for design doc and tokens:
-```bash
-ls .planning/designs/*.md .planning/design/screens/*.md 2>/dev/null
-ls .planning/design/system/tokens.md .planning/design-config.md 2>/dev/null
-```
-
-2. Create the team with `TeamCreate`:
-```
-TeamCreate(team_name: "build-{feature-slug}", description: "Building: {feature name}")
-```
-
-3. Create tasks with `TaskCreate` — one per work item from the plan. Set dependencies:
-```
-TaskCreate(subject: "Implement user repository", description: "...")
-TaskCreate(subject: "Implement user controller", description: "...")
-TaskUpdate(taskId: "2", addBlockedBy: ["1"])  // controller depends on repository
-```
-
-4. Spawn teammates with `Agent` — **MUST include `team_name` and `name` params:**
-
-**Full-stack** — two teammates:
-```
-Agent(
-  team_name: "build-{feature-slug}",
-  name: "backend-dev",
-  subagent_type: "general-purpose",
-  isolation: "worktree",
-  prompt: "You are the backend developer for {feature}.
-    Check TaskList, claim backend tasks with TaskUpdate(owner: 'backend-dev').
-    Follow TDD. Read .memory/index.md for project context.
-    Rules: ~/.claude/rules/backend-micronaut/ and ~/.claude/rules/database/
-    When done with a task, mark it completed and check TaskList for next work."
-)
-
-Agent(
-  team_name: "build-{feature-slug}",
-  name: "frontend-dev",
-  subagent_type: "general-purpose",
-  isolation: "worktree",
-  prompt: "You are the frontend developer for {feature}.
-    Read design doc at .planning/designs/{feature}.md FIRST — follow it exactly.
-    {if design tokens exist: Read .planning/design/system/tokens.md — use these exact values, not Tailwind defaults.}
-    Check TaskList, claim frontend tasks with TaskUpdate(owner: 'frontend-dev').
-    Follow TDD. Rules: ~/.claude/rules/frontend-react/"
-)
-```
-
-**Backend-only** — split by layer:
-```
-Agent(team_name: "build-{slug}", name: "data-layer", ...,
-  prompt: "Migration + entity + repository + repo tests. ...")
-
-Agent(team_name: "build-{slug}", name: "api-layer", ...,
-  prompt: "Service + controller + integration tests. ...")
-```
-Set `TaskUpdate(addBlockedBy)` so api-layer tasks wait for data-layer.
-
-**Frontend-only** — split by concern:
-```
-Agent(team_name: "build-{slug}", name: "components-dev", ...,
-  prompt: "Types + components + API client. Read design doc FIRST. ...")
-
-Agent(team_name: "build-{slug}", name: "pages-dev", ...,
-  prompt: "Pages + routing + integration. Read design doc FIRST. ...")
-```
-Set `TaskUpdate(addBlockedBy)` so pages-dev tasks wait for components-dev.
-
-**Design doc handoff (MANDATORY for frontend/UI teammates):**
-Every frontend/UI teammate MUST get the design doc path in its prompt:
-```
-Read design doc at .planning/designs/{feature}.md FIRST.
-Follow screen designs, component specs, and visual details exactly.
-Do NOT invent your own layout. The design was already reviewed and approved.
-```
-
-**Design token enforcement (MANDATORY for frontend/UI work):**
-If design tokens exist, inject into EVERY frontend/UI teammate prompt:
-```
-DESIGN TOKENS — BINDING CONSTRAINTS:
-Read .planning/design/system/tokens.md (or .planning/design-config.md).
-Use these exact values. Not Tailwind defaults, not generic colors.
-Every color, font, and spacing value must come from the token list.
-```
-
-5. Monitor — messages from teammates arrive automatically. Use `TaskList` to check progress. Use `SendMessage` to redirect if needed.
-
-6. When all teammates finish, merge worktrees and run full test suite.
-
-7. `TeamDelete()` to clean up.
-
-8. **MANDATORY: Continue to Stage 5 (Review) NOW.** Do NOT stop here. Do NOT ask "Want me to commit?" or "Should I create a PR?" — implementation is done but review hasn't happened yet. Go straight to Gate 3 → Stage 5.
-
-**If Agent Teams is NOT enabled** (env var not set) OR **all tasks are in a strict chain with zero parallel groups**, use sequential execution below.
-
-### Sequential execution (ONLY when no parallel groups exist)
+### Sequential execution (when no parallel groups or Agent Teams not enabled)
 
 Execute each task in order:
 
