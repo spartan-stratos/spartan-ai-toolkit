@@ -1,6 +1,6 @@
 ---
 name: api-endpoint-creator
-description: Creates REST endpoint following layered architecture (Controller → Manager → Repository). Use when creating new API endpoints or CRUD operations.
+description: Creates RPC-style endpoint following layered architecture (Controller → Manager → Repository). Use when creating new API endpoints or CRUD operations.
 allowed_tools:
   - Read
   - Write
@@ -11,7 +11,7 @@ allowed_tools:
 
 # API Endpoint Creator Skill
 
-Creates complete REST API endpoints following strict layered architecture patterns.
+Creates complete RPC-style API endpoints following strict layered architecture patterns.
 
 ## When to Use
 
@@ -388,9 +388,9 @@ Location: `app/api-application/src/test/kotlin/com/yourcompany/{Domain}Controlle
 
 ## Rules
 
-### RESTful API with Query Parameters (Not Path Params)
+### RPC-Style API (POST for Mutations, Query Params Only)
 
-This project uses **query parameters for all IDs** and RESTful endpoints:
+This project uses **RPC-style endpoints: @Get for reads, @Post for all mutations, query parameters for all IDs**:
 
 ```
 GET  /api/v1/employees              # List employees (plural)
