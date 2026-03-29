@@ -115,7 +115,7 @@ Then tell the user:
 > "Spec saved to `.planning/specs/{{ args[0] }}.md` — Gate 1 passed."
 >
 > **Next steps:**
-> - Has UI work? → `/spartan:design {{ args[0] }}`
+> - Has UI work? → `/spartan:ux prototype {{ args[0] }}`
 > - Ready to plan? → `/spartan:plan {{ args[0] }}`
 > - Part of a bigger epic? → `/spartan:epic`
 

@@ -583,7 +583,7 @@ If no design-config existed, save it to `.planning/design-config.md` too.
 
 Goal: Design all screens with states, responsive layouts, and accessibility. Get them approved by the design critic. Save to `.planning/design/screens/`.
 
-This phase absorbs what `/spartan:design` does. Same dual-agent review, same quality bar.
+This phase handles screen design with dual-agent review. Same quality bar as the original design workflow.
 
 ```bash
 mkdir -p .planning/design/screens

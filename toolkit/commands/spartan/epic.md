@@ -147,7 +147,7 @@ Then tell the user:
 > ```
 > /spartan:spec [feature-1]
 > /spartan:spec [feature-2]
-> /spartan:design [feature-2]   ← if it has UI work
+> /spartan:ux prototype [feature-2]   ← if it has UI work
 > /spartan:spec [feature-3]
 > ```
 >

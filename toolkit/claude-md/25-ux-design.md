@@ -53,4 +53,4 @@ Once design tokens exist, ALL downstream commands enforce them:
 | `/spartan:build frontend` | Checks for design tokens, nudges if missing |
 | `/spartan:spec` (UI feature) | Checks for user research, suggests if missing |
 | `/spartan:fe-review` | Checks code against design tokens |
-| `/spartan:design` | Alias for `/spartan:ux prototype` |
+| `/spartan:figma-to-code` | Merges with existing design tokens if they exist |
