@@ -237,6 +237,52 @@ Rules load every session. The AI follows them without you asking.
 /spartan:lint-rules                   # Validate your config
 ```
 
+### Parallel builds
+
+Build 2+ features at the same time. Each `/spartan:build` creates a **git worktree** &mdash; a separate directory with its own branch. Run them in different terminals, no conflicts.
+
+```bash
+# Terminal 1                          # Terminal 2
+claude                                claude
+> /spartan:build auth                 > /spartan:build payments
+# → worktree + branch + PR #1        # → worktree + branch + PR #2
+```
+
+Disable with `worktree: false` in `.spartan/build.yaml` if you only use one terminal.
+
+### Project config
+
+Customize any command per project. Two config files in `.spartan/`:
+
+**`.spartan/build.yaml`** &mdash; controls the build workflow:
+
+```yaml
+worktree: true              # git worktree per feature (default: true)
+branch-prefix: "feature"    # branch name: [prefix]/[slug]
+max-review-rounds: 3        # review-fix cycles before asking user
+skip-stages: []             # skip: spec, design, plan, ship (never review)
+
+prompts:                    # inject custom instructions per stage
+  spec: |
+    Always include performance requirements.
+  review: |
+    Check all API responses include request_id.
+  ship: |
+    PR title: [PROJ-123] Short description.
+```
+
+**`.spartan/commands.yaml`** &mdash; inject prompts into any command:
+
+```yaml
+prompts:
+  review: "Flag any function longer than 50 lines."
+  pr-ready: "Always add Reviewers: @backend-team."
+  daily: "Include blockers section."
+  debug: "Always check CloudWatch logs first."
+```
+
+Templates in `toolkit/templates/`. The AI reads your config every session &mdash; no manual reminders needed.
+
 ---
 
 ## Pick Your Packs
