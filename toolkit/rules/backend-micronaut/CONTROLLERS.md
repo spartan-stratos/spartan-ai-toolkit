@@ -384,3 +384,5 @@ Before committing controller changes:
 - [ ] Business logic is in managers, not controllers
 - [ ] **NO inline data classes** - all models in `module-client`
 - [ ] **NO private converter functions** - use inline mapping or manager returns Response DTOs
+- [ ] **NO @Put, @Patch, @Delete** — only @Get and @Post (RPC-style, see API_DESIGN.md)
+- [ ] **NO @PathVariable** — only @QueryValue for all IDs
