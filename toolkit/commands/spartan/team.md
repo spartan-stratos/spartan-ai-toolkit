@@ -294,18 +294,36 @@ Create 2-3 focused review tasks:
 2. **Test coverage** — are tests adequate, edge cases covered, test quality
 3. **Security** (if applicable) — auth, input validation, data handling
 
-### Step 4: Spawn reviewers
+### Step 4: Spawn reviewers — MUST use `team_name` + `name` params
 
-Spawn 2-3 agents with appropriate expertise:
+```
+Agent(
+  team_name: "review-{branch-or-pr}",
+  name: "quality-reviewer",
+  subagent_type: "phase-reviewer",
+  prompt: "Review code design, SOLID, clean code, stack conventions.
+    Changed files: {list}. Check TaskList, claim your task.
+    Output: ACCEPT or NEEDS CHANGES with file:line, rule, severity, fix."
+)
 
-- **quality-reviewer** — use `phase-reviewer` agent type if available, otherwise `general-purpose`
-- **test-reviewer** — `general-purpose` agent focused on test analysis
-- **security-reviewer** (optional) — `general-purpose` agent focused on security
+Agent(
+  team_name: "review-{branch-or-pr}",
+  name: "test-reviewer",
+  subagent_type: "general-purpose",
+  prompt: "Review test coverage, edge cases, test quality.
+    Changed files: {list}. Check TaskList, claim your task.
+    Output: ACCEPT or NEEDS CHANGES."
+)
 
-Each reviewer gets:
-- The diff or changed file list
-- Their specific review focus
-- Instructions to report findings in the Gate 3.5 format
+Agent(
+  team_name: "review-{branch-or-pr}",
+  name: "security-reviewer",
+  subagent_type: "general-purpose",
+  prompt: "Review auth, input validation, data exposure, injection.
+    Changed files: {list}. Check TaskList, claim your task.
+    Output: ACCEPT or NEEDS CHANGES."
+)
+```
 
 ### Step 5: Synthesize
 
@@ -339,13 +357,33 @@ Create 2-3 complementary research tasks:
 2. **Depth analysis** — go deep on the most promising findings from breadth
 3. **Contrarian view** (optional) — find counterarguments, risks, things that could go wrong
 
-### Step 4: Spawn researchers
+### Step 4: Spawn researchers — MUST use `team_name` + `name` params
 
-- **surveyor** — `Explore` or `general-purpose` with web search focus
-- **analyst** — `general-purpose` for deep analysis
-- **contrarian** — `general-purpose` playing devil's advocate (use `idea-killer` agent if available)
+```
+Agent(
+  team_name: "research-{topic-slug}",
+  name: "surveyor",
+  subagent_type: "general-purpose",
+  prompt: "Broad survey of: {topic}. Find 8-15 sources, map the landscape.
+    Track sources with credibility scores (1-5). Check TaskList, claim your task."
+)
 
-Each gets the topic + their angle + instructions to report structured findings.
+Agent(
+  team_name: "research-{topic-slug}",
+  name: "analyst",
+  subagent_type: "general-purpose",
+  prompt: "Deep analysis of top sources for: {topic}.
+    Cross-reference claims, extract data. Check TaskList, claim your task."
+)
+
+Agent(
+  team_name: "research-{topic-slug}",
+  name: "contrarian",
+  subagent_type: "general-purpose",
+  prompt: "Challenge assumptions about: {topic}. Find counterarguments, risks, failures.
+    Play devil's advocate. Check TaskList, claim your task."
+)
+```
 
 ### Step 5: Synthesize
 
@@ -397,15 +435,38 @@ TeamCreate:
 
 From the spec/plan, create tasks for each parallel track. Set `addBlockedBy` for tasks that depend on earlier ones (e.g., frontend depends on API being done).
 
-### Step 5: Spawn builders
+### Step 5: Spawn builders — MUST use `team_name` + `name` params
 
-Each builder agent gets:
+```
+Agent(
+  team_name: "build-{feature-slug}",
+  name: "backend-dev",
+  subagent_type: "general-purpose",
+  isolation: "worktree",
+  prompt: "Backend implementation for {feature}.
+    Read .memory/index.md for context. Rules: ~/.claude/rules/backend-micronaut/.
+    Follow TDD. Check TaskList, claim backend tasks."
+)
+
+Agent(
+  team_name: "build-{feature-slug}",
+  name: "frontend-dev",
+  subagent_type: "general-purpose",
+  isolation: "worktree",
+  prompt: "Frontend implementation for {feature}.
+    Read design doc at .planning/designs/{feature}.md FIRST — follow it exactly.
+    Rules: ~/.claude/rules/frontend-react/. Follow TDD.
+    Check TaskList, claim frontend tasks."
+)
+```
+
+Each builder teammate gets:
 - Worktree isolation (`isolation: "worktree"`)
 - Their track's tasks and file paths
 - Instructions to follow TDD
 - References to relevant rules from installed packs
 - `.memory/` context
-- **Design doc path** (if `.planning/designs/*.md` exists) — frontend/UI agents MUST read the design doc before building. Include in prompt: "Read `.planning/designs/{feature}.md` FIRST. Follow screen designs and component specs exactly."
+- **Design doc path** (if `.planning/designs/*.md` exists) — frontend/UI teammates MUST read the design doc before building.
 
 ### Step 6: Integration
 

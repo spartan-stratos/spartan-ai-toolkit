@@ -81,16 +81,44 @@ Options:
 echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 ```
 
-**If Agent Teams is enabled**, run parallel research agents for faster, broader coverage:
+**If Agent Teams is enabled**, create a research team (NOT sub-agents):
 
-1. Use `TeamCreate` with name `research-{topic-slug}`
-2. Spawn 2-3 agents based on the source strategy from Stage 1:
-   - **breadth-researcher** — runs direct + alternative + adjacent queries, collects 8-15 sources
-   - **depth-researcher** — picks the top 3-5 sources from breadth, goes deep on each
-   - **contrarian-researcher** (optional) — searches for counterarguments, failures, criticism
-3. Each agent tracks sources with credibility scores (see format below)
-4. After all report back, merge source lists and continue to Stage 3 (Analyze)
-5. Clean up team with `TeamDelete`
+```
+TeamCreate(team_name: "research-{topic-slug}", description: "Research: {topic}")
+
+TaskCreate(subject: "Breadth search", description: "Run direct + alternative + adjacent queries, collect 8-15 sources with credibility scores")
+TaskCreate(subject: "Depth analysis", description: "Deep dive on top 3-5 sources from breadth search")
+TaskCreate(subject: "Contrarian search", description: "Find counterarguments, failures, criticism")
+
+Agent(
+  team_name: "research-{topic-slug}",
+  name: "breadth-researcher",
+  subagent_type: "general-purpose",
+  prompt: "Search broadly for: {topic}. Run direct + alternative + adjacent queries.
+    Collect 8-15 sources. Track each with: title, URL, credibility (1-5), key data points.
+    Check TaskList, claim your task. Message depth-researcher when you have initial findings."
+)
+
+Agent(
+  team_name: "research-{topic-slug}",
+  name: "depth-researcher",
+  subagent_type: "general-purpose",
+  prompt: "Go deep on the top 3-5 sources for: {topic}.
+    Extract detailed data, cross-reference claims, note contradictions.
+    Check TaskList, claim your task. Wait for breadth-researcher findings if needed."
+)
+
+Agent(
+  team_name: "research-{topic-slug}",
+  name: "contrarian-researcher",
+  subagent_type: "general-purpose",
+  prompt: "Find counterarguments and criticism for: {topic}.
+    Search for failures, risks, overhyped claims, hidden costs.
+    Check TaskList, claim your task."
+)
+```
+
+After all teammates report back, merge source lists, `TeamDelete()`, continue to Stage 3 (Analyze).
 
 **If Agent Teams is NOT enabled**, gather sequentially:
 

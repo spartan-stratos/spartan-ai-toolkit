@@ -112,13 +112,40 @@ echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 **If Agent Teams is enabled AND the codebase is large (50+ files or multi-module):**
 
 Run a parallel mapping team for faster analysis:
-1. Use `TeamCreate` with name `onboard-{project-slug}`
-2. Spawn 2-3 mapper agents in parallel:
-   - **stack-mapper** — tech stack, dependencies, build tools
-   - **arch-mapper** — architecture patterns, data flow, entry points
-   - **quality-mapper** — conventions, test patterns, concerns
-3. After all report back, synthesize into the architecture overview below
-4. Clean up team with `TeamDelete`
+
+```
+TeamCreate(team_name: "onboard-{project-slug}", description: "Mapping codebase for onboarding")
+
+TaskCreate(subject: "Map tech stack", description: "Languages, frameworks, dependencies, build tools, runtime")
+TaskCreate(subject: "Map architecture", description: "Patterns, layers, data flow, entry points, error handling")
+TaskCreate(subject: "Map quality", description: "Conventions, test patterns, code quality concerns")
+
+Agent(
+  team_name: "onboard-{project-slug}",
+  name: "stack-mapper",
+  subagent_type: "Explore",
+  prompt: "Map the tech stack: languages, frameworks, dependencies, build tools, runtime.
+    Write findings as structured markdown. Check TaskList, claim your task."
+)
+
+Agent(
+  team_name: "onboard-{project-slug}",
+  name: "arch-mapper",
+  subagent_type: "Explore",
+  prompt: "Map architecture: patterns, layers, data flow, entry points, error handling.
+    Trace one typical request end-to-end. Check TaskList, claim your task."
+)
+
+Agent(
+  team_name: "onboard-{project-slug}",
+  name: "quality-mapper",
+  subagent_type: "Explore",
+  prompt: "Map conventions, test patterns, code quality concerns. Find TODOs, tech debt.
+    Check TaskList, claim your task."
+)
+```
+
+After all teammates report back, synthesize into the architecture overview below, then `TeamDelete()`.
 
 **If Agent Teams is NOT enabled (or codebase is small)**, map manually:
 

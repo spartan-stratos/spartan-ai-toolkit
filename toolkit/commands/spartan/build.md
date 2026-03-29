@@ -308,60 +308,104 @@ echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 - All tasks depend on each other in a chain
 - Agent Teams env var is not set
 
-**How to run it:**
+**How to run it (follow this exact sequence):**
 
-1. Check for design doc:
+> **Sub-agents vs Agent Teams — know the difference:**
+> - `Agent(run_in_background: true)` = sub-agent. Same session, 1 node. **NOT a team.**
+> - `Agent(team_name: "...", name: "...")` = teammate. Separate session, own node, can message others. **This is what you want.**
+> - Without `team_name` param, agents ALWAYS spawn as sub-agents. The `team_name` param is what makes them teammates.
+
+1. Check for design doc and tokens:
 ```bash
-ls .planning/designs/*.md 2>/dev/null
+ls .planning/designs/*.md .planning/design/screens/*.md 2>/dev/null
+ls .planning/design/system/tokens.md .planning/design-config.md 2>/dev/null
 ```
 
-2. Use `TeamCreate` with name `build-{feature-slug}`.
+2. Create the team with `TeamCreate`:
+```
+TeamCreate(team_name: "build-{feature-slug}", description: "Building: {feature name}")
+```
 
-3. Create tasks from the plan. Set `addBlockedBy` for real dependencies only.
+3. Create tasks with `TaskCreate` — one per work item from the plan. Set dependencies:
+```
+TaskCreate(subject: "Implement user repository", description: "...")
+TaskCreate(subject: "Implement user controller", description: "...")
+TaskUpdate(taskId: "2", addBlockedBy: ["1"])  // controller depends on repository
+```
 
-4. Spawn agents with `isolation: "worktree"`. Split by mode:
+4. Spawn teammates with `Agent` — **MUST include `team_name` and `name` params:**
 
-**Full-stack** — two agents:
-- **backend-dev** — backend tasks, Kotlin/Micronaut rules
-- **frontend-dev** — frontend tasks, React/Next.js rules, design doc
+**Full-stack** — two teammates:
+```
+Agent(
+  team_name: "build-{feature-slug}",
+  name: "backend-dev",
+  subagent_type: "general-purpose",
+  isolation: "worktree",
+  prompt: "You are the backend developer for {feature}.
+    Check TaskList, claim backend tasks with TaskUpdate(owner: 'backend-dev').
+    Follow TDD. Read .memory/index.md for project context.
+    Rules: ~/.claude/rules/backend-micronaut/ and ~/.claude/rules/database/
+    When done with a task, mark it completed and check TaskList for next work."
+)
+
+Agent(
+  team_name: "build-{feature-slug}",
+  name: "frontend-dev",
+  subagent_type: "general-purpose",
+  isolation: "worktree",
+  prompt: "You are the frontend developer for {feature}.
+    Read design doc at .planning/designs/{feature}.md FIRST — follow it exactly.
+    {if design tokens exist: Read .planning/design/system/tokens.md — use these exact values, not Tailwind defaults.}
+    Check TaskList, claim frontend tasks with TaskUpdate(owner: 'frontend-dev').
+    Follow TDD. Rules: ~/.claude/rules/frontend-react/"
+)
+```
 
 **Backend-only** — split by layer:
-- **data-layer** — migration + entity + repository
-- **api-layer** — service + controller (blocked by data-layer)
+```
+Agent(team_name: "build-{slug}", name: "data-layer", ...,
+  prompt: "Migration + entity + repository + repo tests. ...")
+
+Agent(team_name: "build-{slug}", name: "api-layer", ...,
+  prompt: "Service + controller + integration tests. ...")
+```
+Set `TaskUpdate(addBlockedBy)` so api-layer tasks wait for data-layer.
 
 **Frontend-only** — split by concern:
-- **components-dev** — types + components + API client
-- **pages-dev** — pages + routing + integration (blocked by components-dev)
-
-**Design doc handoff (MANDATORY for frontend/UI agents):**
-If a design doc exists at `.planning/designs/` or `.planning/design/screens/`, EVERY frontend/UI agent MUST get this in its prompt:
 ```
-Design doc: .planning/design/screens/{feature}.md — read this FIRST.
-Follow the screen designs, component specs, and visual details exactly.
-Do NOT invent your own layout or design. The design was already reviewed and approved.
+Agent(team_name: "build-{slug}", name: "components-dev", ...,
+  prompt: "Types + components + API client. Read design doc FIRST. ...")
+
+Agent(team_name: "build-{slug}", name: "pages-dev", ...,
+  prompt: "Pages + routing + integration. Read design doc FIRST. ...")
+```
+Set `TaskUpdate(addBlockedBy)` so pages-dev tasks wait for components-dev.
+
+**Design doc handoff (MANDATORY for frontend/UI teammates):**
+Every frontend/UI teammate MUST get the design doc path in its prompt:
+```
+Read design doc at .planning/designs/{feature}.md FIRST.
+Follow screen designs, component specs, and visual details exactly.
+Do NOT invent your own layout. The design was already reviewed and approved.
 ```
 
 **Design token enforcement (MANDATORY for frontend/UI work):**
-```bash
-ls .planning/design/system/tokens.md .planning/design-config.md 2>/dev/null
-```
-If design tokens exist, read them and inject into EVERY frontend/UI agent prompt:
+If design tokens exist, inject into EVERY frontend/UI teammate prompt:
 ```
 DESIGN TOKENS — BINDING CONSTRAINTS:
 Read .planning/design/system/tokens.md (or .planning/design-config.md).
-You MUST use these exact values. Do NOT use Tailwind defaults or generic colors.
-- Use token color names, not hex values or bg-blue-500
-- Use the project font, not Inter/Arial/system-ui
-- Use the spacing scale, not arbitrary padding/margin
-- Use the project border radius, not rounded-lg
-Every color, font, and spacing value in your code must come from the token list.
+Use these exact values. Not Tailwind defaults, not generic colors.
+Every color, font, and spacing value must come from the token list.
 ```
 
-5. Monitor progress. When all agents finish, merge worktrees and run full test suite.
+5. Monitor — messages from teammates arrive automatically. Use `TaskList` to check progress. Use `SendMessage` to redirect if needed.
 
-6. `TeamDelete` to clean up.
+6. When all teammates finish, merge worktrees and run full test suite.
 
-7. **MANDATORY: Continue to Stage 5 (Review) NOW.** Do NOT stop here. Do NOT ask "Want me to commit?" or "Should I create a PR?" — implementation is done but review hasn't happened yet. Go straight to Gate 3 → Stage 5.
+7. `TeamDelete()` to clean up.
+
+8. **MANDATORY: Continue to Stage 5 (Review) NOW.** Do NOT stop here. Do NOT ask "Want me to commit?" or "Should I create a PR?" — implementation is done but review hasn't happened yet. Go straight to Gate 3 → Stage 5.
 
 **If Agent Teams is NOT enabled** (env var not set), continue with sequential execution below.
 
@@ -639,26 +683,47 @@ After the reviewer says PASS, check its output for:
 echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 ```
 
-**If Agent Teams is enabled**, spawn parallel review agents for deeper coverage. Each agent gets the same rule files from Step 1, but focuses on its area:
+**If Agent Teams is enabled**, create a review team for parallel coverage:
 
 ```
-Agent 1: "quality-reviewer"
-  Focus: Stages 1-2, 4 (correctness, stack conventions, architecture)
-  Rules: all backend or frontend rules based on mode
-  Extra: check against spec and plan
+TeamCreate(team_name: "review-{feature-slug}", description: "Code review for {feature}")
 
-Agent 2: "test-reviewer"
-  Focus: Stage 3 (test coverage, edge cases, test quality)
-  Rules: testing-strategies skill patterns
-  Extra: check test independence, proper assertions, no test duplication
+TaskCreate(subject: "Quality review", description: "Stages 1-2, 4: correctness, conventions, architecture")
+TaskCreate(subject: "Test review", description: "Stage 3: coverage, edge cases, test quality")
+TaskCreate(subject: "Security review", description: "Stage 6: auth, injection, data exposure")
 
-Agent 3: "security-reviewer" (only if auth/input/data code changed)
-  Focus: Stage 6 (security)
-  Rules: security-checklist skill + OWASP top 10
-  Extra: check for injection, auth bypass, data exposure
+Agent(
+  team_name: "review-{feature-slug}",
+  name: "quality-reviewer",
+  subagent_type: "phase-reviewer",
+  prompt: "Review for correctness, stack conventions, architecture.
+    Changed files: {list}. Rules: {rule paths from config}.
+    Check against spec at {spec path} and plan at {plan path}.
+    Output: PASS or NEEDS CHANGES with file:line, rule broken, severity, fix."
+)
+
+Agent(
+  team_name: "review-{feature-slug}",
+  name: "test-reviewer",
+  subagent_type: "general-purpose",
+  prompt: "Review test coverage, edge cases, test quality.
+    Changed files: {list}. Check test independence, assertions, no duplication.
+    Output: PASS or NEEDS CHANGES with specifics."
+)
+
+Agent(
+  team_name: "review-{feature-slug}",
+  name: "security-reviewer",
+  subagent_type: "general-purpose",
+  prompt: "Review security: auth, input validation, data exposure, injection.
+    Changed files: {list}. Rules: security-checklist + OWASP top 10.
+    Output: PASS or NEEDS CHANGES with specifics."
+)
 ```
 
-All agents review at the same time. Combine their findings. All must PASS before moving to Ship. If any says NEEDS CHANGES → fix loop (Step 3) applies to the combined findings.
+All teammates review at the same time. Combine their findings. All must PASS before moving to Ship. If any says NEEDS CHANGES → fix loop (Step 3) applies to the combined findings.
+
+After review completes: `TeamDelete()` to clean up.
 
 **If Agent Teams is NOT enabled**, use a single review agent (Steps 1-2 above).
 
@@ -712,16 +777,36 @@ Read the epic file. For each feature with status `spec`, `planned`, or `building
 | Design (and feature has UI work) | Ask user: create design now or skip? Same logic as Stage 2 |
 | Plan | Generate a plan inline (fast path for small, full path for big) |
 
-**Use Agent Teams to fill gaps in parallel** (if enabled): When 2+ features need plans or designs generated, spawn one agent per feature to do this work at the same time. Each agent runs the spec/design/plan logic for its feature independently.
+**Use Agent Teams to fill gaps in parallel** (if enabled): When 2+ features need plans or designs generated, use a team to do this at the same time.
 
 ```bash
 echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 ```
 
 If Agent Teams enabled and 2+ features need plans:
-- Spawn one `general-purpose` agent per feature
-- Each agent generates the design (if needed) and plan for its feature
-- Collect results, save to `.planning/designs/` and `.planning/plans/`
+```
+TeamCreate(team_name: "epic-prep-{slug}", description: "Preparing specs/plans for epic")
+
+// One task + teammate per feature that needs a plan
+Agent(
+  team_name: "epic-prep-{slug}",
+  name: "planner-{feature-1}",
+  subagent_type: "general-purpose",
+  isolation: "worktree",
+  prompt: "Generate the design (if needed) and plan for feature: {feature-1}.
+    Read spec at .planning/specs/{feature-1}.md.
+    Save design to .planning/designs/, plan to .planning/plans/."
+)
+
+Agent(
+  team_name: "epic-prep-{slug}",
+  name: "planner-{feature-2}",
+  subagent_type: "general-purpose",
+  isolation: "worktree",
+  prompt: "Generate the design (if needed) and plan for feature: {feature-2}. ..."
+)
+```
+Collect results after all finish, then `TeamDelete()`.
 
 ### Step 2: Sort by dependency and create branch
 
@@ -744,11 +829,36 @@ echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 **For each feature (or group of parallel features):**
 
 1. **If Agent Teams enabled and 2+ features can run at the same time:**
-   - Spawn one agent per feature with `isolation: "worktree"`
-   - Each agent gets: its spec, design doc (if exists), plan, TDD instructions, relevant rules
-   - **Design doc handoff is MANDATORY** — every frontend/UI agent must read the design doc first
-   - Wait for all parallel agents to finish
+   ```
+   TeamCreate(team_name: "epic-build-{slug}", description: "Building epic features in parallel")
+
+   // One task per feature
+   TaskCreate(subject: "Build {feature-A}", description: "...")
+   TaskCreate(subject: "Build {feature-B}", description: "...")
+
+   // One teammate per feature — MUST use team_name + name
+   Agent(
+     team_name: "epic-build-{slug}",
+     name: "builder-{feature-A}",
+     subagent_type: "general-purpose",
+     isolation: "worktree",
+     prompt: "Build feature {A}. Spec: .planning/specs/{A}.md. Plan: .planning/plans/{A}.md.
+       Design doc: .planning/designs/{A}.md — read FIRST if exists.
+       Follow TDD. Mark tasks completed when done."
+   )
+
+   Agent(
+     team_name: "epic-build-{slug}",
+     name: "builder-{feature-B}",
+     subagent_type: "general-purpose",
+     isolation: "worktree",
+     prompt: "Build feature {B}. ..."
+   )
+   ```
+   - **Design doc handoff is MANDATORY** — every frontend/UI teammate must read the design doc first
+   - Wait for all teammates to finish (messages arrive automatically)
    - Merge worktrees, run full test suite
+   - `TeamDelete()` to clean up
    - If tests fail → fix before moving on
 
 2. **If sequential (Agent Teams not enabled or only one feature ready):**

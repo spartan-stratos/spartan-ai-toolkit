@@ -134,16 +134,41 @@ Based on results:
 echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 ```
 
-**If Agent Teams is enabled**, run market research and competitor teardowns in parallel:
+**If Agent Teams is enabled**, create a research team (NOT sub-agents):
 
-1. Use `TeamCreate` with name `research-{idea-slug}`
-2. Spawn 2-3 agents:
-   - **market-researcher** — TAM/SAM/SOM, growth signals, adjacent markets
-   - **competitor-analyst** — teardown 3+ competitors, find gaps
-   - **contrarian** (optional) — challenge assumptions, find risks
-3. After all report back, synthesize into a single research doc
-4. Clean up team with `TeamDelete`
+```
+TeamCreate(team_name: "research-{idea-slug}", description: "Market research for {idea}")
 
+TaskCreate(subject: "Market research", description: "TAM/SAM/SOM, growth signals, adjacent markets")
+TaskCreate(subject: "Competitor teardowns", description: "Teardown 3+ competitors, find gaps")
+TaskCreate(subject: "Contrarian analysis", description: "Challenge assumptions, find risks")
+
+Agent(
+  team_name: "research-{idea-slug}",
+  name: "market-researcher",
+  subagent_type: "general-purpose",
+  prompt: "Research the market for: {idea}. TAM/SAM/SOM, growth signals, adjacent markets.
+    Track sources with credibility scores. Check TaskList, claim your task."
+)
+
+Agent(
+  team_name: "research-{idea-slug}",
+  name: "competitor-analyst",
+  subagent_type: "general-purpose",
+  prompt: "Teardown 3+ competitors for: {idea}. Pricing, features, strengths, weaknesses, gaps.
+    Check TaskList, claim your task."
+)
+
+Agent(
+  team_name: "research-{idea-slug}",
+  name: "contrarian",
+  subagent_type: "general-purpose",
+  prompt: "Challenge assumptions about: {idea}. Find risks, failures in similar ideas, hidden costs.
+    Check TaskList, claim your task."
+)
+```
+
+After all teammates report back, `TeamDelete()`, synthesize into a single research doc.
 Skip to step 11 (synthesis) after team reports back.
 
 **If Agent Teams is NOT enabled**, run sequentially:

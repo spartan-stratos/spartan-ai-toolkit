@@ -48,18 +48,51 @@ All documents include **file paths in backticks** so Claude can navigate directl
 echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 ```
 
-**If Agent Teams is enabled**, use a coordinated mapping team instead of independent subagents:
+**If Agent Teams is enabled**, use a coordinated mapping team (NOT sub-agents):
 
-1. Use `TeamCreate` with name `map-{project-slug}`
-2. Create 4 tasks — one per domain (tech, architecture, quality, concerns)
-3. Spawn 4 agents in parallel:
-   - **tech-mapper** — STACK.md + INTEGRATIONS.md
-   - **arch-mapper** — ARCHITECTURE.md + STRUCTURE.md
-   - **quality-mapper** — CONVENTIONS.md + TESTING.md
-   - **concerns-mapper** — CONCERNS.md
-4. Agents can message each other if they find cross-cutting issues (e.g., tech mapper finds a security concern → messages concerns-mapper)
-5. After all complete, verify 7 documents exist and are non-empty
-6. Clean up team with `TeamDelete`
+```
+TeamCreate(team_name: "map-{project-slug}", description: "Deep codebase analysis")
+
+TaskCreate(subject: "Map tech stack + integrations", description: "Write STACK.md + INTEGRATIONS.md to .planning/codebase/")
+TaskCreate(subject: "Map architecture + structure", description: "Write ARCHITECTURE.md + STRUCTURE.md to .planning/codebase/")
+TaskCreate(subject: "Map conventions + testing", description: "Write CONVENTIONS.md + TESTING.md to .planning/codebase/")
+TaskCreate(subject: "Map concerns", description: "Write CONCERNS.md to .planning/codebase/")
+
+Agent(
+  team_name: "map-{project-slug}",
+  name: "tech-mapper",
+  subagent_type: "Explore",
+  prompt: "Write STACK.md and INTEGRATIONS.md to .planning/codebase/.
+    Include file paths in backticks. Check TaskList, claim your task.
+    If you find security concerns, message concerns-mapper via SendMessage."
+)
+
+Agent(
+  team_name: "map-{project-slug}",
+  name: "arch-mapper",
+  subagent_type: "Explore",
+  prompt: "Write ARCHITECTURE.md and STRUCTURE.md to .planning/codebase/.
+    Trace data flow end-to-end. Check TaskList, claim your task."
+)
+
+Agent(
+  team_name: "map-{project-slug}",
+  name: "quality-mapper",
+  subagent_type: "Explore",
+  prompt: "Write CONVENTIONS.md and TESTING.md to .planning/codebase/.
+    Find patterns, code style, test coverage. Check TaskList, claim your task."
+)
+
+Agent(
+  team_name: "map-{project-slug}",
+  name: "concerns-mapper",
+  subagent_type: "Explore",
+  prompt: "Write CONCERNS.md to .planning/codebase/.
+    Find tech debt, bugs, security risks, fragile areas. Check TaskList, claim your task."
+)
+```
+
+After all teammates complete, verify 7 documents exist and are non-empty, then `TeamDelete()`.
 
 **If Agent Teams is NOT enabled**, delegate to GSD:
 
