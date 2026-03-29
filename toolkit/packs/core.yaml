@@ -28,6 +28,7 @@ commands:
 
 rules:
   - core/NAMING_CONVENTIONS.md
+  - core/TIMEZONE.md
   - core/SKILL_AUTHORING.md
 
 skills: []

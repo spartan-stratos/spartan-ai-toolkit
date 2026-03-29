@@ -316,6 +316,7 @@ Rules are enforced automatically every session. No action needed — they're act
 | Rule | Pack |
 |------|------|
 | `NAMING_CONVENTIONS` | core |
+| `TIMEZONE` | core |
 | `ARCHITECTURE` | shared-backend |
 | `SCHEMA` | database |
 | `ORM_AND_REPO` | database |
