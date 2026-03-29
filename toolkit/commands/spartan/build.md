@@ -289,31 +289,38 @@ Write the first failing test for Task 1. Show it fails.
 
 ## Stage 4: Implement
 
-### Auto-parallelize with Agent Teams
+### MANDATORY: Check for Agent Teams BEFORE any task execution
+
+**STOP. Do this check FIRST — before writing any code.**
 
 ```bash
 echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 ```
 
-**If Agent Teams is enabled:** Look at the plan and auto-detect parallelism. If 2+ tasks in the plan can run at the same time (no dependency between them), use Agent Teams automatically. Don't ask — just do it.
+**Then analyze the plan for parallel groups.** Look at the dependency table from Stage 3:
+- Group tasks that share the same dependency (e.g., tasks 3, 4, 5 all depend on task 2 → they form a parallel group)
+- Tasks at the end with no dependency on each other → another parallel group
+- Full-stack plans ALWAYS have parallel groups (backend track + frontend track)
 
-**When to parallelize (auto-trigger):**
-- Full-stack: backend + frontend tracks are always parallel (frontend blocked only by its API dependency, not all backend tasks)
-- Backend-only with 4+ tasks: data-layer tasks vs API-layer tasks can often run in parallel
-- Frontend-only with 4+ tasks: independent components/pages can run in parallel
-- Any mode where the plan has 2+ tasks with no dependency on each other
+**Decision rule:**
 
-**When NOT to parallelize:**
-- Only 1-3 small sequential tasks — overhead isn't worth it
-- All tasks depend on each other in a chain
-- Agent Teams env var is not set
+| Env var set? | Parallel groups found? | Action |
+|---|---|---|
+| YES | YES (2+ tasks in any group) | **MUST use Agent Teams. Do NOT use sequential.** |
+| YES | NO (all tasks in a chain) | Sequential execution |
+| NO | - | Sequential execution |
 
-**How to run it (follow this exact sequence):**
+**If the plan has 5+ tasks and you can see parallel groups but you're about to run them one-by-one — STOP. You're doing it wrong. Use Agent Teams.**
 
 > **Sub-agents vs Agent Teams — know the difference:**
-> - `Agent(run_in_background: true)` = sub-agent. Same session, 1 node. **NOT a team.**
-> - `Agent(team_name: "...", name: "...")` = teammate. Separate session, own node, can message others. **This is what you want.**
-> - Without `team_name` param, agents ALWAYS spawn as sub-agents. The `team_name` param is what makes them teammates.
+> - `Agent(run_in_background: true)` = sub-agent. Same session, 1 node. You do all the work yourself with helpers. **NOT what you want for parallel tasks.**
+> - `Agent(team_name: "...", name: "...")` = teammate. Separate session, own node, works independently. **This is what you MUST use.**
+> - `TaskCreate` WITHOUT `TeamCreate` first = just your personal to-do list. NOT Agent Teams.
+> - `TeamCreate` THEN `TaskCreate` THEN `Agent(team_name: ...)` = real Agent Teams with shared task list.
+
+### Agent Teams execution (when parallel groups exist)
+
+**How to run it (follow this exact sequence):**
 
 1. Check for design doc and tokens:
 ```bash
@@ -407,9 +414,9 @@ Every color, font, and spacing value must come from the token list.
 
 8. **MANDATORY: Continue to Stage 5 (Review) NOW.** Do NOT stop here. Do NOT ask "Want me to commit?" or "Should I create a PR?" — implementation is done but review hasn't happened yet. Go straight to Gate 3 → Stage 5.
 
-**If Agent Teams is NOT enabled** (env var not set), continue with sequential execution below.
+**If Agent Teams is NOT enabled** (env var not set) OR **all tasks are in a strict chain with zero parallel groups**, use sequential execution below.
 
-### Sequential execution (default)
+### Sequential execution (ONLY when no parallel groups exist)
 
 Execute each task in order:
 
