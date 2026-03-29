@@ -17,6 +17,31 @@ All mutations use `@Post`. Never use `@Put`, `@Delete`, or `@Patch`.
 | Delete | `@Post("/delete")` | `@Post("/delete")` |
 | Custom action | `@Post("/close")` | `@Post("/close")` |
 
+### Bad — REST Verbs (NEVER use these)
+
+```kotlin
+// ❌ BAD — REST verbs
+@Patch("/{id}")
+suspend fun update(@PathVariable id: UUID, @Body request: UpdateRequest): Response
+
+@Delete("/{id}")
+suspend fun delete(@PathVariable id: UUID): Boolean
+
+@Put("/{id}")
+suspend fun replace(@PathVariable id: UUID, @Body request: ReplaceRequest): Response
+```
+
+### Good — RPC-Style
+
+```kotlin
+// ✅ GOOD — RPC-style
+@Post("/update")
+suspend fun update(@QueryValue id: UUID, @Body request: UpdateRequest): Response
+
+@Post("/delete")
+suspend fun delete(@QueryValue id: UUID): Boolean
+```
+
 ---
 
 ## URL Design
