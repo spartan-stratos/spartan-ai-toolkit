@@ -15,13 +15,13 @@
 - **No ON DELETE CASCADE** — Handle deletions in application
 - **TEXT not VARCHAR** — Always use TEXT for strings
 - **UUID primary keys** — `uuid_generate_v4()`
-- **Soft delete** — Use `deleted_at TIMESTAMP`, never hard delete records
+- **Soft delete** — Use `deleted_at TIMESTAMPTZ`, never hard delete records
 - Standard columns: `id`, `created_at`, `updated_at`, `deleted_at`
 
 ### Data Type Standards
 - Strings: TEXT (not VARCHAR)
 - IDs: UUID
-- Dates: TIMESTAMP
+- Dates: TIMESTAMPTZ (all timestamps are UTC, see `TIMEZONE.md`)
 - Booleans: BOOLEAN
 - Flexible data: JSONB
 - IP addresses: INET
@@ -107,9 +107,9 @@ CREATE TABLE products (
     id UUID PRIMARY KEY,
     name TEXT NOT NULL,
     status TEXT DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP,
-    deleted_at TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ,
+    deleted_at TIMESTAMPTZ
 );
 ```
 
