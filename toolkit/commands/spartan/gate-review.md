@@ -94,12 +94,45 @@ Offer to use a review team for parallel review:
 > - **A) Review team** — quality reviewer + test reviewer + security reviewer, all in parallel
 > - **B) Single reviewer** — one phase-reviewer agent (cheaper, faster for small changes)"
 
-If user picks A → run `/spartan:team review` internally. Three agents review in parallel:
-1. **quality-reviewer** — code design, SOLID, clean code, stack conventions
-2. **test-reviewer** — test coverage, edge cases, test quality
-3. **security-reviewer** — auth, input validation, data handling
+If user picks A → create a review team (NOT sub-agents):
 
-After all report back, synthesize findings and continue to Step 4 (Discussion).
+```
+TeamCreate(team_name: "gate-review-{phase}", description: "Gate 3.5 review")
+
+TaskCreate(subject: "Quality review", description: "Code design, SOLID, clean code, stack conventions")
+TaskCreate(subject: "Test review", description: "Test coverage, edge cases, test quality")
+TaskCreate(subject: "Security review", description: "Auth, input validation, data handling")
+
+Agent(
+  team_name: "gate-review-{phase}",
+  name: "quality-reviewer",
+  subagent_type: "phase-reviewer",
+  prompt: "Review for code design, SOLID, clean code, stack conventions.
+    Changed files: {list}. Spec: {path}. Plan: {path}.
+    Builder self-assessment: {findings from Step 2}.
+    Verdict: ACCEPT or NEEDS CHANGES. Check TaskList, claim your task."
+)
+
+Agent(
+  team_name: "gate-review-{phase}",
+  name: "test-reviewer",
+  subagent_type: "general-purpose",
+  prompt: "Review test coverage, edge cases, test quality.
+    Changed files: {list}. Check independence, assertions, no duplication.
+    Verdict: ACCEPT or NEEDS CHANGES. Check TaskList, claim your task."
+)
+
+Agent(
+  team_name: "gate-review-{phase}",
+  name: "security-reviewer",
+  subagent_type: "general-purpose",
+  prompt: "Review auth, input validation, data handling, injection risks.
+    Changed files: {list}. Check OWASP top 10.
+    Verdict: ACCEPT or NEEDS CHANGES. Check TaskList, claim your task."
+)
+```
+
+After all teammates report back, synthesize findings, `TeamDelete()`, continue to Step 4 (Discussion).
 
 If user picks B (or Agent Teams not enabled) → use single reviewer below.
 
