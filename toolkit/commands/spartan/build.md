@@ -28,7 +28,7 @@ EPIC (multi-feature — auto-detected):
 ```
 
 **Fast path:** For small work (< 1 day, ≤ 4 tasks), you do spec + plan inline. No separate commands needed.
-**Full path:** For bigger work, you call `/spartan:spec`, `/spartan:design`, `/spartan:plan` as sub-steps.
+**Full path:** For bigger work, you call `/spartan:spec`, `/spartan:ux prototype`, `/spartan:plan` as sub-steps.
 **Epic path:** If the feature name matches an epic with 2+ specs ready, build all features together — one branch, one PR.
 
 ### Stages That MUST NOT Be Skipped
@@ -205,7 +205,7 @@ If no design exists and UI work is needed:
 > - **B) Skip** — I'll design as I build (fine for simple UI changes)
 > - **C) I have Figma designs** — point me to them
 
-If user picks A → use the approach from `/spartan:design` internally. Run the full design workflow including the design-critic agent review.
+If user picks A → use the approach from `/spartan:ux prototype` internally. Run the full design workflow including the design-critic agent review.
 
 If user picks B → continue to Plan.
 

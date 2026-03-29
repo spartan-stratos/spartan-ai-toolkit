@@ -10,7 +10,7 @@ description: |
   </example>
 
   <example>
-  Context: /spartan:design command needs a second opinion on the UI.
+  Context: /spartan:ux prototype command needs a second opinion on the UI.
   user: "Run the design critic on this feature"
   assistant: "I'll spawn the design-critic to review the design doc and give a verdict."
   </example>

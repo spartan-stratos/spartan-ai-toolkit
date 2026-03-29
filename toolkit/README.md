@@ -58,9 +58,9 @@ After install, open any project, run `claude`, then type `/spartan`.
 Every feature follows the same pipeline. Skip steps that don't apply.
 
 ```
-/spartan:spec → /spartan:design → /spartan:plan → /spartan:build → /spartan:pr-ready
-      ↑              ↑                 ↑              ↑ + 3.5           ↑
-    Gate 1      Design Gate         Gate 2          Gate 3           Gate 4
+/spartan:spec → /spartan:ux → /spartan:plan → /spartan:build → /spartan:pr-ready
+      ↑             ↑               ↑              ↑ + 3.5           ↑
+    Gate 1     Design Gate       Gate 2          Gate 3           Gate 4
 ```
 
 | Step | What happens |

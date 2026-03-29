@@ -161,7 +161,7 @@ Run when all tasks are done. This is the "ship it?" check.
 
 Run after the designer and `design-critic` agent both review the design doc. Both must accept.
 
-**Trigger:** `/spartan:design [feature-name]`
+**Trigger:** `/spartan:ux prototype [feature-name]`
 
 ### Agent Agreement
 - [ ] Design-critic agent spawned and given the design doc
