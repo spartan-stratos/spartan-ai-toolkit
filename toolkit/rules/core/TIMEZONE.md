@@ -4,20 +4,80 @@
 
 **Server stores UTC. API sends UTC. API receives UTC. No exceptions.**
 
-The frontend is the only place that converts to/from local time — and only for display.
+The frontend is the only place that converts to/from local time — for display only.
 
 ```
-Database (UTC) → Backend (UTC) → API JSON (UTC) → Frontend receives (UTC) → Display (local)
-                                                  ← Frontend sends (UTC) ←  Input (local → UTC)
+Database (TIMESTAMPTZ/UTC) → Backend (Instant/UTC) → API JSON (ISO 8601 Z) → Frontend (UTC) → Display (local)
+                                                                              ← Send (local → UTC) ←  Input
 ```
 
 ---
 
-## Backend
+## Database
+
+### Use `TIMESTAMPTZ` — Not `TIMESTAMP`
+
+**Always use `TIMESTAMPTZ` (with timezone).** PostgreSQL docs and wiki both say this.
+
+Why: `TIMESTAMPTZ` converts to UTC on insert and converts back on read. If a connection has a non-UTC session timezone (DBA tools, connection pool quirks, migration scripts), `TIMESTAMPTZ` still stores the correct UTC value. `TIMESTAMP` without timezone silently stores whatever you give it — if the session isn't UTC, you get wrong data and can't tell.
+
+```sql
+-- CORRECT — TIMESTAMPTZ is the safe default
+CREATE TABLE events (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  starts_at TIMESTAMPTZ NOT NULL,
+  ends_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ,
+  deleted_at TIMESTAMPTZ
+);
+
+-- WRONG — TIMESTAMP without timezone is fragile
+CREATE TABLE events (
+  id UUID PRIMARY KEY,
+  starts_at TIMESTAMP NOT NULL,  -- Breaks if session timezone isn't UTC
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+Both types use 8 bytes internally. No storage difference.
+
+### Server Must Run in UTC
+
+The database server, application server, and all containers must run in UTC:
+
+```yaml
+# application.yml
+datasources:
+  default:
+    connection-properties:
+      timezone: UTC
+```
+
+```sql
+-- PostgreSQL: verify
+SHOW timezone;  -- Should return 'UTC'
+```
+
+```dockerfile
+# Dockerfile
+ENV TZ=UTC
+```
+
+```yaml
+# Kubernetes pod spec
+env:
+  - name: TZ
+    value: "UTC"
+```
+
+---
+
+## Backend (Kotlin)
 
 ### Always Use `Instant` — Never `LocalDateTime`
 
-`Instant` is UTC by definition. `LocalDateTime` has no timezone info and leads to bugs.
+`Instant` is UTC by definition. `LocalDateTime` has no timezone info and causes bugs.
 
 ```kotlin
 // CORRECT — Instant is always UTC
@@ -26,63 +86,48 @@ val expiresAt: Instant = Instant.now().plusSeconds(3600)
 
 // WRONG — LocalDateTime has no timezone, ambiguous
 val now: LocalDateTime = LocalDateTime.now()  // What timezone? Nobody knows.
-val expiresAt: LocalDateTime = LocalDateTime.now().plusHours(1)
 ```
 
-### Never Use `ZonedDateTime` in Business Logic
+### `ZonedDateTime` — Only at Computation Boundaries
 
-`ZonedDateTime` is only for converting when absolutely needed (e.g., generating a report for a specific timezone). Don't pass it between layers.
+Never put `ZonedDateTime` in entities, DTOs, or API payloads. It's OK for:
+- Scheduling logic (computing "next 9 AM in user's timezone")
+- DST-aware date arithmetic ("add 1 day" at DST boundary)
+- Generating reports in a specific timezone
+
+Always convert back to `Instant` before passing to other layers.
 
 ```kotlin
-// CORRECT — use Instant everywhere
+// CORRECT — entities and DTOs use Instant
 data class UserEntity(
   val createdAt: Instant,
   val lastLoginAt: Instant?,
   val subscriptionExpiresAt: Instant?
 )
 
-// WRONG — ZonedDateTime in entities/DTOs
+// CORRECT — ZonedDateTime only for scheduling computation
+fun nextNotificationTime(userTimezone: String, localTime: LocalTime): Instant {
+  val zone = ZoneId.of(userTimezone)
+  val nextLocal = ZonedDateTime.now(zone).with(localTime)
+  return nextLocal.toInstant()  // Convert back to Instant
+}
+
+// WRONG — ZonedDateTime in entity
 data class UserEntity(
-  val createdAt: ZonedDateTime,   // NO — carries timezone baggage
-  val lastLoginAt: LocalDateTime? // NO — ambiguous
+  val createdAt: ZonedDateTime  // NO — keep entities in Instant
 )
-```
-
-### Never Store Timezone in the Database
-
-Don't add `timezone` columns. Don't save user timezone preferences alongside timestamps. If the frontend needs to display local time, it does the conversion itself.
-
-```sql
--- CORRECT — just UTC timestamps
-CREATE TABLE events (
-  id UUID PRIMARY KEY,
-  starts_at TIMESTAMP NOT NULL,     -- UTC
-  ends_at TIMESTAMP NOT NULL,       -- UTC
-  created_at TIMESTAMP DEFAULT NOW() -- UTC
-);
-
--- WRONG — storing timezone info
-CREATE TABLE events (
-  id UUID PRIMARY KEY,
-  starts_at TIMESTAMP NOT NULL,
-  ends_at TIMESTAMP NOT NULL,
-  timezone TEXT DEFAULT 'America/New_York'  -- DON'T DO THIS
-);
 ```
 
 ### Jackson Serialization
 
-Jackson must serialize all `Instant` fields as ISO 8601 with the `Z` (UTC) suffix. This should be configured globally:
+Jackson must serialize `Instant` as ISO 8601 with the `Z` suffix:
 
 ```kotlin
-// ObjectMapper config (usually already set)
 objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
 // Output: "2024-01-15T10:30:00Z"
 ```
 
-Every datetime field in API JSON looks like: `"2024-01-15T10:30:00Z"`
-
-Never output offsets like `+07:00` or timezone names like `Asia/Ho_Chi_Minh`.
+Never output offsets like `+07:00` or timezone names in API responses.
 
 ---
 
@@ -100,8 +145,6 @@ Never output offsets like `+07:00` or timezone names like `Asia/Ho_Chi_Minh`.
 
 ### Request Bodies — Frontend Sends UTC
 
-When the frontend sends a datetime, it MUST be UTC:
-
 ```json
 {
   "starts_at": "2024-01-20T09:00:00Z",
@@ -115,19 +158,16 @@ When the frontend sends a datetime, it MUST be UTC:
 GET /events?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z
 ```
 
-### No Timezone Fields in Request or Response
+### No Timezone Fields in Timestamp Payloads
+
+Don't put timezone info alongside timestamps. The exception is user preferences (see below).
 
 ```json
-// WRONG — timezone info in API
-{
-  "starts_at": "2024-01-20T09:00:00Z",
-  "timezone": "America/New_York"
-}
+// WRONG — timezone alongside a timestamp
+{ "starts_at": "2024-01-20T09:00:00Z", "timezone": "America/New_York" }
 
-// CORRECT — just UTC, frontend handles display
-{
-  "starts_at": "2024-01-20T09:00:00Z"
-}
+// CORRECT — just UTC
+{ "starts_at": "2024-01-20T09:00:00Z" }
 ```
 
 ---
@@ -136,18 +176,10 @@ GET /events?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z
 
 ### Receive UTC, Convert for Display
 
-All API responses return UTC. Convert to local only when showing to the user:
-
 ```typescript
-// CORRECT — convert at display time
+// Convert at display time
 function formatDate(utcString: string): string {
-  return new Date(utcString).toLocaleString()
-  // Or use Intl.DateTimeFormat for more control
-}
-
-// CORRECT — with specific format
-function formatDate(utcString: string, locale = 'en-US'): string {
-  return new Intl.DateTimeFormat(locale, {
+  return new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(utcString))
@@ -156,86 +188,103 @@ function formatDate(utcString: string, locale = 'en-US'): string {
 
 ### Send UTC to Server
 
-Convert local input to UTC before sending:
-
 ```typescript
-// CORRECT — convert to UTC before API call
-const localDate = new Date(userInput)  // user picks "Jan 20, 2024 9:00 AM"
-const utcString = localDate.toISOString()  // "2024-01-20T02:00:00.000Z" (if user is UTC+7)
+// Convert local input to UTC before API call
+const localDate = new Date(userInput)
+const utcString = localDate.toISOString()  // "2024-01-20T02:00:00.000Z"
 
-await api.post('/events', {
-  startsAt: utcString,  // Always UTC
-})
+await api.post('/events', { startsAt: utcString })
 
-// WRONG — sending local time string
-await api.post('/events', {
-  startsAt: '2024-01-20T09:00:00',  // No Z suffix — ambiguous!
-})
+// WRONG — no Z suffix, ambiguous
+await api.post('/events', { startsAt: '2024-01-20T09:00:00' })
 ```
 
-### Date Libraries
+### Use Browser Timezone at Render Time
 
-If using a date library (date-fns, dayjs, luxon), still follow the same pattern:
-
-```typescript
-// date-fns example
-import { formatInTimeZone } from 'date-fns-tz'
-
-// Display: UTC → user's local timezone
-const display = formatInTimeZone(
-  new Date(apiResponse.createdAt),  // UTC from API
-  Intl.DateTimeFormat().resolvedOptions().timeZone,  // user's timezone
-  'MMM d, yyyy h:mm a'
-)
-
-// Send: local → UTC
-const utc = new Date(localInput).toISOString()
-```
-
-### Never Store Timezone in Frontend State
-
-Don't track the user's timezone in state or send it to the backend. The browser already knows the timezone — use it at render time.
+Don't track the user's timezone in frontend state. The browser already knows it.
 
 ```typescript
-// WRONG — tracking timezone in state
+// CORRECT — use at render time
+const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+// WRONG — storing timezone in state
 const [timezone, setTimezone] = useState('America/New_York')
-
-// CORRECT — use browser timezone at render time
-const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 ```
 
 ---
 
-## Database
+## When You DO Need Timezone
 
-### TIMESTAMP Without Timezone
+There are cases where storing a user's IANA timezone is correct. The rule is:
 
-Use `TIMESTAMP` (not `TIMESTAMPTZ`). The value is always UTC. No timezone info needed.
+**Past events (created_at, login_at, order_placed_at):** Never store timezone. `TIMESTAMPTZ` (UTC) is enough.
 
-```sql
--- CORRECT
-created_at TIMESTAMP DEFAULT NOW()  -- NOW() returns UTC in a UTC-configured server
-
--- ALSO ACCEPTABLE (PostgreSQL stores both as UTC internally)
-created_at TIMESTAMPTZ DEFAULT NOW()
-```
-
-### Server Must Be Configured for UTC
-
-The database server and application server must run in UTC:
-
-```yaml
-# application.yml
-datasources:
-  default:
-    connection-properties:
-      timezone: UTC
-```
+**User preferences (notification time, business hours):** Store the user's IANA timezone as a separate column. Don't mix it with timestamps.
 
 ```sql
--- PostgreSQL: verify server timezone
-SHOW timezone;  -- Should return 'UTC'
+-- CORRECT — timezone as a user preference, not part of timestamps
+CREATE TABLE user_preferences (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL,
+  timezone TEXT NOT NULL DEFAULT 'UTC',          -- IANA timezone: 'America/New_York'
+  notification_time TEXT NOT NULL DEFAULT '09:00', -- local time, not a timestamp
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Then compute UTC fire time dynamically in code:
+-- nextFire = ZonedDateTime.of(today, LocalTime.parse("09:00"), ZoneId.of("America/New_York")).toInstant()
 ```
+
+**Why dynamic computation?** Because DST shifts change the UTC offset. "9 AM New York" is `14:00 UTC` in winter but `13:00 UTC` in summer. Storing a fixed UTC value would drift by an hour.
+
+**Never use fixed offsets as timezone identifiers.** `+05:30` is an offset, not a timezone. It changes with DST. Use IANA names: `Asia/Kolkata`, `America/New_York`.
+
+---
+
+## Microservices
+
+### Inter-Service Communication
+
+All service-to-service datetime fields use ISO 8601 UTC, same as external APIs.
+
+### Event Streaming (Kafka, RabbitMQ)
+
+- Use epoch-based types: Avro `timestamp-millis`, Protobuf `google.protobuf.Timestamp`
+- These are UTC by definition — no timezone ambiguity
+- Document in your schema that all timestamps are UTC epoch
+
+### Logging
+
+All services must log in UTC. If services in different timezones log in local time, correlating logs across services is a nightmare.
+
+```xml
+<!-- logback.xml — force UTC -->
+<timestamp key="timestamp" datePattern="yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" timeReference="UTC"/>
+```
+
+### Distributed Tracing
+
+OpenTelemetry spans use nanosecond UTC timestamps internally. No action needed — but make sure NTP is configured on all nodes. Clock skew (not timezone) is the bigger concern.
+
+### Cron / Scheduler Jobs
+
+Cron expressions are timezone-sensitive. DST transitions can cause jobs to fire twice, or not at all, in the 1-3 AM window.
+
+```kotlin
+// CORRECT — schedule in UTC to avoid DST issues
+@Scheduled(cron = "0 0 14 * * *", zone = "UTC")  // 2 PM UTC, not "2 PM local"
+fun dailyDigest() { ... }
+
+// If the job MUST fire at local wall-clock time, use IANA timezone explicitly:
+@Scheduled(cron = "0 0 9 * * *", zone = "America/New_York")  // 9 AM New York, DST-aware
+fun morningNotification() { ... }
+```
+
+Avoid scheduling jobs in the 1:00-3:00 AM local time window for any timezone with DST.
+
+### IANA Timezone Database Updates
+
+Governments change DST rules. Your JVM and OS timezone databases need updating. If you run long-lived JVMs, update the JDK or use the TZUpdater tool.
 
 ---
 
@@ -243,19 +292,25 @@ SHOW timezone;  -- Should return 'UTC'
 
 | Layer | Type | Format | Example |
 |-------|------|--------|---------|
-| Database | Column type | `TIMESTAMP` | `2024-01-15 10:30:00` |
+| Database | Column type | `TIMESTAMPTZ` | `2024-01-15 10:30:00+00` |
 | Backend (Kotlin) | Property type | `Instant` | `Instant.now()` |
 | API JSON | String | ISO 8601 + Z | `"2024-01-15T10:30:00Z"` |
 | Frontend (receive) | Parse | `new Date(utcString)` | `new Date("2024-01-15T10:30:00Z")` |
-| Frontend (display) | Format | `toLocaleString()` | `"Jan 15, 2024, 5:30 PM"` (UTC+7) |
+| Frontend (display) | Format | `Intl.DateTimeFormat` | `"Jan 15, 2024, 5:30 PM"` |
 | Frontend (send) | Serialize | `toISOString()` | `"2024-01-15T10:30:00.000Z"` |
+| Events (Kafka) | Type | epoch millis | `1705312200000` |
+| Cron jobs | Zone | IANA or UTC | `zone = "UTC"` |
+| User preference | Column | IANA timezone | `America/New_York` |
 
 ## What NOT to Do
 
+- Don't use `TIMESTAMP` without timezone — use `TIMESTAMPTZ`
 - Don't use `LocalDateTime` in Kotlin — use `Instant`
-- Don't store timezone names or offsets in the database
-- Don't send timezone info in API requests or responses
-- Don't use `TIMESTAMPTZ` thinking it "stores the timezone" — PostgreSQL converts everything to UTC anyway
+- Don't put `ZonedDateTime` in entities or DTOs
+- Don't use fixed offsets (`+05:30`) as timezone identifiers — use IANA names
+- Don't store timezone alongside timestamps for past events
 - Don't convert to local time on the backend — that's the frontend's job
-- Don't assume a timezone — let the browser handle it
 - Don't format dates on the server for display — return UTC, let the client format
+- Don't schedule cron jobs in the 1-3 AM DST window
+- Don't assume the host timezone is UTC — set `TZ=UTC` in containers
+- Don't log in local time — all services log UTC
