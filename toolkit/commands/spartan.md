@@ -48,6 +48,18 @@ This prevents confusion when the user is running multiple windows. Keep it to on
 
 ---
 
+## Step 0.9: Load Command Config (silent, always runs)
+
+Check for per-command custom prompts. Commands config lets users inject custom instructions into any Spartan command.
+
+```bash
+cat .spartan/commands.yaml 2>/dev/null || cat .spartan/commands.yml 2>/dev/null
+```
+
+If the file exists and has a `prompts.[command-name]` entry matching the command being routed to, pass those custom instructions to the command. They're appended after the built-in prompt.
+
+---
+
 ## Step 1: Detect Project Context (silent, no questions)
 
 Before asking anything, scan the environment:

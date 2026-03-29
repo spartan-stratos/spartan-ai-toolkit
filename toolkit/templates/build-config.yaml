@@ -1,0 +1,63 @@
+# .spartan/build.yaml — Project-level build config
+# Copy this file to .spartan/build.yaml in your project and customize.
+# All fields are optional. Omit a field to use the default.
+
+# --- Worktree ---
+
+# Worktree isolation (default: true)
+# When true, /spartan:build creates a git worktree per feature.
+# Each terminal gets its own directory, branch, and PR — no conflicts.
+# Set to false to use simple git checkout (single terminal only).
+worktree: true
+
+# Branch prefix (default: "feature")
+# Controls the branch name: [prefix]/[slug] (e.g., "feature/user-auth")
+branch-prefix: "feature"
+
+# Extra directories to symlink into worktrees
+# Gitignored dirs (.planning, .memory, .handoff, .spartan) are always symlinked.
+# Add more here if your project has other shared gitignored dirs.
+# worktree-symlinks:
+#   - .env
+#   - config/local
+
+# --- Build stages ---
+
+# Max review-fix cycles before asking the user (default: 3)
+# max-review-rounds: 3
+
+# Stages to skip (use carefully — most stages exist for a reason)
+# Valid: spec, design, plan, review, ship
+# Note: review can never actually be skipped — it's always enforced
+# skip-stages: []
+
+# --- Custom prompts ---
+
+# Custom instructions injected into build stages.
+# Claude reads these alongside the built-in workflow instructions.
+# Use this to add project-specific rules, naming conventions, or checklists.
+prompts:
+  # Injected after spec questions, before scope is finalized
+  # spec: |
+  #   Always include performance requirements.
+  #   Ask about expected load/traffic.
+
+  # Injected into the plan stage, after the task list is generated
+  # plan: |
+  #   Every backend task must include a Flyway migration version check.
+  #   Frontend tasks must reference the Figma frame URL.
+
+  # Injected during implementation
+  # implement: |
+  #   Always add structured logging to new service methods.
+  #   Use the project's error code registry for new error types.
+
+  # Injected into the review agent's prompt
+  # review: |
+  #   Check that all API responses include request_id for tracing.
+  #   Verify that new endpoints have rate limiting annotations.
+
+  # Injected before PR creation
+  # ship: |
+  #   PR title must start with the Jira ticket number.
+  #   Add "Tested on staging" to the test plan if it touches payments.
