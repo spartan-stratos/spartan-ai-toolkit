@@ -358,6 +358,74 @@ For other tools, copy the rule files from `toolkit/rules/` into your tool's conf
 
 ---
 
+## Parallel Builds
+
+By default, `/spartan:build` creates a **git worktree** per feature — a separate directory with its own branch. This means you can build 2+ features in parallel from different terminals:
+
+```bash
+# Terminal 1                          # Terminal 2
+claude                                claude
+> /spartan:build auth                 > /spartan:build payments
+# → .claude/worktrees/feature-auth/   # → .claude/worktrees/feature-payments/
+# → PR #1                            # → PR #2
+```
+
+No conflicts. Each session gets its own worktree, branch, and PR.
+
+To disable worktrees (single-terminal mode), set `worktree: false` in `.spartan/build.yaml`.
+
+---
+
+## Project Config
+
+Customize any Spartan command per project. Two config files in `.spartan/`:
+
+### `.spartan/build.yaml` — Build workflow config
+
+Controls `/spartan:build` behavior:
+
+```yaml
+worktree: true              # git worktree per feature (default: true)
+branch-prefix: "feature"    # branch name: [prefix]/[slug]
+max-review-rounds: 3        # review-fix cycles before asking user
+skip-stages: []             # skip: spec, design, plan, ship (never review)
+worktree-symlinks: []       # extra dirs to share across worktrees
+
+prompts:
+  spec: |
+    Always include performance requirements.
+  plan: |
+    Every task must reference a Jira ticket.
+  implement: |
+    Add structured logging to new service methods.
+  review: |
+    Check all API responses include request_id.
+  ship: |
+    PR title: [PROJ-123] Short description.
+```
+
+### `.spartan/commands.yaml` — Per-command prompt injection
+
+Inject custom instructions into ANY Spartan command:
+
+```yaml
+prompts:
+  review: |
+    Flag any function longer than 50 lines.
+  pr-ready: |
+    Always add "Reviewers: @backend-team" for backend changes.
+  daily: |
+    Include blockers section. Tag by project area.
+  debug: |
+    Always check CloudWatch logs first.
+  migration: |
+    Migration files must start with ticket number.
+```
+
+Templates for both files are in `toolkit/templates/`.
+
+---
+
 ## Target Stack
 
 Rules and skills are tuned for this stack, but the command framework works with anything:

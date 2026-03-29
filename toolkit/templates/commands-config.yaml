@@ -1,0 +1,55 @@
+# .spartan/commands.yaml — Per-command overrides
+# Inject custom prompts into ANY Spartan command. Claude reads these
+# alongside the built-in instructions when the command runs.
+# All fields are optional.
+
+# --- Per-command prompt injection ---
+# Key = command name (without "spartan:" prefix)
+# Value = custom instructions appended to the command's prompt
+
+# prompts:
+#   spec: |
+#     Always ask about performance requirements.
+#     Include acceptance criteria in BDD format.
+#
+#   plan: |
+#     Tasks must reference Jira ticket numbers.
+#     Estimate hours per task.
+#
+#   review: |
+#     Check that all new endpoints have OpenAPI annotations.
+#     Flag any function longer than 50 lines.
+#
+#   pr-ready: |
+#     PR title format: [PROJ-123] Short description
+#     Always add "Reviewers: @backend-team" for backend changes.
+#
+#   daily: |
+#     Include blockers section.
+#     Tag items by project area (auth, payments, infra).
+#
+#   debug: |
+#     Always check CloudWatch logs first.
+#     Include the request_id in every investigation.
+#
+#   migration: |
+#     Migration files must start with ticket number.
+#     Always add a rollback section.
+#
+#   onboard: |
+#     Focus on the payments module first — it's the most complex.
+#     Skip the legacy admin/ directory.
+
+# --- Command defaults ---
+# Override default behavior for specific commands
+
+# defaults:
+#   build:
+#     worktree: true
+#     branch-prefix: "feature"
+#     max-review-rounds: 3
+#     skip-stages: []
+#   spec:
+#     save-path: ".planning/specs"  # where specs are saved
+#   review:
+#     parallel: true  # use Agent Teams for parallel review if available
