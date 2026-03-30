@@ -4,6 +4,7 @@ description: Security audit across IAM, networking, encryption, secrets, access 
 argument-hint: "[optional: focus-area]"
 preamble-tier: 3
 ---
+@rules/infrastructure/SECURITY.md
 
 # Terraform Security Audit: {{ args[0] | default: "full audit" }}
 

@@ -4,6 +4,7 @@ description: Deployment checklist — pre-deploy verification, apply, post-deplo
 argument-hint: "[environment]"
 preamble-tier: 3
 ---
+@rules/infrastructure/STATE_AND_BACKEND.md
 
 # Terraform Deploy: {{ args[0] | default: "target environment" }}
 

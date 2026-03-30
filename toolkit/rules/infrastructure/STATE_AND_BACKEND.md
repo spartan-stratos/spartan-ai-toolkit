@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*.tf"
+  - "**/*.hcl"
+  - "**/*.tfvars"
+---
 # State Management
 
 > Full guide: use `/spartan:tf-plan` or `/spartan:tf-deploy` commands

@@ -4,6 +4,10 @@ description: PR review for Terraform changes — 8-stage checklist covering stru
 argument-hint: "[optional: branch or PR]"
 preamble-tier: 3
 ---
+@rules/infrastructure/STRUCTURE.md
+@rules/infrastructure/MODULES.md
+@rules/infrastructure/PROVIDERS.md
+@rules/infrastructure/NAMING.md
 
 # Terraform Review: {{ args[0] | default: "current changes" }}
 

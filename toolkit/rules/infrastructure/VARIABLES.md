@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*.tf"
+  - "**/*.hcl"
+  - "**/*.tfvars"
+---
 # Variable Design and Validation
 
 ## Validation Blocks
