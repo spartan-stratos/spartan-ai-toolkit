@@ -11,7 +11,7 @@ All mutations use `@Post`. Never use `@Put`, `@Delete`, or `@Patch`.
 | Action | HTTP Method | Example |
 |--------|-------------|---------|
 | Read one | `@Get` | `@Get("/item")` |
-| Read list | `@Get` | `@Get("/items")` |
+| Read list (paginated) | `@Post("/list")` | `@Post("/list")` with body |
 | Create | `@Post` | `@Post` |
 | Update | `@Post("/update")` | `@Post("/update")` |
 | Delete | `@Post("/delete")` | `@Post("/delete")` |
@@ -41,6 +41,88 @@ suspend fun update(@QueryValue id: UUID, @Body request: UpdateRequest): Response
 @Post("/delete")
 suspend fun delete(@QueryValue id: UUID): Boolean
 ```
+
+---
+
+## List Endpoints — POST with offset/limit (CRITICAL)
+
+**All paginated list endpoints MUST use `@Post("/list")` with a request body containing `offset: Long` and `limit: Int`.**
+
+**NEVER use `@Get` with `page: Int` and `size: Int` query parameters.**
+
+### Why This Is Critical
+
+- `offset/limit` is precise — you know exactly which records you're fetching
+- `page/size` requires calculation and can lead to off-by-one errors
+- POST with body allows complex filters, sorting, and search without URL length limits
+- Consistent pattern across entire codebase
+
+### Bad — @Get with page/size Query Parameters
+
+```kotlin
+// ❌ BAD — @Get with page/size query params
+@Get("/bounties")
+suspend fun listBounties(
+  @QueryValue page: Int?,
+  @QueryValue size: Int?
+): PaginationData<BountyResponse>
+
+// ❌ BAD — Manager with page/size
+suspend fun list(page: Int, size: Int): PaginationData<Bounty>
+```
+
+### Good — @Post with offset/limit Request Body
+
+```kotlin
+// ✅ GOOD — @Post("/list") with request body
+@Post("/list")
+suspend fun listBounties(
+  authentication: Authentication,
+  @Valid @Body request: BountyListRequest
+): PaginationData<BountyResponse>
+
+// ✅ GOOD — Request DTO implements PageableRequest
+@Serdeable
+@Introspected
+data class BountyListRequest(
+  val filter: BountyFilter? = null,
+  val sort: BountySort? = null,
+  val search: String? = null,
+  @field:Min(0)
+  override val offset: Long = 0,
+  @field:Min(1)
+  override val limit: Int = 100
+) : PageableRequest
+
+// ✅ GOOD — Manager with offset/limit
+suspend fun list(
+  filter: BountyFilter?,
+  sort: BountySort?,
+  search: String?,
+  offset: Long,
+  limit: Int
+): Either<ClientException, PaginationData<BountyResponse>>
+```
+
+### PageableRequest Interface
+
+All list request DTOs should implement this interface:
+
+```kotlin
+interface PageableRequest {
+  val offset: Long  // Starting position (0-based)
+  val limit: Int    // Number of items to return
+}
+```
+
+### Quick Reference
+
+| Pattern | Status |
+|---------|--------|
+| `@Get` with `page/size` query params | ❌ NEVER |
+| `@Post("/list")` with `offset/limit` in body | ✅ ALWAYS |
+| Manager methods with `page: Int, size: Int` | ❌ NEVER |
+| Manager methods with `offset: Long, limit: Int` | ✅ ALWAYS |
 
 ---
 
@@ -127,7 +209,7 @@ class AdminController {
 
 ### Request/Response Patterns
 
-Required vs optional query parameters:
+Required vs optional query parameters (for single-resource GETs):
 
 ```kotlin
 // Required parameter - no default, will fail if missing
@@ -135,36 +217,34 @@ Required vs optional query parameters:
 suspend fun getEmployee(
   @QueryValue id: UUID  // Required - no ? nullable
 ): EmployeeResponse
-
-// Optional parameters - nullable with defaults
-@Get("/employees")
-suspend fun listEmployees(
-  @QueryValue search: String?,      // Optional
-  @QueryValue status: String?,      // Optional
-  @QueryValue page: Int?,           // Optional, default in code
-  @QueryValue limit: Int?           // Optional, default in code
-): EmployeeListResponse {
-  val effectivePage = page ?: 1
-  val effectiveLimit = limit ?: 20
-  // ...
-}
 ```
 
-Consistent pagination pattern:
+Paginated list endpoints use POST with request body (see "List Endpoints" section above):
 
 ```kotlin
-// Request
-@Get("/employees")
+// ✅ CORRECT — POST with request body for lists
+@Post("/list")
 suspend fun listEmployees(
-  @QueryValue page: Int?,    // 1-based page number
-  @QueryValue limit: Int?    // Items per page (max 100)
-)
+  @Valid @Body request: EmployeeListRequest
+): PaginationData<EmployeeResponse>
 
-// Response
-data class EmployeeListResponse(
-  val items: List<EmployeeResponse>,
-  val total: Int,
-  val page: Int,
+// Request DTO
+@Serdeable
+@Introspected
+data class EmployeeListRequest(
+  val search: String? = null,
+  val status: EmployeeStatus? = null,
+  @field:Min(0)
+  override val offset: Long = 0,
+  @field:Min(1)
+  override val limit: Int = 100
+) : PageableRequest
+
+// Response wrapper
+data class PaginationData<T>(
+  val items: List<T>,
+  val total: Long,
+  val offset: Long,
   val limit: Int,
   val hasMore: Boolean
 )
@@ -175,7 +255,7 @@ data class EmployeeListResponse(
 | Rule | Example |
 |------|---------|
 | No path params | `@Get("/employee")` with `@QueryValue id` |
-| Plural for lists | `@Get("/employees")` |
+| List endpoints | `@Post("/list")` with `offset/limit` in body |
 | Singular for single | `@Get("/employee")` |
 | Actions as sub-paths | `@Post("/employee/delete")` |
 | Query params for all IDs | `?id=xxx` not `/{id}` |
