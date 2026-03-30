@@ -307,46 +307,40 @@ Uses skills: `ui-ux-pro-max`, frontend rules
 
 **CRITICAL: Full-stack means BOTH layers must complete.** Don't move to Gate 3 after finishing backend only. The plan must include frontend tasks and ALL tasks must be done before review. If the spec mentions UI changes, API responses shown to users, or any user-facing behavior — frontend tasks are mandatory.
 
-### Create feature workspace
+### Create feature workspace (MANDATORY — do not skip)
 
-Each build runs in its own **git worktree** — a separate directory with its own branch. This happens automatically. The user doesn't set anything up. Multiple terminals running `/spartan:build` get separate worktrees, branches, and PRs.
+**MANDATORY:** Every build runs in a git worktree. Do NOT use `git checkout -b`. Do NOT work in the main repo directory. Create the worktree first, then do all work inside it. Skipping this breaks parallel builds.
 
-Use `branch-prefix` from config (default: `feature`). Generate a slug from the feature name.
+First, generate a slug from the feature description. Convert to lowercase, replace spaces with dashes, strip special characters (e.g., "user auth flow" → `user-auth-flow`).
+
+Then run this immediately — substitute the actual slug you generated:
 
 ```bash
-SLUG="[slug]"
+SLUG="the-slug-you-generated"
 BRANCH="feature/$SLUG"
 MAIN_REPO="$(git rev-parse --show-toplevel)"
 WORKSPACE="$MAIN_REPO/.worktrees/$SLUG"
-
-# Create worktree (or reuse if resuming)
-if [ -d "$WORKSPACE" ]; then
-  echo "RESUMING: Worktree exists at $WORKSPACE"
-else
-  git worktree add "$WORKSPACE" -b "$BRANCH" 2>/dev/null || git worktree add "$WORKSPACE" "$BRANCH"
-fi
-
-# Symlink shared dirs (gitignored, won't appear in worktree)
-for dir in .planning .memory .handoff .spartan; do
-  [ -d "$MAIN_REPO/$dir" ] && [ ! -e "$WORKSPACE/$dir" ] && ln -s "$MAIN_REPO/$dir" "$WORKSPACE/$dir"
-done
-
-# Copy .env if exists (API keys, secrets)
+if [ -d "$WORKSPACE" ]; then echo "RESUMING: $WORKSPACE"; else git worktree add "$WORKSPACE" -b "$BRANCH" 2>/dev/null || git worktree add "$WORKSPACE" "$BRANCH"; fi
+for dir in .planning .memory .handoff .spartan; do [ -d "$MAIN_REPO/$dir" ] && [ ! -e "$WORKSPACE/$dir" ] && ln -s "$MAIN_REPO/$dir" "$WORKSPACE/$dir"; done
 [ -f "$MAIN_REPO/.env" ] && [ ! -f "$WORKSPACE/.env" ] && cp "$MAIN_REPO/.env" "$WORKSPACE/.env"
-
-# Gitignore worktrees dir
 grep -qxF '.worktrees/' "$MAIN_REPO/.gitignore" 2>/dev/null || echo '.worktrees/' >> "$MAIN_REPO/.gitignore"
-
 echo "WORKSPACE=$WORKSPACE"
 echo "BRANCH=$BRANCH"
 ```
 
-**From this point, ALL work happens in `$WORKSPACE`:**
-- Bash commands: `cd $WORKSPACE && ./gradlew test`
-- File reads/writes: use `$WORKSPACE/src/...` absolute paths
-- Git operations: `git -C $WORKSPACE ...`
+**Read the output.** It prints `WORKSPACE=<path>` and `BRANCH=<name>`. You MUST use these for all remaining work:
 
-> "Working in: `$WORKSPACE` on branch `$BRANCH`"
+- If `WORKSPACE` is missing from output → the worktree creation failed. Stop and tell the user.
+- If `RESUMING` appears → a previous build started this feature. Continue from where it left off.
+
+**From this point, ALL file operations use the WORKSPACE path:**
+- Bash: `cd <WORKSPACE> && ./gradlew test`
+- Read/Write/Edit: use `<WORKSPACE>/src/...` absolute paths
+- Git: `git -C <WORKSPACE> add` / `git -C <WORKSPACE> commit`
+
+**Do NOT read or write files in the main repo.** Only the worktree.
+
+> "Working in: `<WORKSPACE>` on branch `<BRANCH>`"
 
 **Custom plan prompts:** If `.spartan/build.yaml` has `prompts.plan`, apply those instructions now.
 
@@ -746,16 +740,16 @@ Update `.memory/index.md` if you saved anything.
 
 ### Clean up worktree
 
-After PR is created, the worktree stays in case the user needs to push review fixes. Tell the user:
+After PR is created, the worktree stays for review fixes. Tell the user the worktree path so they know.
 
-> "PR created. Worktree at `.worktrees/[slug]` is still active for review fixes."
-
-When the user says the PR is merged:
+When the user says the PR is merged, clean up by substituting the actual slug:
 
 ```bash
 MAIN_REPO="$(git worktree list | head -1 | awk '{print $1}')"
-git -C "$MAIN_REPO" worktree remove ".worktrees/[slug]" --force 2>/dev/null
+SLUG="the-actual-slug-used-earlier"
+git -C "$MAIN_REPO" worktree remove ".worktrees/$SLUG" --force 2>/dev/null
 git -C "$MAIN_REPO" worktree prune 2>/dev/null
+echo "Cleaned up worktree for $SLUG"
 ```
 
 **GATE 4 — Done.**
@@ -814,29 +808,27 @@ Agent(
 ```
 Collect results after all finish, then `TeamDelete()`.
 
-### Step 2: Sort by dependency and create workspace
+### Step 2: Sort by dependency and create workspace (MANDATORY)
 
 Read the epic's Features table. Sort features by dependency order:
 - Features with no dependencies → can build first
 - Features that depend on others → build after their dependencies are done
 
-Create a worktree for the epic (same pattern as single-feature builds):
+**MANDATORY:** Create a worktree for the epic. Same pattern as single-feature builds. Generate a slug from the epic name, then run immediately:
 
 ```bash
-SLUG="[epic-slug]"
+SLUG="the-epic-slug-you-generated"
 BRANCH="feature/$SLUG"
 MAIN_REPO="$(git rev-parse --show-toplevel)"
 WORKSPACE="$MAIN_REPO/.worktrees/$SLUG"
-
-git worktree add "$WORKSPACE" -b "$BRANCH" 2>/dev/null || git worktree add "$WORKSPACE" "$BRANCH"
-
-for dir in .planning .memory .handoff .spartan; do
-  [ -d "$MAIN_REPO/$dir" ] && [ ! -e "$WORKSPACE/$dir" ] && ln -s "$MAIN_REPO/$dir" "$WORKSPACE/$dir"
-done
+if [ -d "$WORKSPACE" ]; then echo "RESUMING: $WORKSPACE"; else git worktree add "$WORKSPACE" -b "$BRANCH" 2>/dev/null || git worktree add "$WORKSPACE" "$BRANCH"; fi
+for dir in .planning .memory .handoff .spartan; do [ -d "$MAIN_REPO/$dir" ] && [ ! -e "$WORKSPACE/$dir" ] && ln -s "$MAIN_REPO/$dir" "$WORKSPACE/$dir"; done
 [ -f "$MAIN_REPO/.env" ] && [ ! -f "$WORKSPACE/.env" ] && cp "$MAIN_REPO/.env" "$WORKSPACE/.env"
+echo "WORKSPACE=$WORKSPACE"
+echo "BRANCH=$BRANCH"
 ```
 
-All epic work happens in `$WORKSPACE`.
+**Read the output.** All epic work happens in the WORKSPACE path printed above. Use `cd <WORKSPACE> && ...` for all commands.
 
 ### Step 3: Implement in dependency order
 
