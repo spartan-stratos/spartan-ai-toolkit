@@ -166,7 +166,7 @@ npx @c0x12c/spartan-ai-toolkit@latest --all
 | **project-mgmt** | Planning | — | Epics, project lifecycle, phases, workstreams, GSD upgrade, forensics, brownfield, codebase mapping |
 | **product** | Planning | — | Think-before-build, validate, teardown, interview, lean canvas, brainstorm |
 | **infrastructure** | Ops | — | Terraform + AWS: scaffold, modules, review, plan, deploy, import, drift, cost, security. 7 rules, 5 skills, 2 agents |
-| **ops** | Ship | — | Deploy + env-setup |
+| **ops** | Ship | — | Deploy + env-setup, 2 skills (investigate-alert, oncall-log) |
 | **research** | Research | product | Startup + research workflows, kickoff to investor outreach, 10 skills, 2 agents |
 
 Hidden packs (`database`, `shared-backend`) get pulled in as dependencies — you don't pick them directly.

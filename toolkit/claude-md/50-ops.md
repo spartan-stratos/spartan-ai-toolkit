@@ -9,6 +9,8 @@
 |---|---|
 | `/spartan:deploy [svc] [target]` | Deploy guide with pre-flight checks |
 | `/spartan:env-setup [svc]` | Audit env vars, generate `.env.example` |
+| `/spartan:investigate-alert <alert>` | Investigate a monitoring alert end-to-end (metrics, logs, traces, code) |
+| `/spartan:oncall-log [date range]` | Create on-call log from monitoring alerts to wiki |
 
 ---
 
