@@ -423,12 +423,17 @@ export class Crawler {
 
   private async askClaude(prompt: string): Promise<string> {
     const isFollowUp = this.state.visited.size > 0
+    // First call: use --session-id to start a named session
+    // Follow-up calls: use --continue (auto-continues last session, no --session-id needed)
+    if (isFollowUp) {
+      return this.claude.ask(prompt, {
+        ...this.claudeOptions,
+        continue: true,
+      })
+    }
     return this.claude.ask(prompt, {
       ...this.claudeOptions,
       sessionId: this.state.sessionId,
-      // For follow-up calls, use --continue to continue the session
-      // Don't combine --resume with --session-id (requires --fork-session)
-      continue: isFollowUp,
     })
   }
 
