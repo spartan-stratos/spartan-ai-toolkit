@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*.tf"
+  - "**/*.hcl"
+  - "**/*.tfvars"
+---
 # Security Patterns and Requirements
 
 > Full guide: use `/spartan:tf-security` command

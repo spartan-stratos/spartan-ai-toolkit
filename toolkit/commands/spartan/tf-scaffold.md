@@ -4,6 +4,9 @@ description: Scaffold service-level Terraform with live/, modules/, envs/ struct
 argument-hint: "[service-name]"
 preamble-tier: 3
 ---
+@rules/infrastructure/STRUCTURE.md
+@rules/infrastructure/NAMING.md
+@rules/infrastructure/VARIABLES.md
 
 # Terraform Scaffold: {{ args[0] | default: "new service" }}
 

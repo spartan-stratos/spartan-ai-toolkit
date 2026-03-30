@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*.tf"
+  - "**/*.hcl"
+  - "**/*.tfvars"
+---
 # Module Design and Composition
 
 > Full guide: use `/spartan:tf-module` command

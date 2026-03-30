@@ -7,7 +7,7 @@
 
 Two template variants: [Multi-Root](https://github.com/spartan-stratos/template-infra-terraform-multiple-root) (per-env directories) and [Single-Root](https://github.com/spartan-stratos/template-infra-terraform-single-root) (envs/ layout, supports ECS + EKS).
 
-Rules in `rules/infrastructure/` are loaded automatically.
+Rules in `rules/infrastructure/` load automatically when `.tf`, `.hcl`, or `.tfvars` files are in context (Claude Code path-scoped rules). All `/spartan:tf-*` commands also import relevant rules explicitly.
 
 ### Infrastructure Commands
 

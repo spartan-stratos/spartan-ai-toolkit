@@ -233,7 +233,7 @@ color: blue
 
 **Location:** `toolkit/rules/{pack-name}/RULE_NAME.md`
 
-**No frontmatter.** Plain markdown.
+**No frontmatter.** Plain markdown. Exception: infrastructure rules use `paths` frontmatter for Claude Code lazy loading (only loaded when `.tf`/`.hcl`/`.tfvars` files are in context).
 
 - Filename: `UPPER_SNAKE_CASE.md` inside a pack-named subdirectory
 - Start with `#` title
