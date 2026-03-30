@@ -1,0 +1,35 @@
+{
+  "name": "@c0x12c/spartan-web-to-prd",
+  "version": "0.1.0",
+  "description": "Scan a live web app and generate a detailed PRD with screenshots, powered by Claude Code CLI",
+  "type": "module",
+  "bin": {
+    "spartan-web-to-prd": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "test": "node --test tests/*.test.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "prd",
+    "web-crawl",
+    "claude",
+    "product-requirements",
+    "notion"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^6.0.2"
+  }
+}

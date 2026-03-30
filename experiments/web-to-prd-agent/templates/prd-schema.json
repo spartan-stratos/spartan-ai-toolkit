@@ -1,0 +1,98 @@
+{
+  "type": "object",
+  "required": ["appName", "appUrl", "tldr", "goals", "userStories", "epics", "userFlows", "narrative", "buildRoadmap", "openQuestions"],
+  "properties": {
+    "appName": { "type": "string" },
+    "appUrl": { "type": "string" },
+    "tldr": { "type": "string", "description": "1-2 sentences: what app does, who it's for, what problem it solves" },
+    "goals": {
+      "type": "object",
+      "required": ["business", "user", "nonGoals"],
+      "properties": {
+        "business": { "type": "array", "items": { "type": "string" } },
+        "user": { "type": "array", "items": { "type": "string" } },
+        "nonGoals": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "userStories": {
+      "type": "array",
+      "items": { "type": "string", "description": "As a [user], I want [action] so that [benefit]" }
+    },
+    "epics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["number", "name", "phase", "complexity", "tldr", "goals", "userStories", "functionalRequirements", "userExperience", "narrative"],
+        "properties": {
+          "number": { "type": "integer" },
+          "name": { "type": "string" },
+          "phase": { "type": "integer" },
+          "dependencies": { "type": "array", "items": { "type": "string" } },
+          "complexity": { "type": "string", "enum": ["Simple", "Medium", "Complex"] },
+          "tldr": { "type": "string" },
+          "goals": {
+            "type": "object",
+            "required": ["business", "user", "nonGoals"],
+            "properties": {
+              "business": { "type": "array", "items": { "type": "string" } },
+              "user": { "type": "array", "items": { "type": "string" } },
+              "nonGoals": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "userStories": { "type": "array", "items": { "type": "string" } },
+          "functionalRequirements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "priority", "details"],
+              "properties": {
+                "name": { "type": "string" },
+                "priority": { "type": "string", "enum": ["High", "Medium", "Low"] },
+                "details": { "type": "array", "items": { "type": "string" } },
+                "screenshotPaths": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "userExperience": {
+            "type": "object",
+            "required": ["entryPoint", "flow", "edgeCases", "designNotes"],
+            "properties": {
+              "entryPoint": { "type": "string" },
+              "flow": { "type": "array", "items": { "type": "string" } },
+              "edgeCases": { "type": "array", "items": { "type": "string" } },
+              "designNotes": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "narrative": { "type": "string", "description": "100-word user story for this epic" }
+        }
+      }
+    },
+    "userFlows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "steps"],
+        "properties": {
+          "name": { "type": "string" },
+          "steps": { "type": "array", "items": { "type": "string" } },
+          "edgeCases": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "narrative": { "type": "string", "description": "200-word walkthrough of a typical user session" },
+    "buildRoadmap": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["phase", "name", "epics"],
+        "properties": {
+          "phase": { "type": "integer" },
+          "name": { "type": "string" },
+          "epics": { "type": "array", "items": { "type": "string" } },
+          "dependencies": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "openQuestions": { "type": "array", "items": { "type": "string" } }
+  }
+}
