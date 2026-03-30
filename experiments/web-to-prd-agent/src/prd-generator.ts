@@ -38,23 +38,23 @@ export class PRDGenerator {
   async generate(featureMap: FeatureMap): Promise<PRDDocument> {
     this.log('Generating PRD...')
 
-    const schema = this.schema
     const featureData = JSON.stringify(featureMap, null, 2)
-
-    const prompt = buildPRDPrompt(featureMap, featureData)
+    const prompt = buildPRDPrompt(featureMap, featureData, this.schema)
 
     let lastError: string | null = null
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         const retryNote = lastError
-          ? `\n\nPREVIOUS ATTEMPT FAILED VALIDATION: ${lastError}\nFix the issues and generate again.`
+          ? `\n\nPREVIOUS ATTEMPT FAILED VALIDATION: ${lastError}\nFix the issues and try again. Output ONLY the JSON object, no markdown.`
           : ''
 
-        const prd = await this.claude.askStructured<PRDDocument>(
-          prompt + retryNote,
-          schema,
-          this.claudeOptions
-        )
+        // Don't use --json-schema (not supported in claude -p).
+        // Instead, embed the schema in the prompt and parse the result.
+        const rawResult = await this.claude.ask(prompt + retryNote, this.claudeOptions)
+
+        // Extract JSON from response (Claude may wrap it in markdown code blocks)
+        const jsonStr = extractJSONFromResponse(rawResult)
+        const prd = JSON.parse(jsonStr) as PRDDocument
 
         const validation = validatePRD(prd)
         if (validation.valid) {
@@ -284,9 +284,67 @@ export function prdToMarkdown(prd: PRDDocument): string {
   return lines.join('\n')
 }
 
+// -- JSON extraction --
+
+/**
+ * Extract JSON from a Claude response that may contain markdown,
+ * code blocks, or other text around the JSON.
+ */
+export function extractJSONFromResponse(text: string): string {
+  // Try to find JSON in a code block first (```json ... ```)
+  const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/)
+  if (codeBlockMatch) {
+    const content = codeBlockMatch[1].trim()
+    // Verify it looks like JSON
+    if (content.startsWith('{') || content.startsWith('[')) {
+      return content
+    }
+  }
+
+  // Try to find the outermost JSON object
+  const start = text.indexOf('{')
+  if (start === -1) throw new Error('No JSON object found in response')
+
+  // Find the matching closing brace by counting depth
+  let depth = 0
+  let inString = false
+  let escaped = false
+
+  for (let i = start; i < text.length; i++) {
+    const char = text[i]
+
+    if (escaped) {
+      escaped = false
+      continue
+    }
+
+    if (char === '\\' && inString) {
+      escaped = true
+      continue
+    }
+
+    if (char === '"') {
+      inString = !inString
+      continue
+    }
+
+    if (inString) continue
+
+    if (char === '{') depth++
+    if (char === '}') {
+      depth--
+      if (depth === 0) {
+        return text.slice(start, i + 1)
+      }
+    }
+  }
+
+  throw new Error('No complete JSON object found in response')
+}
+
 // -- Prompt building --
 
-function buildPRDPrompt(featureMap: FeatureMap, featureData: string): string {
+function buildPRDPrompt(featureMap: FeatureMap, featureData: string, schema: string): string {
   return `Generate a complete PRD (Product Requirements Document) for the app "${featureMap.appName}" at ${featureMap.appUrl}.
 
 Here is the feature map from crawling the app:
@@ -303,5 +361,10 @@ Rules for the PRD:
 7. Build Roadmap should group epics by phase with dependencies.
 8. Open Questions should list anything unclear from the crawl.
 
-Generate the full PRD as JSON matching the provided schema.`
+IMPORTANT: Output ONLY a single JSON object matching this schema. No markdown, no explanation, no text before or after. Just the raw JSON.
+
+JSON Schema:
+${schema}
+
+Output the JSON now:`
 }
