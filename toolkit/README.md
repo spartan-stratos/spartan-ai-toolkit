@@ -51,6 +51,20 @@ After install, open any project, run `claude`, then type `/spartan`.
 
 ---
 
+## Demo: Web-to-PRD
+
+Scan a live web app, extract every feature, generate a structured PRD with epics and stories, then export to Notion.
+
+```
+/spartan:web-to-prd "https://screensdesign.com"
+```
+
+![Web-to-PRD scanning screensdesign.com](../docs/images/web-to-prd-demo.png)
+
+Uses Playwright MCP (browser control) + Notion MCP (export). Auto-installs prerequisites, handles login, and asks for confirmation at each step.
+
+---
+
 ## How to Use
 
 ### The core workflow
@@ -229,6 +243,7 @@ Type `/spartan` to get the smart router — it asks what you need and picks the 
 | `interview` | Mom Test interview questions |
 | `lean-canvas` | Fill out a 9-block Lean Canvas |
 | `brainstorm` | Generate and rank ideas |
+| `web-to-prd "URL"` | Scan a live web app with Playwright, extract features, generate PRD with epics/stories, export to Notion |
 
 ### Infrastructure (infrastructure pack)
 | Command | What it does |
@@ -293,6 +308,7 @@ Skills give Claude deeper knowledge in specific areas. They're loaded automatica
 | `article-writing` | research | Long-form content creation |
 | `content-engine` | research | Content strategy and production |
 | `startup-pipeline` | research | Full startup research pipeline |
+| `web-to-prd` | product | Scan web apps, extract features, generate PRD, export to Notion |
 
 ---
 
