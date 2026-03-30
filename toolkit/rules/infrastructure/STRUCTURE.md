@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*.tf"
+  - "**/*.hcl"
+  - "**/*.tfvars"
+---
 # Project Organization and Layering
 
 > Full guide: use `/spartan:tf-scaffold` command

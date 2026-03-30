@@ -4,6 +4,9 @@ description: Create or extend a Terraform module with proper interface, docs, an
 argument-hint: "[module-name]"
 preamble-tier: 3
 ---
+@rules/infrastructure/MODULES.md
+@rules/infrastructure/NAMING.md
+@rules/infrastructure/VARIABLES.md
 
 # Terraform Module: {{ args[0] | default: "new module" }}
 

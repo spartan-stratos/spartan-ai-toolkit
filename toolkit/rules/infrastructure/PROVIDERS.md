@@ -1,3 +1,9 @@
+---
+paths:
+  - "**/*.tf"
+  - "**/*.hcl"
+  - "**/*.tfvars"
+---
 # Provider Configuration
 
 ## Providers Only in Live Layer

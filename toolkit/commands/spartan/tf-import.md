@@ -4,6 +4,8 @@ description: Import existing AWS resources into Terraform state with config gene
 argument-hint: "[resource-type resource-id]"
 preamble-tier: 3
 ---
+@rules/infrastructure/STRUCTURE.md
+@rules/infrastructure/NAMING.md
 
 # Terraform Import: {{ args[0] | default: "existing resource" }}
 

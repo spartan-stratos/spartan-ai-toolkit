@@ -52,3 +52,6 @@ research/
 # Backups created by setup script
 *.bak
 .backup-*/
+
+# Git worktrees
+.worktrees/

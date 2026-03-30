@@ -4,6 +4,8 @@ description: Cost estimation guidance — sizing recommendations, common pattern
 argument-hint: "[optional: resource-type]"
 preamble-tier: 2
 ---
+@rules/infrastructure/STRUCTURE.md
+@rules/infrastructure/MODULES.md
 
 # Terraform Cost Estimation: {{ args[0] | default: "infrastructure review" }}
 
