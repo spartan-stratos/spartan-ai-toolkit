@@ -7,52 +7,40 @@ preamble-tier: 4
 
 # Build: {{ args[0] | default: "a new feature" }}
 
-You are the **Build workflow leader** — the main way to go from requirement to merged PR.
-
-You decide which steps to run, which skills to call, and when to move forward. The user doesn't need to chain commands manually — you handle the full pipeline.
+You are the **Build workflow leader** — go from requirement to merged PR.
 
 ```
 SINGLE FEATURE:
+  Context → Spec → Design? → Workspace → Plan → Implement → Review → Ship
+                                  ↑                            ↑
+                            git worktree                  Spawn agent
+                            (MANDATORY)                   (MANDATORY)
 
-  Context → Spec → Design? → Plan+Worktree → Implement → Review Agent → Fix → Ship
-     │        │        │           │               │            │          │       │
-  .memory/ Gate 1   Design   git worktree       Gate 3    Spawn agent   Loop   Gate 4
-                    Gate     .worktrees/slug              fix until OK
-
-EPIC (multi-feature — auto-detected):
-
-  Context → Epic → Per feature: Spec/Design/Plan → Worktree → Implement → Review → Ship
-     │        │            │                           │            │          │       │
-  .planning/ read epic  fill gaps                git worktree  parallel    Loop   one PR
-  epics/                                        .worktrees/     by dep
-
-PARALLEL (multiple terminals — automatic):
-
-  Terminal 1: /spartan:build auth     → .worktrees/auth/     (feature/auth)     → PR #1
-  Terminal 2: /spartan:build payments → .worktrees/payments/  (feature/payments) → PR #2
-  (each gets its own worktree, branch, and PR — no conflicts, no manual setup)
+PARALLEL (multiple terminals — each gets its own worktree):
+  Terminal 1: /spartan:build auth     → .worktrees/auth/     → PR #1
+  Terminal 2: /spartan:build payments → .worktrees/payments/  → PR #2
 ```
 
-**Fast path:** For small work (< 1 day, ≤ 4 tasks), you do spec + plan inline. No separate commands needed.
-**Full path:** For bigger work, you call `/spartan:spec`, `/spartan:ux prototype`, `/spartan:plan` as sub-steps.
-**Epic path:** If the feature name matches an epic with 2+ specs ready, build all features together — one branch, one PR.
+### Mandatory Stages
 
-### Stages That MUST NOT Be Skipped
+| Stage | Can skip? |
+|-------|-----------|
+| 1 Spec | NO |
+| 2 Design | Only if pure data change (no UI) |
+| 3 Workspace + Plan | NO |
+| 4 Implement | NO |
+| 5 Review | **NEVER** — spawn review agent, never self-review |
+| 6 Ship | NO |
 
-| Stage | When it runs | Can skip? |
-|-------|-------------|-----------|
-| Stage 1 (Spec) | Always | NO — every feature needs a scope |
-| Stage 2 (Design) | Frontend/UI work | NO — must ask user (skip only if pure data change) |
-| Stage 3 (Plan) | Always | NO — every feature needs a plan |
-| Stage 4 (Implement) | Always | NO |
-| Stage 5 (Review) | Always | **NEVER** — this is the most commonly skipped stage. You MUST spawn the review agent. |
-| Stage 6 (Ship) | Always | NO |
+**Auto mode:** Show output at each stage but don't pause for confirmation. Still stop for destructive actions and the 3 forcing questions.
 
-**If you finish Stage 4 and are about to commit/PR without running Stage 5 — STOP. You are skipping review. Go back and run it.**
+**Fast path:** Small work (< 1 day, ≤ 4 tasks) → spec + plan inline. No separate commands.
+**Full path:** Bigger work → `/spartan:spec`, `/spartan:ux prototype`, `/spartan:plan` as sub-steps.
+**Epic path:** Feature name matches epic with 2+ specs → build all together, one branch, one PR. See Stage E.
 
 ---
 
-## Preamble (run first)
+## Preamble
 
 ```bash
 mkdir -p ~/.spartan/sessions
@@ -68,41 +56,27 @@ cat .spartan/build.yaml 2>/dev/null || true
 cat .spartan/commands.yaml 2>/dev/null || true
 ```
 
-**Read the output.** If `SESSIONS` >= 3, start EVERY response with: **[PROJECT / BRANCH]** Currently working on: [task]
+If `SESSIONS` >= 3, start every response with: **[PROJECT / BRANCH]** Currently working on: [task]
 
-If `.spartan/commands.yaml` has a `prompts.build` entry, apply those custom instructions alongside the built-in ones.
+If `.spartan/commands.yaml` has `prompts.build`, apply those instructions alongside built-in ones.
 
----
+### Build Config (`.spartan/build.yaml`)
 
-## Build Config Fields
-
-If the preamble output includes `.spartan/build.yaml` content, apply these overrides. All fields are optional.
+All fields optional:
 
 | Field | Default | What it does |
 |-------|---------|-------------|
-| `branch-prefix` | `"feature"` | Branch name: `[prefix]/[slug]` (e.g., `feature/user-auth`) |
-| `max-review-rounds` | `3` | Max review-fix cycles before asking the user |
-| `skip-stages` | `[]` | Stages to skip. Valid: `spec`, `design`, `plan`, `ship`. Never `review`. |
-| `prompts.spec` | — | Custom instructions injected after spec questions |
-| `prompts.plan` | — | Custom instructions injected into the plan stage |
-| `prompts.implement` | — | Custom instructions injected during implementation |
-| `prompts.review` | — | Custom instructions injected into the review agent's prompt |
-| `prompts.ship` | — | Custom instructions injected before PR creation |
-
-**If config has `prompts.*` sections**, inject those instructions at the relevant stage. They run AFTER the built-in instructions.
-
-**If config has `skip-stages`**, skip those stages. But NEVER skip `review` even if listed — review is always mandatory.
+| `branch-prefix` | `"feature"` | Branch name: `[prefix]/[slug]` |
+| `max-review-rounds` | `3` | Max review-fix cycles before asking user |
+| `skip-stages` | `[]` | Stages to skip. Never `review`. |
+| `prompts.*` | — | Custom instructions per stage: `spec`, `plan`, `implement`, `review`, `ship` |
 
 ---
 
-## Step 0: Detect Mode & Stack (silent — no questions)
+## Step 0: Detect Mode & Stack (silent)
 
-Parse the user's input to find the mode:
-- First arg is `backend` or `be` → **backend mode**
-- First arg is `frontend` or `fe` → **frontend mode**
-- No mode given → **auto-detect**
+Parse input: `backend`/`be` → backend, `frontend`/`fe` → frontend, else auto-detect:
 
-**Auto-detect logic** (check the project files):
 ```bash
 ls build.gradle.kts settings.gradle.kts 2>/dev/null && echo "STACK:kotlin-micronaut"
 ls package.json 2>/dev/null && cat package.json 2>/dev/null | grep -q '"next"' && echo "STACK:nextjs-react"
@@ -113,223 +87,93 @@ ls .planning/PROJECT.md 2>/dev/null && echo "GSD_ACTIVE"
 |----------|------|
 | Kotlin only | Backend |
 | Next.js only | Frontend |
-| Both | Ask: "This is a full-stack project. Is this feature backend, frontend, or both?" |
-| Neither | Ask the user what stack they're using |
+| Both | Ask: "Backend, frontend, or both?" |
 
-**Check for installed skills:**
-- If backend mode but no `kotlin-best-practices` skill found → warn: "You don't have the backend pack installed. Run `/spartan:update` and add it, or continue without stack-specific guidance."
-- If frontend mode but no `ui-ux-pro-max` skill found → same warning for frontend pack.
+Check for installed skills — if backend mode but no `kotlin-best-practices` skill, or frontend mode but no `ui-ux-pro-max` skill → warn user to install the pack.
 
 ---
 
-## Step 0.5: Check Context (silent — no questions)
-
-Before doing anything, check what already exists for this feature.
+## Step 0.5: Check Context (silent)
 
 ```bash
-# Check memory for relevant decisions/patterns
 ls .memory/index.md 2>/dev/null
-ls .memory/decisions/ .memory/patterns/ .memory/knowledge/ .memory/blockers/ 2>/dev/null
-
-# Check for existing artifacts
-ls .planning/specs/*.md 2>/dev/null
-ls .planning/designs/*.md .planning/design/screens/*.md 2>/dev/null
-ls .planning/plans/*.md 2>/dev/null
-
-# Check for design tokens
-ls .planning/design/system/tokens.md .planning/design-config.md 2>/dev/null
-
-# Check for epic
+ls .planning/specs/*.md .planning/designs/*.md .planning/plans/*.md 2>/dev/null
 ls .planning/epics/*.md 2>/dev/null
-
-# Check for handoff from a previous session
 ls .handoff/*.md 2>/dev/null
+ls .worktrees/ 2>/dev/null
+git worktree list 2>/dev/null
 ```
 
-**If `.memory/index.md` exists**, read it. Look for decisions or patterns related to this feature. If you find something relevant, mention it:
-> "Found relevant context in `.memory/`: [brief summary]. Using this."
-
-**If a handoff exists**, read it. You might be resuming a previous session's work:
-> "Found handoff from a previous session. Resuming from: [last stage]."
-
-**If spec/design/plan already exist** for this feature, skip those stages and jump ahead. Show what you found:
-> "Found: spec ✓, design ✓, plan ✓ — jumping to Implement."
-
-### Epic detection (auto — no questions)
-
-**If an epic exists** that matches the feature name (or the user passed an epic name):
-
-1. Read the epic file at `.planning/epics/{name}.md`
-2. Find all features listed in the epic's Features table
-3. Check which features have specs ready (status = `spec` or `planned`)
-4. Check which features are already `done` or `skipped`
-
-**If 2+ features have specs ready → switch to Epic mode:**
-> "Found epic **{name}** with {N} features. {X} specs ready, {Y} already done. Building all ready features together — one branch, one PR."
-
-Then jump to **Stage E: Epic Build** below.
-
-**If only 1 feature has a spec** → build that one normally (single feature mode).
-
-**If no features have specs yet** → tell the user to write specs first:
-> "Epic exists but no specs are ready. Run `/spartan:spec {first-feature}` to start."
+- **Memory exists** → read `.memory/index.md`, mention relevant context
+- **Handoff exists** → resume from previous session
+- **Spec/design/plan exist** → skip completed stages, jump ahead
+- **Worktree exists for feature** → set WORKSPACE, resume from last stage
+- **Epic matches feature name** with 2+ specs ready → switch to Epic mode (Stage E)
 
 ---
 
-## Stage 1: Understand (Spec)
+## Stage 1: Spec
 
-### Size check first
+**Size check:** Small (< 1 day, ≤ 4 tasks) → inline. Big (multi-day, 5+) → run `/spartan:spec` approach.
 
-Before asking anything, estimate the size from the user's description:
+### Fast path (small)
 
-- **Small** (< 1 day, ≤ 4 tasks, ≤ 3 files) → **Fast path** — inline spec below
-- **Big** (multi-day, 5+ tasks, new tables + endpoints + UI) → **Full path** — run `/spartan:spec`
+Ask 3 forcing questions (always, even in auto mode):
+1. **"What pain does this solve?"** — the pain, not the feature
+2. **"What's the narrowest version we can ship?"** — force MVP
+3. **"What assumption could be wrong?"** — surface risks
 
-**How to decide:**
-- Adding a column + updating one endpoint = small
-- New feature with migration + service + controller + frontend = big
-- If unclear, ask one question: "Quick estimate — is this a few hours or multiple days?"
-
-### Fast path (small work)
-
-Ask 3 forcing questions. Always. Even in auto mode.
-
-1. **"What pain does this solve?"** — Not the feature. The pain. If the user says "add a profiles endpoint" ask what user problem it fixes.
-2. **"What's the narrowest version we can ship?"** — Force MVP thinking. Cut scope until it hurts.
-3. **"What assumption could be wrong?"** — Surface hidden risks early.
-
-After the user answers, produce a scope block:
+Produce:
 
 ```markdown
 ## Scope: [feature name]
-
 **Pain:** [one sentence]
-**Stack:** [backend / frontend / full-stack] — [Kotlin+Micronaut / Next.js+React / both]
+**Stack:** [backend / frontend / full-stack]
 
 **IN:**
 - [what will be built]
-- [what will be built]
 
 **OUT:**
-- [what is NOT in scope]
 - [what is NOT in scope]
 
 **Risk:** [the assumption that could be wrong]
 ```
 
-### Full path (big work)
+### Full path (big)
 
-Tell the user and run the spec command internally:
-> "This is bigger work — let me run a proper spec first."
+> "This is bigger work — running a proper spec."
 
-Use the approach from `/spartan:spec` — ask questions one at a time, fill the template, run Gate 1, save to `.planning/specs/`.
+Use `/spartan:spec` approach internally. Save to `.planning/specs/`.
 
-Then continue to the next stage automatically (don't tell the user to run a separate command).
+If `.spartan/build.yaml` has `prompts.spec`, apply now.
 
-**Custom spec prompts:** If `.spartan/build.yaml` has `prompts.spec`, apply those instructions now — ask any extra questions, add any extra requirements to the scope.
-
-**GATE 1 — STOP and ask:**
-> "Here's the scope. Anything to change before I plan?"
->
-> **Auto mode on?** → Show scope, continue immediately without waiting.
+**GATE 1:** "Here's the scope. Anything to change before I plan?"
 
 ---
 
-## Stage 2: Design (UI work only — auto-detected)
+## Stage 2: Design (UI work only)
 
-**Only runs if the feature has UI work.** Skip entirely for pure backend.
-
-Check if this feature needs a design:
-- Frontend mode? → Yes
-- Full-stack mode with UI changes? → Yes
-- Backend only? → Skip this stage
-
-Check if a design already exists:
+Skip for pure backend. Check:
 ```bash
 ls .planning/designs/*.md 2>/dev/null
 ```
 
-If no design exists and UI work is needed:
-> "This has UI work. Want me to create a design doc?"
->
-> - **A) Yes** — I'll run the design workflow (dual-agent review with design-critic)
-> - **B) Skip** — I'll design as I build (fine for simple UI changes)
-> - **C) I have Figma designs** — point me to them
+If no design and feature has UI work, ask:
+> - **A) Yes** — run design workflow with design-critic agent
+> - **B) Skip** — design as I build (fine for simple UI)
+> - **C) I have Figma** — point me to them
 
-If user picks A → use the approach from `/spartan:ux prototype` internally. Run the full design workflow including the design-critic agent review.
-
-If user picks B → continue to Plan.
-
-If user picks C → read the Figma reference and use it as the design source.
-
-**Auto mode on?** → Still ask this question. Design skipping is the user's call, not yours. The only exception: if the change is purely data (adding a column to an existing table, no new screens or layouts), skip silently. If there's ANY new component, screen, modal, or layout change — you MUST ask.
+**Always ask for frontend work.** Only skip silently for pure data changes (no new screens/components/modals).
 
 ---
 
-## Stage 3: Plan
+## Stage 3: Workspace + Plan
 
-### Check for saved plan
+### 3.1 Create workspace (MANDATORY — run FIRST)
 
-If a plan already exists for this feature, use it:
-> "Found plan: `.planning/plans/{name}.md` — using it."
+**CRITICAL: NEVER use `git checkout -b`. NEVER work in the main repo. Every build runs in a git worktree.**
 
-If no plan exists, do the size check:
-
-### Fast path (small — 1-4 tasks)
-
-Produce an inline plan:
-
-```markdown
-## Plan: [feature name]
-Branch: `feature/[slug]`
-
-### Task 1: [name]
-Files: [exact paths]
-Test first: [what test to write]
-Implementation: [what to change]
-Verify: [how to confirm]
-
-### Task 2: [name]
-...
-```
-
-**Max 4 tasks for inline plan.** If you need more, use the full path.
-
-### Full path (big — 5+ tasks)
-
-Use the approach from `/spartan:plan` internally — architecture design, file locations, phased tasks with parallel/sequential marking. Save to `.planning/plans/`.
-
-Then continue automatically.
-
-### What the plan includes (by mode)
-
-**Backend mode** — tasks follow this order:
-1. Migration (if new/changed table)
-2. Entity + Table object + Repository + repo tests
-3. Service/Manager + service tests
-4. Controller + integration tests
-
-Uses skills: `database-patterns`, `api-endpoint-creator`, `kotlin-best-practices`, `testing-strategies`, `security-checklist`
-
-**Frontend mode** — tasks follow this order:
-1. Types / interfaces
-2. API client (if new endpoints needed — flag that backend work may be needed first)
-3. Components (bottom-up: small → composed → page-level)
-4. Page + routing + tests
-
-Uses skills: `ui-ux-pro-max`, frontend rules
-
-**Full-stack mode** — backend tasks first, then frontend tasks. Mark the integration point clearly (where frontend starts depending on backend API).
-
-**CRITICAL: Full-stack means BOTH layers must complete.** Don't move to Gate 3 after finishing backend only. The plan must include frontend tasks and ALL tasks must be done before review. If the spec mentions UI changes, API responses shown to users, or any user-facing behavior — frontend tasks are mandatory.
-
-### Create feature workspace (MANDATORY — do not skip)
-
-**MANDATORY:** Every build runs in a git worktree. Do NOT use `git checkout -b`. Do NOT work in the main repo directory. Create the worktree first, then do all work inside it. Skipping this breaks parallel builds.
-
-First, generate a slug from the feature description. Convert to lowercase, replace spaces with dashes, strip special characters (e.g., "user auth flow" → `user-auth-flow`).
-
-Then run this immediately — substitute the actual slug you generated:
+Generate a slug from the feature name (lowercase, dashes, no special chars: "user auth flow" → `user-auth-flow`). Then run immediately:
 
 ```bash
 SLUG="the-slug-you-generated"
@@ -344,643 +188,248 @@ echo "WORKSPACE=$WORKSPACE"
 echo "BRANCH=$BRANCH"
 ```
 
-**Read the output.** It prints `WORKSPACE=<path>` and `BRANCH=<name>`. You MUST use these for all remaining work:
+**Read the output.** If `WORKSPACE` is missing → worktree failed, STOP.
 
-- If `WORKSPACE` is missing from output → the worktree creation failed. Stop and tell the user.
-- If `RESUMING` appears → a previous build started this feature. Continue from where it left off.
+**From this point, ALL work uses WORKSPACE paths:**
+- Bash: `cd $WORKSPACE && ./gradlew test`
+- Read/Write/Edit: `$WORKSPACE/src/...` absolute paths
+- Git: `git -C $WORKSPACE add` / `git -C $WORKSPACE commit`
 
-**From this point, ALL file operations use the WORKSPACE path:**
-- Bash: `cd <WORKSPACE> && ./gradlew test`
-- Read/Write/Edit: use `<WORKSPACE>/src/...` absolute paths
-- Git: `git -C <WORKSPACE> add` / `git -C <WORKSPACE> commit`
+> "Working in: `$WORKSPACE` on branch `$BRANCH`"
 
-**Do NOT read or write files in the main repo.** Only the worktree.
+### 3.2 Plan
 
-> "Working in: `<WORKSPACE>` on branch `<BRANCH>`"
+If saved plan exists at `.planning/plans/` → use it.
 
-**Custom plan prompts:** If `.spartan/build.yaml` has `prompts.plan`, apply those instructions now.
+**Fast path (1-4 tasks):**
+
+```markdown
+## Plan: [feature name]
+Branch: `feature/[slug]`
+
+### Task 1: [name]
+Files: [exact paths]
+Test first: [what test]
+Implementation: [what to change]
+```
+
+Max 4 tasks inline. More → full path.
+
+**Full path (5+ tasks):** Use `/spartan:plan` approach. Save to `.planning/plans/`.
+
+**Task order by mode:**
+- Backend: Migration → Entity/Table/Repo + tests → Service/Manager + tests → Controller + integration tests
+- Frontend: Types → API client → Components (bottom-up) → Page + routing + tests
+- Full-stack: Backend first, then frontend. Mark integration point. ALL layers must complete.
+
+Uses skills: `database-patterns`, `api-endpoint-creator`, `kotlin-best-practices`, `testing-strategies`, `ui-ux-pro-max`, `security-checklist`
+
+If `.spartan/build.yaml` has `prompts.plan`, apply now.
 
 Write the first failing test for Task 1. Show it fails.
 
-**GATE 2 — STOP and ask:**
-> "Plan has [N] tasks. Does this make sense?"
->
-> **Auto mode on?** → Show plan, start executing immediately.
+**GATE 2:** "Plan has [N] tasks. Does this make sense?"
 
 ---
 
 ## Stage 4: Implement
 
-### FIRST: Check for parallelism and route
+### GUARD: Verify workspace (run before writing any code)
 
-**Before writing any code, analyze the plan from Stage 3.**
+```bash
+MAIN_REPO="$(git worktree list | head -1 | awk '{print $1}')"
+CURRENT="$(git rev-parse --show-toplevel 2>/dev/null)"
+if [ "$MAIN_REPO" = "$CURRENT" ]; then echo "ERROR: In main repo, not a worktree!"; else echo "OK: Worktree at $CURRENT"; fi
+```
 
-Look at the dependency table:
-- Group tasks that share the same dependency (e.g., tasks 3, 4, 5 all depend on task 2 → parallel group)
-- Tasks at the end with no dependency on each other → another parallel group
-- Full-stack plans ALWAYS have parallel groups (backend + frontend tracks)
+**If ERROR → STOP. Go back to 3.1 and create workspace.**
+
+### Route: parallel or sequential
 
 ```bash
 echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
 ```
 
-**Route decision:**
+**Agent Teams enabled AND 2+ parallel tasks?** → Create team with `TeamCreate`. One teammate per parallel track:
+- Full-stack: backend-dev + frontend-dev
+- Backend: data-layer + api-layer
+- Frontend: components + pages
 
-| Env var set? | Parallel groups? | Route |
-|---|---|---|
-| YES | YES (2+ tasks in any group) | **Tell the user: "This plan has parallel groups. I'm creating an agent team to run them at the same time." Then use `TeamCreate` to create a team and spawn teammates.** |
-| YES | NO (strict chain) | Sequential execution below |
-| NO | — | Sequential execution below |
+Frontend/UI teammates MUST get design doc path in their prompt.
 
-**How Agent Teams works** (when routing to teams):
+After team completes → continue to Stage 5.
 
-Agent Teams are separate Claude Code sessions (not background tasks). They show as multiple **nodes** in the status bar, not "local agents." Each teammate works independently with its own context.
+**Otherwise → sequential execution:**
 
-Tell the user you're creating a team, then:
-1. Call `TeamCreate` to create the team
-2. Call `TaskCreate` for each work item, with `addBlockedBy` for dependencies
-3. Spawn teammates with `Agent` using `team_name` and `name` params — each handles a parallel track
-4. Split by mode: full-stack = backend-dev + frontend-dev, backend-only = data-layer + api-layer, frontend-only = components-dev + pages-dev
-5. Frontend/UI teammates MUST get design doc path and design tokens in their prompt
-6. Monitor via incoming messages (auto-delivered). Use `SendMessage` to redirect if needed.
-7. When all done, merge worktrees, run full test suite, `TeamDelete` to clean up
+### TDD per task
 
-**After team completes → continue to Stage 5 (Review). Do NOT stop.**
-
-### Sequential execution (when no parallel groups or Agent Teams not enabled)
-
-Execute each task in order:
-
-### For each task:
-1. **Write test** → run it → confirm it fails (red)
-2. **Write code** → run test → confirm it passes (green)
+For each task:
+1. **Write test** → run → confirm fail (red)
+2. **Write code** → run → confirm pass (green)
 3. **Refactor** if needed (tests still green)
-4. **Commit** with an atomic message:
-   ```
-   feat([scope]): [what this task does]
-   ```
-5. Brief status: "Task [N]/[total] done. Moving to next."
+4. **Commit:** `feat([scope]): [what this task does]`
+5. Brief status: "Task [N]/[total] done."
 
-### TDD override
-If a task is hard to test-first (UI components, config changes), say so and switch to implement-then-test. But always have a test when the task is done.
+If a task is hard to test-first (UI, config) → implement-then-test. Always have a test when done.
 
-### Skill routing during implementation
+If `.spartan/build.yaml` has `prompts.implement`, apply now.
 
-Call the right skills based on what you're doing:
+### Verify all layers
 
-| Working on... | Use skill |
-|---------------|-----------|
-| Database migration | `database-patterns` |
-| New endpoint | `api-endpoint-creator` |
-| Kotlin code | `kotlin-best-practices` |
-| Writing tests | `testing-strategies` |
-| React components | `ui-ux-pro-max` |
-| Security-sensitive code | `security-checklist` |
+| Mode | Must pass before review |
+|------|------------------------|
+| Backend | Migration + Entity/Table/Repo + Manager + Controller + `./gradlew test` |
+| Frontend | Types + API client + Components + Page + `npm test && npm run build` |
+| Full-stack | ALL backend + ALL frontend + frontend calls backend correctly |
 
-### After all tasks — Verify Definition of Done
-
-**Before moving to review, verify ALL layers are complete:**
-
-| Mode | Must be done before review |
-|------|---------------------------|
-| **Backend** | Migration applied, entity/table/repo created, manager with business logic, controller with endpoints, all tests passing (`./gradlew test`) |
-| **Frontend** | Types defined, API client updated, components built, page/routing wired, build passes (`yarn build` or `npm run build`) |
-| **Full-stack** | ALL backend items above + ALL frontend items above + frontend calls the new backend API correctly |
-
-**Full-stack verification (MANDATORY if mode is full-stack):**
-1. Backend tests pass: `./gradlew test`
-2. Frontend builds: `yarn build` or `npm run build`
-3. Frontend types match backend response DTOs
-4. API client has methods for all new endpoints
-5. UI shows the data from the new endpoints
-
-**If any layer is incomplete**, go back and finish it. Do NOT proceed to review with only backend done.
-
-Run the full test suite:
 ```bash
 # Backend
 ./gradlew test
-
 # Frontend
 npm test && npm run build
-
-# Both (full-stack)
-./gradlew test && npm test && npm run build
 ```
 
-**GATE 3 — Implementation complete. Review is NEXT.**
-> "All [N] tasks done. [X] tests passing. Starting review."
->
-> **Auto mode on?** → Go straight to review.
->
-> **CRITICAL: You MUST run Stage 5 (Review) after this gate. No exceptions. Do NOT commit, do NOT create a PR, do NOT ask the user what to do next. The next step is ALWAYS the review agent.**
+**GATE 3:** "All [N] tasks done. [X] tests passing. Starting review."
+
+**You MUST run Stage 5 next. Do NOT create a PR. Do NOT skip review.**
 
 ---
 
-## Stage 5: Review (agent-based — MANDATORY, NEVER SKIP)
+## Stage 5: Review (MANDATORY — NEVER SKIP)
 
-> **CRITICAL: This stage MUST run for every build. No exceptions.**
-> - Not optional. Not skippable. Not deferrable.
-> - Do NOT ask the user "Want me to skip review?" or "Should I review?"
-> - Do NOT commit or create a PR before this stage completes.
-> - If you catch yourself about to skip this stage, STOP and run it.
+> Not optional. Not skippable. Spawn a separate agent. Never self-review. Never ask user if they want to skip.
 
-**This is NOT a self-review.** Spawn a separate review agent to get a fresh perspective. The reviewer finds issues, you fix them, repeat until clean.
-
-### Step 1: Load rules from config
-
-The review uses **configurable rules**. Load them in this order:
+### Load rules
 
 ```bash
-# 1. Check for project config
 cat .spartan/config.yaml 2>/dev/null || cat ~/.spartan/config.yaml 2>/dev/null
 ```
 
-**If `.spartan/config.yaml` exists:**
-- Read the `rules` section → get rule file paths for the current mode
-- Read the `review-stages` section → get which stages to run
-- Read `file-types` section → classify changed files by mode
-- If `extends` is set, load the base profile first, then apply overrides (`rules-add`, `rules-remove`, `rules-override`)
-- If `conditional-rules` is set, match rules to changed files by glob pattern
+**Config exists** → read `rules`, `review-stages`, `file-types`, `extends`, `conditional-rules`.
 
-**If no config exists — auto-generate from installed packs:**
-
+**No config** → auto-generate from installed packs:
 ```bash
-# Check what packs are installed
 cat .claude/.spartan-packs 2>/dev/null || cat ~/.claude/.spartan-packs 2>/dev/null
 ```
+Match to profile: `backend-micronaut` → `kotlin-micronaut`, `frontend-react` → `react-nextjs`, etc. Copy profile to `.spartan/config.yaml`.
 
-If a packs file exists, generate config from the matching profile:
-- Has `backend-micronaut` → use `kotlin-micronaut` profile
-- Has `frontend-react` → use `react-nextjs` profile
-- Has `backend-nodejs` → use `typescript-node` profile
-- Has `backend-python` → use `python-fastapi` profile
-- None of the above → use `custom` profile
+**Nothing found** → scan `rules/` or `.claude/rules/` or `~/.claude/rules/`. Use all 7 default review stages.
 
-Look for the profile in the toolkit source:
-```bash
-REPO_PATH=$(cat ~/.claude/.spartan-repo 2>/dev/null || echo "")
-ls "$REPO_PATH/toolkit/profiles/" 2>/dev/null
-```
-
-Copy the matching profile to `.spartan/config.yaml`. Tell the user:
-> "No config found. Generated `.spartan/config.yaml` from {profile} profile. Edit it to customize."
-
-**If no packs file either (bare fallback):**
-- Scan `rules/` directory for all `.md` files
-- Group by subdirectory: `rules/backend-micronaut/` → backend, `rules/frontend-react/` → frontend, `rules/database/` → backend, `rules/core/` → shared
-- If no `rules/` dir, check `.claude/rules/` then `~/.claude/rules/`
-- Use all 7 default review stages
-
-### Step 2: Gather review context
+### Gather context
 
 ```bash
-# Get changed files by type (use file-types from config if available)
 git diff main...HEAD --name-only
-
-# Find spec and plan for this feature
 ls .planning/specs/*.md .planning/plans/*.md .planning/designs/*.md 2>/dev/null
 ```
 
-Classify each changed file into backend/frontend/migration using the `file-types` from config (or defaults: `.kt/.java/.go/.py` = backend, `.tsx/.ts/.vue` = frontend, `.sql` = migration).
+Classify changed files: `.kt/.java/.go/.py` = backend, `.tsx/.ts/.vue` = frontend, `.sql` = migration.
 
-**Custom review prompts:** If `.spartan/build.yaml` has `prompts.review`, include those instructions in the review agent's prompt below — they're injected after the standard review stages.
-
-### Step 3: Spawn the review agent
-
-Use the `Agent` tool to spawn a reviewer. **The prompt is built from the config.**
+### Spawn reviewer
 
 ```
 Agent:
   name: "reviewer"
   subagent_type: "phase-reviewer"
   prompt: |
-    You are reviewing code changes for the feature: {feature name}.
+    Review code for: {feature name}.
+    Changed files — backend: {list}, frontend: {list}, migrations: {list}.
+    Spec: {path}. Plan: {path}. Design: {path or "none"}.
 
-    ## What changed
-    - Backend files: {list from git diff, classified by file-types config}
-    - Frontend files: {list from git diff}
-    - Migration files: {list from git diff}
-    - Design doc: {path if exists, or "none"}
+    Read ALL rule files BEFORE reviewing:
+    Backend: {paths from config.rules.backend + config.rules.shared}
+    Frontend: {paths from config.rules.frontend + config.rules.shared}
+    Conditional: {rules matching changed file globs}
+    {If design doc exists: check UI matches approved design.}
 
-    ## Spec and plan
-    - Spec: {path to spec file, or inline scope block from Stage 1}
-    - Plan: {path to plan file, or inline plan from Stage 3}
-    Check that the code matches what was specified and planned. Flag missing pieces.
+    Review stages (skip any disabled in config.review-stages):
+    1. Correctness — matches spec? edge cases? error handling?
+    2. Stack Conventions — follows loaded rule files? idiomatic?
+    3. Test Coverage — tests exist? independent? edge cases + error paths?
+    4. Architecture — proper layers? no duplication? no dead code?
+    5. Database & API — schema rules? API design rules? input validation?
+    6. Security — auth? sanitized input? no data leaks? no injection?
+    7. Doc Gaps — new pattern to document? flag for .memory/
 
-    ## Rules to check against
-    Read these rule files BEFORE reviewing code. They are the source of truth.
-
-    {List ALL rule paths from config, grouped by mode. Example:}
-
-    **Backend rules (from .spartan/config.yaml):**
-    {for each rule in config.rules.backend + config.rules.shared:}
-    - `{rule path}`
-    {end for}
-
-    **Frontend rules (from .spartan/config.yaml):**
-    {for each rule in config.rules.frontend + config.rules.shared:}
-    - `{rule path}`
-    {end for}
-
-    **Conditional rules (if any):**
-    {for each conditional rule where changed files match applies-to:}
-    - `{rule path}` — applies to files matching `{glob}`
-    {end for}
-
-    {IF design doc exists:}
-    **Design compliance:**
-    - Read the design doc at {path}. Check that UI matches the approved design.
-
-    ## Review stages
-    {List ONLY the stages that are enabled in config.review-stages.
-     For each stage, include its name and description from config.
-     If no config, use all 7 defaults below.}
-
-    **Stage 1 — Correctness & Requirements**
-    - Does the code match the spec? Any missing requirements?
-    - Are all edge cases handled?
-    - Error handling follows the project's approach (check the rules)?
-
-    **Stage 2 — Stack Conventions**
-    - Code follows the patterns described in the loaded rule files?
-    - Stack idioms are correct for this language/framework?
-
-    **Stage 3 — Test Coverage**
-    - Tests exist for new code?
-    - Tests are independent (no order dependency)?
-    - Edge cases covered? Happy path + error paths?
-
-    **Stage 4 — Architecture & Clean Code**
-    - Architecture matches what the config says (layered, hexagonal, etc.)?
-    - Proper separation between layers?
-    - Functions small and focused? No deep nesting?
-    - No duplication, no dead code?
-
-    **Stage 5 — Database & API**
-    - Schema follows the rules? (check loaded database rules)
-    - API design follows the rules? (check loaded API rules)
-    - Input validation on public endpoints?
-
-    **Stage 6 — Security**
-    - Auth checks on all endpoints?
-    - Input validated and sanitized?
-    - No sensitive data logged or exposed?
-    - No injection risks?
-
-    **Stage 7 — Documentation Gaps**
-    - New pattern that should be documented? → flag for rules update
-    - New convention established? → flag for .memory/patterns/
-    - Recurring issue that should become a rule? → flag it
-
-    ## Output format
-
-    For each issue:
-    - File and line number
-    - What's wrong
-    - Which rule it breaks (with rule file path)
-    - Severity: HIGH (must fix) / MEDIUM (should fix) / LOW (nice to have)
-    - Suggested fix
-
-    End with:
-    - **PASS** or **NEEDS CHANGES** (list all HIGH/MEDIUM issues)
-    - **Documentation updates needed** (list any from Stage 7, or "none")
-    - **What's clean** (always include — praise good code)
+    Per issue: file:line, what's wrong, which rule, severity (HIGH/MEDIUM/LOW), fix.
+    End with: PASS or NEEDS CHANGES + what's clean (always praise good code).
 ```
 
-### Step 3: Fix loop
+**Agent Teams enabled?** → Split into 3 parallel reviewers: quality (stages 1-2,4), tests (stage 3), security (stage 6). All must PASS. `TeamDelete` after.
 
-When the reviewer reports back:
+If `.spartan/build.yaml` has `prompts.review`, inject into reviewer prompt.
 
-**If PASS** → save any documentation updates the reviewer flagged, then continue to Ship.
+### Fix loop
 
-**If NEEDS CHANGES:**
-
-1. Read the reviewer's findings
-2. Fix all HIGH issues. Fix MEDIUM issues if they make sense.
-3. Commit fixes:
-   ```
-   fix([scope]): [what review caught]
-   ```
-4. Run tests again to make sure fixes didn't break anything
-5. Spawn the review agent AGAIN with the updated diff — only the remaining/new changes need review
-6. Repeat until the reviewer says PASS
-
-**Max review rounds** (default: 3, configurable via `max-review-rounds` in `.spartan/build.yaml`). If still failing after max rounds, stop and ask the user:
-> "Review found issues I can't fully fix. Here's what's left: [list]. Want to continue anyway or address these manually?"
-
-### Step 4: Capture review learnings
-
-After the reviewer says PASS, check its output for:
-
-- **Documentation updates needed** → save to `.memory/knowledge/` so the next build knows
-- **New pattern flagged** → save to `.memory/patterns/`
-- **Rule violation that keeps showing up** → note it for the user to consider adding to rules
-
-### Step 5: Parallel review with Agent Teams
-
-```bash
-echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
-```
-
-**If Agent Teams is enabled**, create a review team for parallel coverage:
-
-```
-TeamCreate(team_name: "review-{feature-slug}", description: "Code review for {feature}")
-
-TaskCreate(subject: "Quality review", description: "Stages 1-2, 4: correctness, conventions, architecture")
-TaskCreate(subject: "Test review", description: "Stage 3: coverage, edge cases, test quality")
-TaskCreate(subject: "Security review", description: "Stage 6: auth, injection, data exposure")
-
-Agent(
-  team_name: "review-{feature-slug}",
-  name: "quality-reviewer",
-  subagent_type: "phase-reviewer",
-  prompt: "Review for correctness, stack conventions, architecture.
-    Changed files: {list}. Rules: {rule paths from config}.
-    Check against spec at {spec path} and plan at {plan path}.
-    Output: PASS or NEEDS CHANGES with file:line, rule broken, severity, fix."
-)
-
-Agent(
-  team_name: "review-{feature-slug}",
-  name: "test-reviewer",
-  subagent_type: "general-purpose",
-  prompt: "Review test coverage, edge cases, test quality.
-    Changed files: {list}. Check test independence, assertions, no duplication.
-    Output: PASS or NEEDS CHANGES with specifics."
-)
-
-Agent(
-  team_name: "review-{feature-slug}",
-  name: "security-reviewer",
-  subagent_type: "general-purpose",
-  prompt: "Review security: auth, input validation, data exposure, injection.
-    Changed files: {list}. Rules: security-checklist + OWASP top 10.
-    Output: PASS or NEEDS CHANGES with specifics."
-)
-```
-
-All teammates review at the same time. Combine their findings. All must PASS before moving to Ship. If any says NEEDS CHANGES → fix loop (Step 3) applies to the combined findings.
-
-After review completes: `TeamDelete()` to clean up.
-
-**If Agent Teams is NOT enabled**, use a single review agent (Steps 1-2 above).
+- **PASS** → save any flagged docs to `.memory/`, continue to Ship
+- **NEEDS CHANGES** → fix HIGH + reasonable MEDIUM, commit `fix([scope]): [what review caught]`, re-run tests, spawn reviewer again with updated diff
+- Max rounds: 3 (configurable via `max-review-rounds`). After max → ask user what to do
 
 ---
 
 ## Stage 6: Ship
 
-**Custom ship prompts:** If `.spartan/build.yaml` has `prompts.ship`, apply those instructions — PR naming rules, extra checks, deploy notes, etc.
+If `.spartan/build.yaml` has `prompts.ship`, apply now.
 
-### Create PR
-Run the approach from `/spartan:pr-ready`:
-- Rebase onto main
-- Run all checks one final time
-- Create PR with clear title, summary, and test plan
+Run `/spartan:pr-ready` approach: rebase onto main, final checks, create PR.
 
-### Save to memory (if something notable was learned)
+Save notable learnings to `.memory/` if any.
 
-After the PR is created, check if this build revealed anything worth remembering:
-
-- **New pattern discovered?** → Save to `.memory/patterns/`
-- **Architecture decision made?** → Save to `.memory/decisions/`
-- **Gotcha or workaround found?** → Save to `.memory/knowledge/`
-- **Nothing notable?** → Skip. Don't save noise.
-
-```bash
-mkdir -p .memory/decisions .memory/patterns .memory/knowledge
-```
-
-Update `.memory/index.md` if you saved anything.
-
-### Clean up worktree
-
-After PR is created, the worktree stays for review fixes. Tell the user the worktree path so they know.
-
-When the user says the PR is merged, clean up by substituting the actual slug:
+Worktree stays for review fixes. When user says PR is merged:
 
 ```bash
 MAIN_REPO="$(git worktree list | head -1 | awk '{print $1}')"
-SLUG="the-actual-slug-used-earlier"
+SLUG="the-actual-slug"
 git -C "$MAIN_REPO" worktree remove ".worktrees/$SLUG" --force 2>/dev/null
 git -C "$MAIN_REPO" worktree prune 2>/dev/null
-echo "Cleaned up worktree for $SLUG"
+echo "Cleaned up worktree: $SLUG"
 ```
 
-**GATE 4 — Done.**
-> "PR created: [link]. Here's what's in it: [summary]."
+**GATE 4:** "PR created: [link]. Here's what's in it: [summary]."
 
 ---
 
-## Stage E: Epic Build (multi-feature mode)
+## Stage E: Epic Build
 
-**This replaces Stages 1–4 when epic mode is active.** It builds all ready features from the epic on one branch and creates one PR. Review and Ship still run normally after.
+Replaces Stages 1–4 when epic mode is active. One branch, one PR for all features.
 
-### Step 1: Collect and fill gaps
+### E.1: Collect and fill gaps
 
-Read the epic file. For each feature with status `spec`, `planned`, or `building`:
+For each feature in epic with status `spec`/`planned`/`building`:
+- Read spec, design, plan from `.planning/`
+- Missing spec → skip feature, tell user to run `/spartan:spec`
+- Missing design (with UI) → ask user: create now or skip?
+- Missing plan → generate inline
 
-1. Read its spec from `.planning/specs/`
-2. Read its design from `.planning/designs/` (if exists)
-3. Read its plan from `.planning/plans/` (if exists)
+Agent Teams enabled + 2+ features need plans → parallelize with one teammate per feature (`isolation: "worktree"`).
 
-**Fill gaps for each feature that's missing something:**
+### E.2: Create workspace + sort
 
-| Missing | Action |
-|---------|--------|
-| Spec | Skip this feature — tell user to run `/spartan:spec {feature}` first |
-| Design (and feature has UI work) | Ask user: create design now or skip? Same logic as Stage 2 |
-| Plan | Generate a plan inline (fast path for small, full path for big) |
+Create worktree using epic name as slug (same bash block as Stage 3.1).
 
-**Use Agent Teams to fill gaps in parallel** (if enabled): When 2+ features need plans or designs generated, use a team to do this at the same time.
+Sort features by dependency: no-deps first (can run in parallel), then dependents.
 
-```bash
-echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
-```
+### E.3: Implement
 
-If Agent Teams enabled and 2+ features need plans:
-```
-TeamCreate(team_name: "epic-prep-{slug}", description: "Preparing specs/plans for epic")
+**Agent Teams enabled + 2+ independent features** → one teammate per feature. Frontend teammates MUST get design doc path. Wait for all, merge worktrees, run tests.
 
-// One task + teammate per feature that needs a plan
-Agent(
-  team_name: "epic-prep-{slug}",
-  name: "planner-{feature-1}",
-  subagent_type: "general-purpose",
-  isolation: "worktree",
-  prompt: "Generate the design (if needed) and plan for feature: {feature-1}.
-    Read spec at .planning/specs/{feature-1}.md.
-    Save design to .planning/designs/, plan to .planning/plans/."
-)
+**Sequential** → build each feature with TDD, update epic status → `done` after each.
 
-Agent(
-  team_name: "epic-prep-{slug}",
-  name: "planner-{feature-2}",
-  subagent_type: "general-purpose",
-  isolation: "worktree",
-  prompt: "Generate the design (if needed) and plan for feature: {feature-2}. ..."
-)
-```
-Collect results after all finish, then `TeamDelete()`.
+### E.4: Verify
 
-### Step 2: Sort by dependency and create workspace (MANDATORY)
+Run full test suite. Then continue to Stage 5 (Review) — one review for all features.
 
-Read the epic's Features table. Sort features by dependency order:
-- Features with no dependencies → can build first
-- Features that depend on others → build after their dependencies are done
-
-**MANDATORY:** Create a worktree for the epic. Same pattern as single-feature builds. Generate a slug from the epic name, then run immediately:
-
-```bash
-SLUG="the-epic-slug-you-generated"
-BRANCH="feature/$SLUG"
-MAIN_REPO="$(git rev-parse --show-toplevel)"
-WORKSPACE="$MAIN_REPO/.worktrees/$SLUG"
-if [ -d "$WORKSPACE" ]; then echo "RESUMING: $WORKSPACE"; else git worktree add "$WORKSPACE" -b "$BRANCH" 2>/dev/null || git worktree add "$WORKSPACE" "$BRANCH"; fi
-for dir in .planning .memory .handoff .spartan; do [ -d "$MAIN_REPO/$dir" ] && [ ! -e "$WORKSPACE/$dir" ] && ln -s "$MAIN_REPO/$dir" "$WORKSPACE/$dir"; done
-[ -f "$MAIN_REPO/.env" ] && [ ! -f "$WORKSPACE/.env" ] && cp "$MAIN_REPO/.env" "$WORKSPACE/.env"
-echo "WORKSPACE=$WORKSPACE"
-echo "BRANCH=$BRANCH"
-```
-
-**Read the output.** All epic work happens in the WORKSPACE path printed above. Use `cd <WORKSPACE> && ...` for all commands.
-
-### Step 3: Implement in dependency order
-
-Go through features in dependency order. **When 2+ features have no dependency between them, build them at the same time using Agent Teams** (if enabled). Otherwise build one by one.
-
-```bash
-echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
-```
-
-**For each feature (or group of parallel features):**
-
-1. **If Agent Teams enabled and 2+ features can run at the same time:**
-   ```
-   TeamCreate(team_name: "epic-build-{slug}", description: "Building epic features in parallel")
-
-   // One task per feature
-   TaskCreate(subject: "Build {feature-A}", description: "...")
-   TaskCreate(subject: "Build {feature-B}", description: "...")
-
-   // One teammate per feature — MUST use team_name + name
-   Agent(
-     team_name: "epic-build-{slug}",
-     name: "builder-{feature-A}",
-     subagent_type: "general-purpose",
-     isolation: "worktree",
-     prompt: "Build feature {A}. Spec: .planning/specs/{A}.md. Plan: .planning/plans/{A}.md.
-       Design doc: .planning/designs/{A}.md — read FIRST if exists.
-       Follow TDD. Mark tasks completed when done."
-   )
-
-   Agent(
-     team_name: "epic-build-{slug}",
-     name: "builder-{feature-B}",
-     subagent_type: "general-purpose",
-     isolation: "worktree",
-     prompt: "Build feature {B}. ..."
-   )
-   ```
-   - **Design doc handoff is MANDATORY** — every frontend/UI teammate must read the design doc first
-   - Wait for all teammates to finish (messages arrive automatically)
-   - Merge worktrees, run full test suite
-   - `TeamDelete()` to clean up
-   - If tests fail → fix before moving on
-
-2. **If sequential (Agent Teams not enabled or only one feature ready):**
-   - Build each task with TDD: test → implement → refactor → commit
-   - Follow the same skill routing as Stage 4
-
-3. **After each feature completes:**
-   - Update epic Features table (status → `done`)
-   - Check: does this unblock the next features? If yes, start those next.
-
-### Step 4: After all features built
-
-Run the full test suite. Then continue to **Stage 5: Review** — the review agent reviews ALL changes across all features. One review, one fix loop, one PR.
-
-**GATE 3 (Epic):**
-> "All {N} features built. {X} tests passing. Starting review."
->
-> **Auto mode on?** → Go straight to review.
-
----
-
-## Resume: Picking Up Where You Left Off
-
-If a previous session was interrupted (context overflow, user stopped, etc.), this workflow can resume.
-
-**How resume works:**
-1. Check for existing worktrees from a previous build:
-   ```bash
-   ls .worktrees/ 2>/dev/null
-   git worktree list 2>/dev/null
-   ```
-   If a worktree exists for this feature, set `WORKSPACE` to it and work there. Don't create a new one.
-2. Step 0.5 checks for `.handoff/` files and existing `.planning/` artifacts
-3. Determine which stage was completed last:
-   - Has spec but no plan → resume at Stage 3 (Plan)
-   - Has plan but no commits on feature branch → resume at Stage 4 (Implement)
-   - Has commits but no PR → resume at Stage 5 (Review) or Stage 6 (Ship)
-4. Show the user: "Resuming from [stage] in `$WORKSPACE`. Here's what was done: [summary]."
-5. Continue from that point.
-
-**Don't re-do completed stages.** Read the saved artifacts and move forward.
+**GATE 3 (Epic):** "All {N} features built. {X} tests passing. Starting review."
 
 ---
 
 ## Rules
 
-- **You are the orchestrator.** Don't tell the user to run `/spartan:spec` or `/spartan:plan` separately. Run those approaches yourself when needed.
-- **Fast path is the default for small work.** If the whole thing is 1-4 tasks, do everything inline. Don't force the user through 3 separate commands.
-- **Full path for big work.** If 5+ tasks, save artifacts to `.planning/` so future sessions can pick up.
-- **Gates are mandatory.** Even small features go through all stages. The stages are fast for small work — that's fine.
-- **TDD by default.** Write the test first. Override only when test-first doesn't make sense for that specific task.
-- **One commit per task.** Don't batch. Each task = one commit with a clear message.
-- **Review is ALWAYS an agent. NEVER skip.** This is the #1 rule. After implementation finishes — whether via Agent Teams or sequential — you MUST spawn the review agent (Stage 5). Never self-review. Never skip review. Never ask the user if they want to skip. Never commit or create a PR without review. Fix issues until the reviewer says PASS.
-- **Design gate runs for frontend work.** If the feature has UI work (new components, screens, modals, layouts), you MUST trigger the design question in Stage 2. Only skip for pure data changes (adding a field to an existing table/component).
-- **Security check always runs.** Whether backend or frontend, security patterns get checked during review.
-- **Frontend checks for backend needs.** If a new page needs data that doesn't exist yet, say so at Stage 3 and add backend tasks first.
-- **Don't over-plan.** If the whole thing is 1-2 files and 30 minutes of work, don't force it into this workflow. Just do it. This workflow is for features that need structure — at least 2-3 tasks.
-- **Save state for big work.** If 5+ tasks, save artifacts to `.planning/` so future sessions can resume.
-- **Full-stack = both layers done.** If the feature touches both backend and frontend, you MUST implement both before creating the PR. Backend-only completion is NOT "done" for a full-stack feature.
-- **Epic = one branch, one PR.** When building from an epic, all features go on one branch and ship as one PR. Don't create separate PRs per feature. Parallelize independent features with Agent Teams when available.
-- **Epic auto-detection.** If the user's feature name matches an epic in `.planning/epics/`, switch to epic mode automatically. Don't ask.
-- **Build config is `.spartan/build.yaml`.** Controls branch prefix, max review rounds, skip stages, and custom prompts per stage. All fields optional.
-- **Every build creates a worktree automatically.** `git worktree add .worktrees/[slug]` runs at Stage 3. All work happens in the worktree using `$WORKSPACE` paths. Multiple terminals get separate worktrees, branches, and PRs. No conflicts. Cleanup happens after PR merge.
-
----
-
-## Definition of Done
-
-A feature is NOT done until every applicable item is checked:
-
-### Backend
-- [ ] Database migration (if new/changed table)
-- [ ] Kotlin entity, table object, repository with tests
-- [ ] Manager with business logic and Either error handling
-- [ ] Controller with proper annotations (@ExecuteOn, @Secured, @Validated)
-- [ ] Integration tests for all endpoints (happy path, 404, 401)
-- [ ] `./gradlew test` passes
-
-### Frontend
-- [ ] TypeScript types/interfaces match backend DTOs
-- [ ] API client methods for all new/changed endpoints
-- [ ] Components built and connected to data
-- [ ] Page routing and navigation working
-- [ ] `yarn build` (or `npm run build`) passes with no errors
-- [ ] Loading, empty, and error states handled
-
-### Full-Stack (ALL of the above, plus)
-- [ ] Frontend calls backend API correctly (snake_case conversion, auth headers)
-- [ ] Response data renders in the UI
-- [ ] End-to-end flow works: user action → API call → backend processing → response → UI update
-- [ ] Both `./gradlew test` AND `yarn build` pass
-
-### Always
-- [ ] Atomic commits (one per task)
-- [ ] Review agent passed (all HIGH/MEDIUM issues fixed)
-- [ ] PR created with summary and test plan
-
+- **Orchestrate everything.** Don't tell user to run separate commands — run them yourself.
+- **Fast path for small work** (1-4 tasks). Full path for big (5+).
+- **TDD by default.** One commit per task. Override only when test-first doesn't fit.
+- **Review is ALWAYS an agent. NEVER skip.** Fix until reviewer says PASS.
+- **Design gate for frontend.** Any new component/screen/modal → ask. Pure data → skip.
+- **Full-stack = both layers.** Don't create PR with only backend done.
+- **Every build uses a worktree. NEVER `git checkout -b`.** Multiple terminals get separate worktrees.
+- **Epic = one branch, one PR.** Auto-detect from `.planning/epics/`.
+- **Don't over-plan.** If 1-2 files and 30 min of work, just do it. This workflow is for features that need structure.
