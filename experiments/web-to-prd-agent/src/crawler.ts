@@ -426,8 +426,9 @@ export class Crawler {
     return this.claude.ask(prompt, {
       ...this.claudeOptions,
       sessionId: this.state.sessionId,
+      // For follow-up calls, use --continue to continue the session
+      // Don't combine --resume with --session-id (requires --fork-session)
       continue: isFollowUp,
-      resume: isFollowUp,
     })
   }
 
