@@ -46,6 +46,9 @@ docs/ROADMAP.md
 # Internal research output (not tracked)
 research/
 
+# Playwright MCP profile (created by /spartan:web-to-prd)
+.playwright-profile/
+
 # Backups created by setup script
 *.bak
 .backup-*/

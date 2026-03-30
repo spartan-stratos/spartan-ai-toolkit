@@ -11,9 +11,11 @@ commands:
   - interview
   - lean-canvas
   - brainstorm
+  - web-to-prd
 
 rules: []
-skills: []
+skills:
+  - web-to-prd
 agents: []
 
 claude-sections:
