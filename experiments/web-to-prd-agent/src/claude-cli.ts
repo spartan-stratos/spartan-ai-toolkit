@@ -1,4 +1,5 @@
-import { spawn } from 'node:child_process'
+import { spawn, type SpawnOptions } from 'node:child_process'
+import { openSync } from 'node:fs'
 import type { ClaudeOptions, ClaudeResponse } from './types.js'
 
 export class ClaudeCLI {
@@ -68,16 +69,18 @@ export class ClaudeCLI {
       const chunks: Buffer[] = []
       const stderrChunks: Buffer[] = []
 
+      // Redirect stdin from /dev/null to avoid "no stdin data received" warning
+      const devNull = openSync('/dev/null', 'r')
       const proc = spawn('claude', args, {
-        stdio: ['pipe', 'pipe', 'pipe'],
+        stdio: [devNull, 'pipe', 'pipe'],
         env: { ...process.env },
       })
 
-      proc.stdout.on('data', (chunk: Buffer) => {
+      proc.stdout!.on('data', (chunk: Buffer) => {
         chunks.push(chunk)
       })
 
-      proc.stderr.on('data', (chunk: Buffer) => {
+      proc.stderr!.on('data', (chunk: Buffer) => {
         stderrChunks.push(chunk)
       })
 

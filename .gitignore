@@ -48,6 +48,8 @@ research/
 
 # Playwright MCP profile (created by /spartan:web-to-prd)
 .playwright-profile/
+.playwright-mcp/
+experiments/web-to-prd-agent/.playwright-mcp/
 
 # Backups created by setup script
 *.bak
