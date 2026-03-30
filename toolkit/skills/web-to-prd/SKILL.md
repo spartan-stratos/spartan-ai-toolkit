@@ -326,28 +326,36 @@ Rules for dependencies:
 
 ### Structure
 
-Generate a PRD with 8 sections. The format is designed to be actionable — when someone reads it, they know exactly what to build first, step by step.
+Generate a PRD with 8 sections. **Each Epic is a mini-PRD** — a developer reads one Epic and knows exactly what to build.
 
 ```
 1. TL;DR              — 2 sentences, what this app does
 2. Goals              — Business goals, user goals, non-goals
 3. User Stories        — Grouped by persona/role
-4. Functional Reqs    — Grouped by Epic, with priority table + acceptance criteria
-5. User Experience    — Entry points, key flows, edge cases, design notes
+4. Epics (mini-PRDs)  — THE MAIN SECTION. Each epic has full detail (see below)
+5. User Flows         — End-to-end flows connecting stories across epics
 6. Narrative          — 200-word story from user's POV
-7. Build Roadmap      — Phased plan with dependency graph (the "what to do first" section)
+7. Build Roadmap      — Phased plan with dependency graph
 8. Open Questions     — Things that need human input
 ```
 
-**Section 4 (Functional Requirements)** is the main section. Each Epic gets:
-- A priority and phase number
-- A requirements table: `# | Requirement | Priority | Story`
-- Acceptance criteria as checkboxes
+**Section 4 (Epics) is the core.** Epics are ordered by build priority (Epic 1 = build first). No separate Stories database — all detail lives inside each Epic.
 
-**Section 7 (Build Roadmap)** is the actionable section. Shows:
-- Phases with parallel epics
-- Dependency graph (text diagram)
-- Complexity estimate per epic
+Each Epic MUST include:
+- Priority, phase, dependencies, complexity
+- What this epic does (2-3 sentences)
+- Pages/screens involved with URLs
+- **Features with FULL detail:**
+  - User story (As a..., I want..., so that...)
+  - What the user sees (UI elements, layout, data, visual details — be very specific)
+  - How it works step by step (1. User does X → 2. System shows Y → ...)
+  - Acceptance criteria (testable checkboxes)
+  - Edge cases (empty state, error state, loading state)
+  - Technical notes (APIs, data model, integrations)
+
+**Be as detailed as possible.** Describe every button, every form field, every table column, every filter option. A developer should read one Epic and build it without asking questions.
+
+**Try EVERY feature.** Click every menu, open every modal, test every filter. Missing features = useless PRD.
 
 See the command file (`web-to-prd.md`) for the full template.
 
@@ -357,34 +365,22 @@ See the command file (`web-to-prd.md`) for the full template.
 
 ### Database Structure
 
-Create 4 linked databases in Notion:
+Create a parent page + Epics database in Notion:
 
 ```
 Parent page: "[App Name] — Product Backlog"
-├── PRD page (full text PRD)
-├── Epics database
-│   ├── Name (title)
-│   ├── Priority (select: P0, P1, P2, P3)
-│   ├── Status (select: Not Started, In Progress, Done)
-│   ├── Phase (number)
-│   ├── Depends On (relation → Epics)
-│   ├── Description (rich text)
-│   └── Story Count (rollup from Stories)
-├── Stories database
-│   ├── Name (title)
-│   ├── Epic (relation → Epics)
-│   ├── Priority (select: P0, P1, P2, P3)
-│   ├── Status (select: Backlog, Ready, In Progress, Review, Done)
-│   ├── Points (number)
-│   ├── User Story (rich text: As a..., I can..., so that...)
-│   └── Acceptance Criteria (rich text: checklist)
-└── Tasks database
+├── PRD content (sections 1-3, 5-8)
+└── Epics database
     ├── Name (title)
-    ├── Story (relation → Stories)
-    ├── Status (select: To Do, In Progress, Done)
-    ├── Type (select: Frontend, Backend, Design, DevOps, QA)
-    └── Description (rich text)
+    ├── Priority (select: P0, P1, P2, P3)
+    ├── Status (select: Not Started, In Progress, Done)
+    ├── Phase (number)
+    ├── Complexity (select: Simple, Medium, Complex)
+    ├── Dependencies (text)
+    └── Description (rich text — full epic mini-PRD content)
 ```
+
+No separate Stories or Tasks databases. All detail lives inside each Epic's Description field. Simpler, easier to manage.
 
 ### Export steps
 
