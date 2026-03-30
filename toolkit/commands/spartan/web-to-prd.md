@@ -238,15 +238,25 @@ Proceed? [Y/n]
 
 **Only start this step after login is confirmed and crawl plan is approved.**
 
+**Goal: Try EVERY feature you can find.** Missing features = incomplete PRD = useless output.
+
 Navigate through each section systematically:
 
-1. **Visit each page** from the navigation
+1. **Visit each page** from the navigation — every menu item, every sidebar link
 2. **Take a snapshot** (accessibility tree) of each page
-3. **Click into sub-pages** — tabs, accordions, detail views
-4. **Note interactive elements** — forms, buttons, modals, filters
-5. **Don't click destructive actions** — skip Delete, Remove, etc.
+3. **Click into sub-pages** — tabs, accordions, detail views, breadcrumbs
+4. **Try interactive elements:**
+   - Click every button (except Delete/Remove/destructive ones)
+   - Open every modal/dialog/dropdown
+   - Check every tab/accordion
+   - Note every form and its fields
+   - Test filters and search (type something, see what changes)
+   - Check settings/config pages
+   - Look for admin panels, user profiles, account pages
+5. **Don't click destructive actions** — skip Delete, Remove, Reset, etc.
 6. **Add 1-2 second delay** between navigations
 7. **If session expires mid-crawl** (redirected to login) → STOP, tell user to re-login in the browser, wait, then continue
+8. **Check hidden navigation** — hamburger menus, footer links, user avatar dropdowns, help/docs sections
 
 ### Progress updates
 
@@ -376,79 +386,127 @@ Generate a full PRD document with this structure:
 - As a [user type], I want to [action], so that [benefit]
 - As a [admin/manager], I want to [action], so that [benefit]
 
-## 4. Functional Requirements
+## 4. Epics (ordered by implementation priority)
 
-[Grouped by Epic, with priority. This is the main section.]
+**Epics are ordered 1, 2, 3... by build order. Epic 1 = build first. Each Epic is a mini-PRD — a developer reads it and knows exactly what to build.**
 
-### Epic 1: [Name] — Priority: P0 — Phase: 1
-**Dependencies:** none
-**Pages:** [URLs in this area]
+**IMPORTANT: Try every feature you can find.** Click every menu item, tab, button (except destructive ones). Open modals, expand accordions, test filters, check settings. Features you don't try = features missing from the PRD.
 
-| # | Requirement | Priority | Story |
-|---|-------------|----------|-------|
-| 1.1 | [Specific feature/capability] | P0 | As a user, I can... |
-| 1.2 | [Specific feature/capability] | P0 | As a user, I can... |
-| 1.3 | [Specific feature/capability] | P1 | As a user, I can... |
+---
 
-**Acceptance Criteria:**
-- [ ] [Testable criterion for 1.1]
-- [ ] [Testable criterion for 1.2]
+### Epic 1: [Name] — Build First
 
-### Epic 2: [Name] — Priority: P1 — Phase: 2
-**Dependencies:** Epic 1
-...
+**Phase:** 1 | **Dependencies:** none | **Complexity:** Simple/Medium/Complex
 
-[Repeat for all epics]
+#### What this does
+[2-3 sentences: what this feature area covers and why it matters. Why build it first.]
 
-## 5. User Experience
+#### Pages / Screens
+- [URL 1] — [page name and what it shows]
+- [URL 2] — [page name and what it shows]
 
-### Entry Points
-- [How users get into the app]
-- [Main navigation structure]
+#### Features
 
-### Key Flows
-1. [Flow name]: [step-by-step from entry to completion]
-2. [Flow name]: [step-by-step]
+**1.1 [Feature name]**
+- **User story:** As a [user], I want to [action], so that [benefit]
+- **What the user sees:**
+  - [UI elements: buttons, forms, tables, cards — be specific]
+  - [Layout: where on the page, how many columns, what data]
+  - [Visual: colors, icons, badges, status indicators]
+- **How it works:**
+  1. User [does X]
+  2. System [shows Y]
+  3. User [clicks Z]
+  4. System [responds with W]
+- **Acceptance criteria:**
+  - [ ] [Specific, testable]
+  - [ ] [Specific, testable]
+- **Edge cases:** Empty state: [what]. Error: [what]. Loading: [what].
+- **Technical notes:** [APIs, data model, integrations if obvious]
 
-### Edge Cases
-- [What happens when X fails]
-- [Empty states observed]
+**1.2 [Feature name]**
+- **User story:** ...
+- **What the user sees:** ...
+- **How it works:** ...
+- **Acceptance criteria:** ...
 
-### Design Notes
-- [UI patterns used: sidebar, tabs, cards, etc.]
-- [Responsive behavior observed]
+[Continue for ALL features in this epic]
+
+---
+
+### Epic 2: [Name] — Build After Epic 1
+
+**Phase:** 1 | **Dependencies:** Epic 1 | **Complexity:** Medium
+
+[Same full format — every epic gets the same detail level]
+
+---
+
+[Continue for ALL epics, ordered by build priority]
+
+---
+
+## 5. User Flows (end-to-end)
+
+[These connect stories across epics. Show the full user journey.]
+
+### Flow 1: [Name — e.g., "New user signs up and creates first project"]
+1. User lands on [page] → sees [what]
+2. Clicks [button] → goes to [page]
+3. Fills in [form fields] → submits
+4. System [creates/processes] → shows [result]
+5. User can now [next action]
+
+### Flow 2: [Name]
+1. ...
+
+### Edge Cases (cross-epic)
+- [What happens when X fails mid-flow]
+- [Empty states across flows]
+
+### Design Patterns Observed
+- [Navigation pattern: sidebar/tabs/breadcrumbs]
+- [Form patterns: inline edit/modal/full page]
+- [Data display: cards/tables/lists]
+- [Responsive behavior]
 
 ## 6. Narrative
 
-[200 words: a story from the user's point of view.
-Walk through a typical session using the app.
-Makes the PRD feel real, not abstract.]
+[200 words: walk through a typical user session from their point of view.
+Makes the PRD feel real. Name the user, describe their context, show the friction points.]
 
 ## 7. Build Roadmap
 
-[This is the actionable section. Shows exactly what to build first.]
+[Shows the order to build. Each phase lists epics that can be built in parallel.]
 
 ### Phase 1: Foundation (no dependencies)
-| Epic | Priority | Stories | Est. complexity |
-|------|----------|---------|-----------------|
-| [Epic A] | P0 | [N] | [Simple/Medium/Complex] |
-| [Epic B] | P0 | [N] | [Simple/Medium/Complex] |
+| Epic | Priority | Stories | Complexity | Why first |
+|------|----------|---------|------------|-----------|
+| [Epic A] | P0 | [N] | [Simple/Medium/Complex] | [Reason] |
+| [Epic B] | P0 | [N] | [Simple/Medium/Complex] | [Reason] |
 
-### Phase 2: Core Features (depends on Phase 1)
-| Epic | Priority | Stories | Est. complexity |
-|------|----------|---------|-----------------|
-| [Epic C] | P0 | [N] | [Medium/Complex] |
+### Phase 2: Core (depends on Phase 1)
+| Epic | Priority | Stories | Complexity | Why this phase |
+|------|----------|---------|------------|----------------|
+| [Epic C] | P0 | [N] | [Medium/Complex] | [Reason — what from Phase 1 it needs] |
 
 ### Phase 3: Enhancement (depends on Phase 2)
 ...
 
 ### Dependency Graph
+```
 [Text diagram showing which epics depend on which]
+
+Epic A (Phase 1) ──→ Epic C (Phase 2) ──→ Epic F (Phase 3)
+Epic B (Phase 1) ──→ Epic D (Phase 2)
+                     Epic E (Phase 2) ──→ Epic G (Phase 3)
+```
 
 ## 8. Open Questions
 - [Things that couldn't be determined from the UI]
 - [Decisions that need product input]
 - [Areas where the app behavior was unclear]
+- [Features that might be behind a paywall or role — couldn't access]
 ```
 
 **Save locally first:**
@@ -471,29 +529,20 @@ Ask the user:
 
 ### If A or B: Create Notion structure
 
-1. **Create parent page** — "[App Name] — Product Backlog" with PRD content
+1. **Create parent page** — "[App Name] — Product Backlog" with full PRD content (sections 1-3, 5-8)
 2. **Create Epics database** with columns:
    - Name (title)
    - Priority (select: P0, P1, P2, P3)
    - Status (select: Not Started, In Progress, Done)
    - Phase (number)
-   - Description (rich text)
-3. **Create Stories database** with columns:
-   - Name (title)
-   - Epic (relation to Epics)
-   - Priority (select: P0, P1, P2, P3)
-   - Status (select: Backlog, Ready, In Progress, Review, Done)
-   - User Story (rich text)
-   - Acceptance Criteria (rich text)
-4. **Create Tasks database** with columns:
-   - Name (title)
-   - Story (relation to Stories)
-   - Status (select: To Do, In Progress, Done)
-   - Type (select: Frontend, Backend, Design, DevOps, QA)
-5. **Populate all databases** with the extracted data
-6. **Create views:**
-   - Kanban by Status (for Stories)
-   - Table grouped by Epic (for Stories)
+   - Complexity (select: Simple, Medium, Complex)
+   - Dependencies (text)
+   - Description (rich text — the full epic mini-PRD content: what it does, features, how it works, acceptance criteria)
+3. **Populate Epics database** — each epic row contains the FULL detail from section 4 (not just a title)
+4. **Create views:**
+   - Table sorted by Phase (build order view)
+   - Kanban by Status (progress view)
+   - Filter by Priority (planning view)
 
 ### If C: Local only
 
