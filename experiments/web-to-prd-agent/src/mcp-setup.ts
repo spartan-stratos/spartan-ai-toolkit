@@ -63,7 +63,7 @@ export function installPlaywrightMCP(): boolean {
   } catch {
     // Fallback: install without persistent profile
     try {
-      execSync('claude mcp remove playwright', { stdio: 'pipe' }).toString()
+      execSync('claude mcp remove playwright', { stdio: 'pipe' })
     } catch { /* ignore */ }
 
     try {

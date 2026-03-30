@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'node:test'
+import { describe, it, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { Screenshotter, slugify } from '../dist/screenshotter.js'
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -33,6 +33,10 @@ describe('Screenshotter', () => {
 
   beforeEach(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'screenshotter-test-'))
+  })
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true })
   })
 
   it('generates sequential numbered paths', () => {
@@ -87,8 +91,5 @@ describe('Screenshotter', () => {
     const ss = new Screenshotter(tmpDir)
     const dir = ss.getOutputDir()
     assert.ok(dir.endsWith('screenshots'))
-
-    // Cleanup
-    rmSync(tmpDir, { recursive: true })
   })
 })

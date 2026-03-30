@@ -12,6 +12,7 @@ export class Crawler {
   private claudeOptions: ClaudeOptions
   private maxPages: number
   private log: (msg: string) => void
+  private queuedUrls: Set<string>
 
   constructor(options: {
     claude: ClaudeCLI
@@ -27,6 +28,7 @@ export class Crawler {
     this.maxPages = options.maxPages ?? 100
     this.log = options.log ?? console.log
     this.claudeOptions = options.claudeOptions
+    this.queuedUrls = new Set([options.appUrl])
 
     this.state = {
       sessionId: options.sessionId,
@@ -78,14 +80,17 @@ export class Crawler {
 
     // Process queue
     while (this.state.queue.length > 0 && this.state.visited.size < this.maxPages) {
-      const url = this.state.queue.shift()!
-      if (this.state.visited.has(url)) continue
+      const url = this.state.queue.shift()
+      if (!url || this.state.visited.has(url)) continue
 
       await this.delay()
 
       try {
+        // Generate screenshot path before navigating so we can tell Claude where to save
+        const ssPath = this.screenshotter.nextPath(url.split('/').pop() ?? 'page')
+
         const result = await this.askClaude(
-          `Navigate to "${url}". Take a screenshot. ` +
+          `Navigate to "${url}". Take a screenshot and save it to "${ssPath}". ` +
           `Read the page and return JSON: ` +
           `{"title": "page title", "type": "list|detail|form|settings|dashboard|other", ` +
           `"section": "which nav section this belongs to", ` +
@@ -98,8 +103,6 @@ export class Crawler {
         this.state.pages.set(url, page)
         this.state.visited.add(url)
 
-        // Screenshot
-        const ssPath = this.screenshotter.nextPath(parsed.title ?? url)
         page.screenshotPath = ssPath
         this.state.screenshots.push(ssPath)
 
@@ -162,8 +165,11 @@ export class Crawler {
           await this.delay()
 
           try {
+            // Generate screenshot path before clicking
+            const ssPath = this.screenshotter.nextPath(`${page.title}-${elem.name}`)
+
             const clickResult = await this.askClaude(
-              `On the current page, click "${elem.name}". Take a screenshot. ` +
+              `On the current page, click "${elem.name}". Take a screenshot and save it to "${ssPath}". ` +
               `Describe what happened. Return JSON: ` +
               `{"result": "what happened after clicking", "openedModal": true/false, ` +
               `"newPage": true/false, "formFields": ["list of form field labels if a form appeared"], ` +
@@ -177,11 +183,9 @@ export class Crawler {
               type: elem.type ?? 'other',
               description: clickParsed.description ?? clickParsed.result ?? '',
               result: clickParsed.result,
+              screenshotPath: ssPath,
             }
 
-            // Screenshot the interaction result
-            const ssPath = this.screenshotter.nextPath(`${page.title}-${elem.name}`)
-            interaction.screenshotPath = ssPath
             this.state.screenshots.push(ssPath)
             this.screenshotter.track(ssPath, page.section)
 
@@ -220,15 +224,16 @@ export class Crawler {
    */
   private async exploreModal(page: PageInfo, triggerElement: string): Promise<void> {
     try {
+      const ssPath = this.screenshotter.nextPath(`modal-${triggerElement}`)
+
       const result = await this.askClaude(
         `A modal/dialog opened after clicking "${triggerElement}". ` +
-        `Take a screenshot. Describe everything in the modal: ` +
+        `Take a screenshot and save it to "${ssPath}". Describe everything in the modal: ` +
         `{"title": "modal title", "formFields": ["field labels"], ` +
         `"buttons": ["button labels"], "description": "what this modal is for"}`
       )
 
       const parsed = JSON.parse(extractJSON(result))
-      const ssPath = this.screenshotter.nextPath(`modal-${triggerElement}`)
       this.state.screenshots.push(ssPath)
       this.screenshotter.track(ssPath, page.section)
 
@@ -398,21 +403,31 @@ export class Crawler {
   }
 
   private addToQueue(urlOrLabel: string): void {
-    // If it looks like a URL, use it directly
-    // Otherwise skip — it's a label we can't navigate to by URL
-    if (urlOrLabel.startsWith('http') || urlOrLabel.startsWith('/')) {
-      const normalized = normalizeUrl(urlOrLabel, this.state.appUrl)
-      if (!this.state.visited.has(normalized) && !this.state.queue.includes(normalized)) {
+    // Try to extract a URL from the string (handles labels like "Home (→ /)" or "Settings → /settings")
+    let url = urlOrLabel
+    const pathMatch = urlOrLabel.match(/→\s*(\/[^\s)]*)/)?.[1]
+    if (pathMatch) {
+      url = pathMatch
+    }
+
+    if (url.startsWith('http') || url.startsWith('/')) {
+      const normalized = normalizeUrl(url, this.state.appUrl)
+      if (!this.state.visited.has(normalized) && !this.queuedUrls.has(normalized)) {
         this.state.queue.push(normalized)
+        this.queuedUrls.add(normalized)
       }
+    } else {
+      this.log(`  Skipping non-URL nav item: "${urlOrLabel}"`)
     }
   }
 
   private async askClaude(prompt: string): Promise<string> {
+    const isFollowUp = this.state.visited.size > 0
     return this.claude.ask(prompt, {
       ...this.claudeOptions,
       sessionId: this.state.sessionId,
-      resume: this.state.visited.size > 0,
+      continue: isFollowUp,
+      resume: isFollowUp,
     })
   }
 

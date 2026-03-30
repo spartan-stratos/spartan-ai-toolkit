@@ -10,6 +10,7 @@ export interface ClaudeResponse {
 export interface ClaudeOptions {
   sessionId?: string
   resume?: boolean
+  continue?: boolean
   mcpConfig?: string
   allowedTools?: string
   jsonSchema?: string

@@ -1,6 +1,7 @@
 import { ClaudeCLI } from './claude-cli.js'
 import type { ClaudeOptions, PRDDocument, NotionExportResult } from './types.js'
-import { prdToMarkdown } from './prd-generator.js'
+
+const NOTION_MCP_TOOLS = 'mcp__claude_ai_Notion__*'
 
 export class NotionExporter {
   private claude: ClaudeCLI
@@ -42,7 +43,7 @@ export class NotionExporter {
         `After creating the page, return the page URL.`,
         {
           ...this.claudeOptions,
-          allowedTools: 'mcp__claude_ai_Notion__*',
+          allowedTools: NOTION_MCP_TOOLS,
         }
       )
 
@@ -70,7 +71,7 @@ export class NotionExporter {
           `Return the page URL.`,
           {
             ...this.claudeOptions,
-            allowedTools: 'mcp__claude_ai_Notion__*',
+            allowedTools: NOTION_MCP_TOOLS,
           }
         )
 

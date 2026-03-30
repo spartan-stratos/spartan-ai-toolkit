@@ -1,5 +1,6 @@
-import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'node:fs'
+import { writeFileSync, readFileSync, existsSync, mkdirSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
+import { tmpdir } from 'node:os'
 import { randomUUID } from 'node:crypto'
 import { ClaudeCLI } from './claude-cli.js'
 import { checkPrerequisites, installPlaywrightMCP, cleanStaleLockFiles, buildMCPConfig } from './mcp-setup.js'
@@ -14,6 +15,7 @@ export class Agent {
   private state: AgentState
   private claude: ClaudeCLI
   private claudeOptions: ClaudeOptions
+  private mcpConfigPath: string
   private log: (msg: string) => void
 
   constructor(options: CLIOptions) {
@@ -25,16 +27,14 @@ export class Agent {
       errors: [],
     }
 
-    // Write MCP config to temp file
-    const mcpConfigPath = join(options.outputDir, 'mcp-config.json')
-    if (!existsSync(options.outputDir)) {
-      mkdirSync(options.outputDir, { recursive: true })
-    }
+    // Write MCP config to OS temp dir (cleaned up on exit)
+    const sessionSlug = randomUUID().slice(0, 8)
+    this.mcpConfigPath = join(tmpdir(), `spartan-prd-mcp-${sessionSlug}.json`)
     const mcpConfig = buildMCPConfig()
-    writeFileSync(mcpConfigPath, JSON.stringify(mcpConfig, null, 2))
+    writeFileSync(this.mcpConfigPath, JSON.stringify(mcpConfig, null, 2))
 
     this.claudeOptions = {
-      mcpConfig: mcpConfigPath,
+      mcpConfig: this.mcpConfigPath,
       allowedTools: 'mcp__playwright__*',
       outputFormat: 'json',
     }
@@ -58,7 +58,7 @@ export class Agent {
       await this.handleLogin()
 
       // Step 2: Pass 1 — map all pages
-      const sessionId = `prd-${randomUUID().slice(0, 8)}`
+      const sessionId = randomUUID()
       const screenshotter = new Screenshotter(this.options.outputDir)
       const crawler = new Crawler({
         claude: this.claude,
@@ -72,6 +72,7 @@ export class Agent {
 
       this.state.step = 'crawl-pass1'
       await crawler.pass1()
+      this.state.crawlState = crawler.getState()
 
       // Show sitemap and ask user
       this.log('')
@@ -83,6 +84,7 @@ export class Agent {
       // Step 3: Pass 2 — deep exploration
       this.state.step = 'crawl-pass2'
       await crawler.pass2()
+      this.state.crawlState = crawler.getState()
 
       // Step 4: Coverage check
       this.state.step = 'coverage-check'
@@ -158,6 +160,9 @@ export class Agent {
       this.log(`\nError: ${(err as Error).message}`)
       this.saveState()
       throw err
+    } finally {
+      // Clean up temp MCP config
+      try { unlinkSync(this.mcpConfigPath) } catch { /* already gone */ }
     }
   }
 
@@ -231,7 +236,7 @@ export class Agent {
           const check = await this.claude.ask(
             'Take a snapshot of the current page. Is this still a login page? ' +
             'Return JSON: {"isLoginPage": true/false, "title": "page title"}',
-            { ...this.claudeOptions, resume: true }
+            this.claudeOptions
           )
 
           try {
@@ -302,6 +307,10 @@ export class Agent {
    * Save agent state for resume support.
    */
   private saveState(): void {
+    if (!existsSync(this.options.outputDir)) {
+      mkdirSync(this.options.outputDir, { recursive: true })
+    }
+
     const statePath = join(this.options.outputDir, 'agent-state.json')
 
     // Convert Maps/Sets to plain objects for JSON

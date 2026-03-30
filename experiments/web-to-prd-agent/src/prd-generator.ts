@@ -14,6 +14,7 @@ export class PRDGenerator {
   private claude: ClaudeCLI
   private claudeOptions: ClaudeOptions
   private log: (msg: string) => void
+  private schema: string
 
   constructor(options: {
     claude: ClaudeCLI
@@ -23,6 +24,12 @@ export class PRDGenerator {
     this.claude = options.claude
     this.claudeOptions = options.claudeOptions
     this.log = options.log ?? console.log
+
+    try {
+      this.schema = readFileSync(SCHEMA_PATH, 'utf-8')
+    } catch {
+      throw new Error(`PRD schema not found at ${SCHEMA_PATH} — reinstall the package`)
+    }
   }
 
   /**
@@ -31,7 +38,7 @@ export class PRDGenerator {
   async generate(featureMap: FeatureMap): Promise<PRDDocument> {
     this.log('Generating PRD...')
 
-    const schema = readFileSync(SCHEMA_PATH, 'utf-8')
+    const schema = this.schema
     const featureData = JSON.stringify(featureMap, null, 2)
 
     const prompt = buildPRDPrompt(featureMap, featureData)

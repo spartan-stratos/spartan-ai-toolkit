@@ -17,7 +17,7 @@ export class ClaudeCLI {
    */
   buildArgs(prompt: string, options: ClaudeOptions = {}): string[] {
     const merged = { ...this.defaultOptions, ...options }
-    const args: string[] = ['-p', prompt, '--verbose']
+    const args: string[] = ['-p', prompt]
 
     if (merged.outputFormat) {
       args.push('--output-format', merged.outputFormat)
@@ -29,6 +29,10 @@ export class ClaudeCLI {
 
     if (merged.resume) {
       args.push('--resume')
+    }
+
+    if (merged.continue) {
+      args.push('--continue')
     }
 
     if (merged.mcpConfig) {
@@ -152,12 +156,27 @@ export class ClaudeCLI {
 }
 
 /**
- * Parse claude's JSON output. Handles the case where claude
- * outputs multiple JSON objects (stream-json mode) by taking the last one.
+ * Parse claude's JSON output. Handles multiple formats:
+ * - Single JSON result object (default --output-format json)
+ * - JSON array with --verbose (array of system/progress/result objects)
+ * - Newline-separated JSON (stream-json mode)
  */
 export function parseClaudeJSON(raw: string): ClaudeResponse {
-  // Claude sometimes outputs multiple JSON lines (stream mode)
-  // Find the line with type "result"
+  // Try as JSON array first (--verbose mode produces this)
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) {
+      for (let i = parsed.length - 1; i >= 0; i--) {
+        if (parsed[i].type === 'result') return parsed[i]
+      }
+    } else if (parsed.type === 'result') {
+      return parsed
+    }
+  } catch {
+    // Not valid JSON as a whole — try line-by-line
+  }
+
+  // Try each line (stream-json or newline-separated)
   const lines = raw.split('\n').filter(l => l.trim())
   for (let i = lines.length - 1; i >= 0; i--) {
     try {

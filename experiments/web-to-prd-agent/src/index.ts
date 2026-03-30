@@ -79,11 +79,11 @@ async function main(): Promise<void> {
   console.log(`Output: ${options.outputDir}`)
   console.log('')
 
-  // Check for resume
+  // Resume support (state is saved but full resume not yet implemented in v1)
   if (options.resume) {
     const savedState = Agent.loadState(options.outputDir)
     if (savedState) {
-      console.log(`Resuming from step: ${savedState.step}`)
+      console.log(`Found saved state at step: ${savedState.step} (full resume not yet implemented — starting fresh)`)
       console.log('')
     } else {
       console.log('No saved state found. Starting fresh.')

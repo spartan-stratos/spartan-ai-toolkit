@@ -7,7 +7,7 @@ describe('ClaudeCLI', () => {
     it('builds basic args with prompt and json format', () => {
       const cli = new ClaudeCLI()
       const args = cli.buildArgs('hello')
-      assert.deepEqual(args, ['-p', 'hello', '--verbose', '--output-format', 'json'])
+      assert.deepEqual(args, ['-p', 'hello', '--output-format', 'json'])
     })
 
     it('includes session id and resume flags', () => {
@@ -91,6 +91,17 @@ describe('ClaudeCLI', () => {
         '{"type":"progress","message":"writing..."}',
         '{"type":"result","result":"Done!","total_cost_usd":0.5,"session_id":"xyz"}',
       ].join('\n')
+      const parsed = parseClaudeJSON(raw)
+      assert.equal(parsed.type, 'result')
+      assert.equal(parsed.result, 'Done!')
+    })
+
+    it('parses JSON array output (verbose mode)', () => {
+      const raw = JSON.stringify([
+        { type: 'system', subtype: 'init', session_id: 'abc' },
+        { type: 'assistant', message: 'thinking...' },
+        { type: 'result', result: 'Done!', total_cost_usd: 0.5, session_id: 'abc' },
+      ])
       const parsed = parseClaudeJSON(raw)
       assert.equal(parsed.type, 'result')
       assert.equal(parsed.result, 'Done!')
