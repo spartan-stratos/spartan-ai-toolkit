@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { validatePRD, validateEpic, prdToMarkdown } from '../dist/prd-generator.js'
+import { validatePRD, validateEpic, prdToMarkdown, extractJSONFromResponse } from '../dist/prd-generator.js'
 
 const validEpic = {
   number: 1,
@@ -148,5 +148,41 @@ describe('prdToMarkdown', () => {
     const md = prdToMarkdown(validPRD)
     assert.ok(md.includes('**Login Form** (Priority: High)'))
     assert.ok(md.includes('Email and password fields'))
+  })
+})
+
+describe('extractJSONFromResponse', () => {
+  it('extracts JSON from a code block', () => {
+    const input = 'Here is the PRD:\n```json\n{"appName": "Test"}\n```\nDone!'
+    const result = extractJSONFromResponse(input)
+    assert.equal(JSON.parse(result).appName, 'Test')
+  })
+
+  it('extracts JSON from plain text with surrounding content', () => {
+    const input = 'Sure! Here is the result: {"key": "value", "nested": {"a": 1}} and more text'
+    const result = extractJSONFromResponse(input)
+    const parsed = JSON.parse(result)
+    assert.equal(parsed.key, 'value')
+    assert.equal(parsed.nested.a, 1)
+  })
+
+  it('handles nested braces correctly', () => {
+    const obj = { outer: { inner: { deep: "value" } }, list: [1, 2] }
+    const input = 'Result: ' + JSON.stringify(obj) + ' done'
+    const result = extractJSONFromResponse(input)
+    assert.deepEqual(JSON.parse(result), obj)
+  })
+
+  it('handles strings with braces inside', () => {
+    const input = '{"text": "hello {world}"}'
+    const result = extractJSONFromResponse(input)
+    assert.equal(JSON.parse(result).text, 'hello {world}')
+  })
+
+  it('throws when no JSON found', () => {
+    assert.throws(
+      () => extractJSONFromResponse('no json here at all'),
+      /No JSON object found/
+    )
   })
 })
