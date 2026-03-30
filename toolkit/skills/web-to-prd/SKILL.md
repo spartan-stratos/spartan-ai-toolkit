@@ -219,6 +219,14 @@ SPAs don't have traditional page URLs. Use this approach:
 After every 10 pages, show progress:
 > "Scanned 10/~25 pages. Found 3 feature areas so far. Continue?"
 
+### Coverage Check (mandatory before generating PRD)
+
+After crawling, show a coverage report: pages visited, screenshots taken, buttons clicked, modals found, forms found, tabs explored, filters tested. List all nav sections and mark which were explored vs skipped.
+
+**Fail if:** any nav section not explored, fewer screenshots than pages, zero modals on a page with buttons (means you didn't click them), any section with only 1 interaction (you only looked, didn't try).
+
+Ask user to confirm coverage before proceeding to PRD generation.
+
 ---
 
 ## Feature Extraction
