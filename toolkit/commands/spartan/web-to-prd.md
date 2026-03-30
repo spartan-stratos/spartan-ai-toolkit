@@ -648,24 +648,40 @@ Ask the user:
 
 ### If A or B: Create Notion structure
 
-1. **Create parent page** — "[App Name] — Product Backlog" with full PRD content (sections 1-3, 5-8)
-2. **Create Epics database** with columns:
-   - Name (title)
-   - Priority (select: P0, P1, P2, P3)
-   - Status (select: Not Started, In Progress, Done)
-   - Phase (number)
-   - Complexity (select: Simple, Medium, Complex)
-   - Dependencies (text)
-   - Description (rich text — the full epic mini-PRD content: what it does, features, how it works, acceptance criteria)
-3. **Populate Epics database** — each epic row contains the FULL detail from section 4 (not just a title)
-4. **Create views:**
-   - Table sorted by Phase (build order view)
-   - Kanban by Status (progress view)
-   - Filter by Priority (planning view)
+**Structure: Parent page + one sub-page per Epic (each Epic is a full page, not a database row)**
+
+1. **Create parent page** — "[App Name] — PRD"
+   - Sections 1-3 (TL;DR, Goals, User Stories) as page content
+   - Sections 5-8 (User Flows, Narrative, Build Roadmap, Open Questions) as page content
+   - Table of contents linking to each Epic sub-page
+
+2. **Create one Notion page PER Epic** — as children of the parent page
+   Each Epic page MUST contain:
+   - **Title:** "Epic [N]: [Name] — P[priority] — Phase [N]"
+   - **Properties at top:** Priority, Phase, Complexity, Dependencies
+   - **Full content from Section 4** — the entire mini-PRD for this Epic:
+     - What this does (2-3 sentences)
+     - Pages/Screens involved
+     - **Screenshots embedded directly in the page** (not just local file references)
+     - Every feature with: user story, UI description, step-by-step flow, acceptance criteria, edge cases
+   - This is a FULL page, not a one-line database entry
+
+3. **Upload screenshots to each Epic page**
+   - For each screenshot referenced in the Epic, embed it in the Notion page
+   - Place screenshots next to the feature they document
+   - Use Notion's image embedding — the screenshot should be VISIBLE in the page, not a link to a local file
+   - If Notion MCP doesn't support image upload → add the screenshot file path and tell user to upload manually
+
+4. **Optionally create an Epics overview database** (for filtering/sorting):
+   - Name, Priority, Status, Phase, Complexity, Dependencies columns
+   - Each row links to its full Epic page
+   - Views: Table by Phase, Kanban by Status
+
+**IMPORTANT: Each Epic in Notion must be as detailed as in the local PRD file. Don't summarize. Copy the full content.**
 
 ### If C: Local only
 
-Save to `.planning/web-to-prd/` and done.
+Save to `.planning/web-to-prd/` with screenshots in `screenshots/` subdirectory.
 
 ---
 
