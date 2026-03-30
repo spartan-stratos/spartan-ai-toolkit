@@ -368,22 +368,23 @@ See the command file (`web-to-prd.md`) for the full template.
 
 ### Database Structure
 
-Create a parent page + Epics database in Notion:
+Create a parent page with one sub-page per Epic:
 
 ```
-Parent page: "[App Name] — Product Backlog"
-├── PRD content (sections 1-3, 5-8)
-└── Epics database
-    ├── Name (title)
-    ├── Priority (select: P0, P1, P2, P3)
-    ├── Status (select: Not Started, In Progress, Done)
-    ├── Phase (number)
-    ├── Complexity (select: Simple, Medium, Complex)
-    ├── Dependencies (text)
-    └── Description (rich text — full epic mini-PRD content)
+Parent page: "[App Name] — PRD"
+├── PRD overview (sections 1-3, 5-8)
+├── Epic 1: [Name] (full page with screenshots, features, acceptance criteria)
+├── Epic 2: [Name] (full page with screenshots, features, acceptance criteria)
+├── ...
+└── Optional: Epics overview database (for filtering/sorting, links to pages)
 ```
 
-No separate Stories or Tasks databases. All detail lives inside each Epic's Description field. Simpler, easier to manage.
+**Each Epic = a full Notion page**, not a database row with a Description field. Include:
+- Full content from the PRD Section 4 format
+- Screenshots embedded directly in the page (visible, not links)
+- Every feature detail: user story, UI description, step-by-step, acceptance criteria
+
+**Screenshots must be uploaded to Notion**, not just saved locally. Place them next to the features they document.
 
 ### Export steps
 
