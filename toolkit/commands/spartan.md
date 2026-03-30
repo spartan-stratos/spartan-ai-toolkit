@@ -18,45 +18,43 @@ Your job: understand what the user needs, then route to the right **workflow lea
 
 ---
 
-## Step 0.5: Session Tracking (silent, always runs)
-
-Track this session so other Claude windows know what's happening here:
+## Preamble (run first)
 
 ```bash
 mkdir -p ~/.spartan/sessions
-echo "branch=$(git branch --show-current 2>/dev/null || echo 'unknown') dir=$(basename $(pwd)) time=$(date +%s)" > ~/.spartan/sessions/$$
+touch ~/.spartan/sessions/"$PPID"
+_SESSIONS=$(find ~/.spartan/sessions -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
+find ~/.spartan/sessions -mmin +120 -type f -delete 2>/dev/null || true
+_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+_PROJECT=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || basename "$(pwd)")
+echo "SESSIONS: $_SESSIONS"
+echo "BRANCH: $_BRANCH"
+echo "PROJECT: $_PROJECT"
+cat .spartan/commands.yaml 2>/dev/null || true
 ```
 
-Count active sessions (modified in last 2 hours):
+**Read the output.** Use `SESSIONS`, `BRANCH`, and `PROJECT` for the rest of this session.
 
-```bash
-ACTIVE_SESSIONS=0
-NOW=$(date +%s)
-CUTOFF=$((NOW - 7200))
-for f in ~/.spartan/sessions/*; do
-  [ -f "$f" ] || continue
-  MOD=$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f" 2>/dev/null || echo 0)
-  [ "$MOD" -gt "$CUTOFF" ] && ACTIVE_SESSIONS=$((ACTIVE_SESSIONS + 1))
-done
-```
+**If `SESSIONS` >= 3:** Start EVERY response with a grounding line:
 
-**If 3+ active sessions**, start your response with a grounding line:
+> **[PROJECT / BRANCH]** Currently working on: [brief task description]
 
-> **[Session ground]** You're in `[directory]` on branch `[branch]`. Last commit: `[git log --oneline -1]`.
+This prevents "which terminal am I?" confusion during parallel builds. One line, no big deal.
 
-This prevents confusion when the user is running multiple windows. Keep it to one line — don't make it a big deal.
+**If `.spartan/commands.yaml` exists** and has a `prompts.[command-name]` entry matching the command being routed to, pass those custom instructions to the command after the built-in prompt.
 
----
+## Completeness Principle
 
-## Step 0.9: Load Command Config (silent, always runs)
+AI makes completeness near-free. Always recommend the complete option over shortcuts. See `ETHOS.md` for the full philosophy. When presenting options, include `Completeness: X/10` (10 = all edge cases, 7 = happy path, 3 = shortcut).
 
-Check for per-command custom prompts. Commands config lets users inject custom instructions into any Spartan command.
+## AskUserQuestion Format
 
-```bash
-cat .spartan/commands.yaml 2>/dev/null || cat .spartan/commands.yml 2>/dev/null
-```
+**ALWAYS use this structure for every question to the user:**
 
-If the file exists and has a `prompts.[command-name]` entry matching the command being routed to, pass those custom instructions to the command. They're appended after the built-in prompt.
+1. **Re-ground:** State project + branch (from preamble). One sentence.
+2. **Simplify:** Explain so a smart 16-year-old can follow. No function names. Say what it DOES.
+3. **Recommend:** `RECOMMENDATION: Choose [X] because [reason]` — prefer the complete option.
+4. **Options:** `A) ... B) ... C) ...` — one decision per question. Never ask two things at once.
 
 ---
 

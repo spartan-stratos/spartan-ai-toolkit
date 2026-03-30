@@ -52,7 +52,25 @@ PARALLEL (multiple terminals — automatic):
 
 ---
 
-## FIRST: Load Build Config (silent — no questions)
+## Preamble (run first)
+
+```bash
+mkdir -p ~/.spartan/sessions
+touch ~/.spartan/sessions/"$PPID"
+_SESSIONS=$(find ~/.spartan/sessions -mmin -120 -type f 2>/dev/null | wc -l | tr -d ' ')
+find ~/.spartan/sessions -mmin +120 -type f -delete 2>/dev/null || true
+_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+_PROJECT=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || basename "$(pwd)")
+echo "SESSIONS: $_SESSIONS"
+echo "BRANCH: $_BRANCH"
+echo "PROJECT: $_PROJECT"
+```
+
+**Read the output.** If `SESSIONS` >= 3, start EVERY response with: **[PROJECT / BRANCH]** Currently working on: [task]
+
+---
+
+## Load Build Config (silent — no questions)
 
 Check for a project-level build config that overrides default behavior:
 
