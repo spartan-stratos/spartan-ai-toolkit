@@ -342,25 +342,29 @@ Generate a PRD with 8 sections. **Each Epic is a mini-PRD** — a developer read
 8. Open Questions     — Things that need human input
 ```
 
-**Section 4 (Epics) is the core.** Epics are ordered by build priority (Epic 1 = build first). No separate Stories database — all detail lives inside each Epic.
+**Section 4 (Epics) is the core.** Epics are ordered by build priority (Epic 1 = build first).
 
-Each Epic MUST include:
-- Priority, phase, dependencies, complexity
-- What this epic does (2-3 sentences)
-- Pages/screens involved with URLs
-- **Features with FULL detail:**
-  - User story (As a..., I want..., so that...)
-  - What the user sees (UI elements, layout, data, visual details — be very specific)
-  - How it works step by step (1. User does X → 2. System shows Y → ...)
-  - Acceptance criteria (testable checkboxes)
-  - Edge cases (empty state, error state, loading state)
-  - Technical notes (APIs, data model, integrations)
+**Each Epic is a FULL PRD with 6 sections:**
 
-**Be as detailed as possible.** Describe every button, every form field, every table column, every filter option. A developer should read one Epic and build it without asking questions.
+```
+Epic N: [Name]
+├── 1. TL;DR — what this epic solves, who it's for
+├── 2. Goals — business goals, user goals, non-goals
+├── 3. User Stories — As a [user], I want...
+├── 4. Functional Requirements — every feature with screenshots, UI detail, priority
+├── 5. User Experience — entry point, flow (step by step), edge cases, design notes
+└── 6. Narrative — 100-word user story for this epic
+```
+
+**No epic can skip any section.** Every epic gets all 6 sections. This is what makes the PRD actionable — a developer reads one Epic page and knows exactly what to build.
+
+**Screenshots are embedded in Section 4** next to the features they show. Not at the end, not as links — inline with the content.
+
+**Be as detailed as possible.** Describe every button, every form field, every table column, every filter option.
 
 **Try EVERY feature.** Click every menu, open every modal, test every filter. Missing features = useless PRD.
 
-See the command file (`web-to-prd.md`) for the full template.
+See the command file (`web-to-prd.md`) for the full template with examples.
 
 ---
 

@@ -512,44 +512,69 @@ Generate a full PRD document with this structure:
 
 **Phase:** 1 | **Dependencies:** none | **Complexity:** Simple/Medium/Complex
 
-#### What this does
-[2-3 sentences: what this feature area covers and why it matters. Why build it first.]
+**Each Epic follows the FULL PRD format below. No shortcuts.**
 
-#### Pages / Screens
-- [URL 1] — [page name and what it shows] — see `screenshots/NN-name.png`
-- [URL 2] — [page name and what it shows] — see `screenshots/NN-name.png`
+#### 1. TL;DR
+[1-2 sentences: what problem this epic solves, who it's for, what we're building, and why it matters.]
 
-#### Screenshots
-![Page name](screenshots/NN-name.png)
-![Modal/feature name](screenshots/NN-name.png)
+#### 2. Goals
 
-#### Features
+**Business Goals**
+- [What this epic achieves for the business — metrics, conversion, retention]
 
-**1.1 [Feature name]**
-- **Screenshot:** `screenshots/NN-name.png`
-- **User story:** As a [user], I want to [action], so that [benefit]
-- **What the user sees:**
-  - [UI elements: buttons, forms, tables, cards — be specific]
-  - [Layout: where on the page, how many columns, what data]
-  - [Visual: colors, icons, badges, status indicators]
-- **How it works:**
-  1. User [does X]
-  2. System [shows Y]
-  3. User [clicks Z]
-  4. System [responds with W]
-- **Acceptance criteria:**
-  - [ ] [Specific, testable]
-  - [ ] [Specific, testable]
-- **Edge cases:** Empty state: [what]. Error: [what]. Loading: [what].
-- **Technical notes:** [APIs, data model, integrations if obvious]
+**User Goals**
+- [What pain this solves for the user — specific, measurable]
 
-**1.2 [Feature name]**
-- **User story:** ...
-- **What the user sees:** ...
-- **How it works:** ...
-- **Acceptance criteria:** ...
+**Non-Goals**
+- [What's NOT in this epic — keeps scope clear]
+
+#### 3. User Stories
+- As a [user type], I want to [action], so that [benefit]
+- As a [other user type], I want to [action], so that [benefit]
+
+#### 4. Functional Requirements
+
+**Screenshots:** (embedded — show what each feature looks like)
+![Feature area overview](screenshots/NN-name.png)
+
+**4.1 [Feature name]** (Priority: High)
+- [What it does — specific, not vague]
+- [UI elements: buttons, forms, tables, cards, layout]
+- [Data displayed: what columns, what values, what format]
+![Feature screenshot](screenshots/NN-detail.png)
+
+**4.2 [Feature name]** (Priority: High)
+- [What it does]
+- [UI details]
+
+**4.3 [Feature name]** (Priority: Medium)
+- [What it does]
 
 [Continue for ALL features in this epic]
+
+#### 5. User Experience
+
+**Entry Point**
+- [How the user gets to this feature — which page, which button]
+
+**Flow**
+1. User [does X] → sees [Y]
+2. User [clicks Z] → system [shows W]
+3. User [completes action] → [result]
+
+**Edge Cases**
+- Empty state: [what shows when no data]
+- Error state: [what shows when something fails]
+- Loading state: [what shows while loading]
+- First-time user: [any onboarding or tooltip]
+
+**Design Notes**
+- [Layout patterns: cards, tables, sidebar, tabs]
+- [Visual details: colors, icons, spacing]
+- [Responsive behavior if observed]
+
+#### 6. Narrative
+[100 words: a short story from the user's perspective using THIS epic's features. Name the user, describe context, show the value.]
 
 ---
 
@@ -557,11 +582,11 @@ Generate a full PRD document with this structure:
 
 **Phase:** 1 | **Dependencies:** Epic 1 | **Complexity:** Medium
 
-[Same full format — every epic gets the same detail level]
+[SAME full PRD format — sections 1-6. Every epic gets ALL 6 sections.]
 
 ---
 
-[Continue for ALL epics, ordered by build priority]
+[Continue for ALL epics, ordered by build priority. NO epic can skip any section.]
 
 ---
 
