@@ -376,9 +376,47 @@ app:
 
 ---
 
+## Step 2.5: Coverage Check (MANDATORY before generating PRD)
+
+**You CANNOT proceed to Step 3 until this checklist passes. This prevents shallow PRDs.**
+
+Before generating anything, count what you found and show the user:
+
+```
+Coverage Report:
+  Pages visited:        [N] (must be > number of nav items)
+  Screenshots taken:    [N] (must be >= pages visited)
+  Buttons clicked:      [N]
+  Modals/dialogs found: [N]
+  Forms found:          [N] (with field counts)
+  Tabs explored:        [N]
+  Filters tested:       [N]
+  Dropdowns opened:     [N]
+  Sub-pages discovered: [N] (pages found by clicking, not from nav)
+
+  Sections from nav:    [list all nav items]
+  Sections explored:    [list which ones you actually visited]
+  Sections NOT explored: [list any you skipped — explain why]
+```
+
+**Fail conditions (must fix before proceeding):**
+- [ ] Any nav section not explored → go back and explore it
+- [ ] Fewer screenshots than pages → go back and screenshot missing pages
+- [ ] Zero modals found on a page with action buttons → you didn't click the buttons, go back
+- [ ] Zero forms found on an app with user input → you missed them, go back
+- [ ] Any section explored with only 1 interaction → you only looked, didn't try features
+
+**Ask the user:**
+> "Here's my coverage report. I visited [N] pages, took [N] screenshots, tried [N] interactions.
+> Missing anything? Any sections I should go back to?"
+
+**Only proceed to Step 3 after user confirms coverage is enough.**
+
+---
+
 ## Step 3: Organize and Prioritize
 
-After crawling is done, organize the raw features:
+After crawling is done AND coverage check passes, organize the raw features:
 
 ### 3a. Group into Epics
 
