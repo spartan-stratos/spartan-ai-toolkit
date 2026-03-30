@@ -240,23 +240,60 @@ Proceed? [Y/n]
 
 **Goal: Try EVERY feature you can find.** Missing features = incomplete PRD = useless output.
 
-Navigate through each section systematically:
+### Two-pass crawl strategy
 
-1. **Visit each page** from the navigation — every menu item, every sidebar link
-2. **Take a snapshot** (accessibility tree) of each page
-3. **Click into sub-pages** — tabs, accordions, detail views, breadcrumbs
-4. **Try interactive elements:**
-   - Click every button (except Delete/Remove/destructive ones)
-   - Open every modal/dialog/dropdown
-   - Check every tab/accordion
-   - Note every form and its fields
-   - Test filters and search (type something, see what changes)
-   - Check settings/config pages
-   - Look for admin panels, user profiles, account pages
-5. **Don't click destructive actions** — skip Delete, Remove, Reset, etc.
-6. **Add 1-2 second delay** between navigations
-7. **If session expires mid-crawl** (redirected to login) → STOP, tell user to re-login in the browser, wait, then continue
-8. **Check hidden navigation** — hamburger menus, footer links, user avatar dropdowns, help/docs sections
+**Pass 1: Map all pages (breadth-first)**
+
+Go through every navigation link and build a complete sitemap FIRST. Don't explore features deeply yet.
+
+1. Start at homepage/dashboard
+2. Read the full navigation (sidebar, top nav, footer)
+3. Visit each nav item → take screenshot → note the page title and type → go back
+4. For each page, check for sub-navigation (tabs, nested menus) → note them
+5. Build a sitemap of ALL discoverable pages
+6. **Go back to home between sections** — don't get lost in deep pages
+
+After Pass 1, show the user the sitemap:
+> "I found [N] pages across [N] sections:
+> 1. Dashboard — 1 page
+> 2. Projects — 3 pages (list, detail, settings)
+> 3. Users — 2 pages (list, profile)
+> ...
+> Anything I'm missing? Any hidden sections?"
+
+**Pass 2: Deep exploration (exhaust every feature, go as deep as possible)**
+
+Now go through each page from the sitemap. **On each page, follow every interaction path until you hit a dead end.**
+
+1. **Navigate to the page** — take a full screenshot
+2. **Read the entire page** — snapshot the accessibility tree
+3. **Try every interactive element on this page — follow the chain:**
+   - Click a button → what opens? A modal? A new page? A dropdown?
+     - If modal → what's inside? A form? Screenshot it. What fields? What happens on submit?
+     - If new page → is this a sub-page? Add to sitemap. Explore it fully before coming back.
+     - If dropdown → what options? Click each option. What changes?
+   - Click every tab → screenshot each tab. What content is different? Any sub-features inside each tab?
+   - Expand every accordion → what's inside? More buttons? More links? Follow them.
+   - Check every form → note ALL fields, types, placeholder text, validation rules.
+     - Are there conditional fields? (selecting option A shows different fields than option B)
+   - Test filters/search → type something → screenshot results → clear → try different filter combos
+   - Check hover states → tooltips? Action menus?
+   - Look for pagination → how many pages? What controls?
+   - Check empty states → what shows when a list has no items?
+4. **The rule: follow every path until there's nothing left to click.**
+   - Button → Modal → Form → Submit → Result → Back
+   - Tab → Content → Sub-tab → Detail → Back
+   - List → Click item → Detail page → Actions → Back to list
+5. **Take screenshots of each state** — modal open, filter applied, tab selected, form filled, etc.
+6. **Go back to the page's starting state** after exploring each branch
+7. **Move to next page only when you've exhausted every interaction on this page**
+
+**Rules for both passes:**
+- **Don't click destructive actions** — skip Delete, Remove, Reset, etc.
+- **Add 1-2 second delay** between navigations
+- **If session expires** (redirected to login) → STOP, tell user to re-login, wait, then continue
+- **Check hidden navigation** — hamburger menus, footer links, user avatar dropdowns, help/docs sections
+- **Go back to home/nav between sections** — don't lose your place
 
 ### Progress updates
 
@@ -266,9 +303,48 @@ After every 10 pages or every major section:
 > Latest section: [section name]
 > Continue? [Y/n]"
 
+### Screenshots (MANDATORY)
+
+**Take a screenshot of EVERY page and important UI state.** Screenshots make the PRD 10x easier to understand.
+
+```bash
+# Create screenshots directory
+mkdir -p .planning/web-to-prd/screenshots
+```
+
+**When to screenshot:**
+- Every main page (after it fully loads)
+- Modals/dialogs when opened
+- Dropdowns/menus when expanded
+- Different tab states
+- Filter results (before and after filtering)
+- Forms (showing fields and layout)
+- Empty states
+- Error states (if visible)
+
+**How to take screenshots:** Use Playwright MCP's `browser_screenshot` tool. Save each screenshot with a clear name:
+
+```
+.planning/web-to-prd/screenshots/
+  01-homepage.png
+  02-dashboard.png
+  03-settings-general.png
+  04-settings-billing.png
+  05-user-list.png
+  06-user-detail.png
+  07-create-modal.png
+  08-filter-expanded.png
+  ...
+```
+
+**Naming:** `{NN}-{page-or-feature-name}.png` — numbered in crawl order for easy reference.
+
+**Never screenshot login pages** — could capture pre-filled credentials.
+
 ### What to capture per page
 
 For each page, record:
+- **Screenshot** (saved to `.planning/web-to-prd/screenshots/`)
 - URL and page title
 - Page type (dashboard, list, detail, form, settings, etc.)
 - Features visible on the page
@@ -402,12 +478,17 @@ Generate a full PRD document with this structure:
 [2-3 sentences: what this feature area covers and why it matters. Why build it first.]
 
 #### Pages / Screens
-- [URL 1] — [page name and what it shows]
-- [URL 2] — [page name and what it shows]
+- [URL 1] — [page name and what it shows] — see `screenshots/NN-name.png`
+- [URL 2] — [page name and what it shows] — see `screenshots/NN-name.png`
+
+#### Screenshots
+![Page name](screenshots/NN-name.png)
+![Modal/feature name](screenshots/NN-name.png)
 
 #### Features
 
 **1.1 [Feature name]**
+- **Screenshot:** `screenshots/NN-name.png`
 - **User story:** As a [user], I want to [action], so that [benefit]
 - **What the user sees:**
   - [UI elements: buttons, forms, tables, cards — be specific]

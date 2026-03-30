@@ -187,22 +187,17 @@ If navigate still fails with "Opening in existing browser session" → retry onc
 
 **Cookies:** With persistent profile (`~/.playwright-profile`), logins are saved. Next run on the same site = already logged in.
 
-### Step 2: Explore all sections
+### Step 2: Two-pass crawl
 
-After login is confirmed:
+**Pass 1 — Map all pages (breadth-first):**
+Visit every nav link, take a screenshot, note the page type, go back. Build a complete sitemap. Don't explore features deeply yet. Go back to home between sections. Show the sitemap to user and ask if anything is missing.
 
-1. Read all navigation links (navbar, sidebar, footer)
-2. Visit each link, take snapshot
-3. For each page, look for:
-   - Sub-navigation (tabs, accordions, dropdowns)
-   - Forms and their fields
-   - Data tables and their columns
-   - Action buttons (create, edit, delete, export)
-   - Modals/dialogs (click non-destructive buttons to discover them)
-   - Settings/config pages
-   - User/account pages
-   - Admin panels (if accessible)
-4. Build a sitemap as you go
+**Pass 2 — Deep exploration (exhaust every feature):**
+Go through each page from the sitemap. On each page: try EVERY interactive element until there's nothing left to try. Click a button → opens a modal? → what's in the modal? → has a form? → what fields? → has a submit button? → what happens after submit? → follow every path until you hit a dead end or a page you already explored. Only move to next page when you've exhausted all interactions on this page. The goal is to discover features that are 2-3 levels deep — hidden behind tabs, modals, sub-pages, or conditional UI.
+
+### Screenshots (mandatory)
+
+Take a screenshot of every page and every important UI state. Save to `.planning/web-to-prd/screenshots/` with names like `01-homepage.png`, `02-dashboard.png`, `07-create-modal.png`. Include screenshot references in each Epic. Never screenshot login pages.
 
 ### For SPAs (single page apps)
 
