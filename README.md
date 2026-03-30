@@ -69,8 +69,8 @@ Nothing ships without passing every gate.
 | What | Count | Description |
 |------|-------|-------------|
 | **Slash commands** | 67 | End-to-end workflows, not just prompts |
-| **Coding rules** | 21 | Your standards, enforced automatically |
-| **Skills** | 27 | Domain knowledge (Kotlin, React, DB, security, etc.) |
+| **Coding rules** | 22 | Your standards, enforced automatically |
+| **Skills** | 28 | Domain knowledge (Kotlin, React, DB, security, etc.) |
 | **Agents** | 9 | Specialized reviewers, researchers, planners |
 | **Stack profiles** | 8 | Pre-built configs for Go, Python, Java, Kotlin, React, etc. |
 | **Quality gates** | 5 | Automated checkpoints between every step |

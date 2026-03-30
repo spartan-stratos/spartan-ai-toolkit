@@ -64,21 +64,19 @@ _PROJECT=$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null |
 echo "SESSIONS: $_SESSIONS"
 echo "BRANCH: $_BRANCH"
 echo "PROJECT: $_PROJECT"
+cat .spartan/build.yaml 2>/dev/null || true
+cat .spartan/commands.yaml 2>/dev/null || true
 ```
 
 **Read the output.** If `SESSIONS` >= 3, start EVERY response with: **[PROJECT / BRANCH]** Currently working on: [task]
 
+If `.spartan/commands.yaml` has a `prompts.build` entry, apply those custom instructions alongside the built-in ones.
+
 ---
 
-## Load Build Config (silent — no questions)
+## Build Config Fields
 
-Check for a project-level build config that overrides default behavior:
-
-```bash
-cat .spartan/build.yaml 2>/dev/null || cat .spartan/build.yml 2>/dev/null
-```
-
-If `.spartan/build.yaml` exists, read it and apply overrides. All fields are optional — omit to use defaults.
+If the preamble output includes `.spartan/build.yaml` content, apply these overrides. All fields are optional.
 
 | Field | Default | What it does |
 |-------|---------|-------------|
