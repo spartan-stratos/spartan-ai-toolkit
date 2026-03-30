@@ -36,3 +36,4 @@ You don't have to use all of them. Pick what fits your stage.
 | `/spartan:interview "product"` | Generate Mom Test interview script (talk about their life, not your idea) |
 | `/spartan:lean-canvas "product"` | Fill out 9-block Lean Canvas interactively |
 | `/spartan:brainstorm "theme"` | Generate 8-15 ideas → filter → rank top 3 |
+| `/spartan:web-to-prd "URL"` | Scan a live web app → extract features → generate PRD/epics/stories → export to Notion. Needs Playwright MCP + Notion MCP. |
