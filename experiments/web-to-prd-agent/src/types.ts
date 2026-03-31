@@ -19,6 +19,65 @@ export interface ClaudeOptions {
   outputFormat?: 'json' | 'text' | 'stream-json'
 }
 
+// -- Browser & DOM --
+
+export interface AriaNode {
+  role: string
+  name: string
+  children?: AriaNode[]
+  value?: string
+  checked?: boolean
+  disabled?: boolean
+  expanded?: boolean
+  level?: number
+  pressed?: boolean
+  selected?: boolean
+}
+
+export interface ElementInfo {
+  selector: string
+  role: string
+  name: string
+  text: string
+  tag: string
+  type?: string
+  href?: string
+  isVisible: boolean
+}
+
+export interface DOMDiff {
+  newElements: ElementInfo[]
+  removedElements: ElementInfo[]
+  urlChanged: boolean
+  newUrl?: string
+  modalOpened: boolean
+  dropdownOpened: boolean
+  formAppeared: boolean
+  meaningfulChange: boolean
+}
+
+export interface PageSnapshot {
+  url: string
+  title: string
+  ariaTree: AriaNode | null
+  links: string[]
+  elements: ElementInfo[]
+  screenshotPath: string
+}
+
+export interface ClickAction {
+  pageUrl: string
+  selector: string
+  elementName: string
+  reason: string
+}
+
+export interface ClickResult {
+  action: ClickAction
+  diff: DOMDiff
+  screenshotPath?: string
+}
+
 // -- Pages & Crawl --
 
 export interface PageInfo {

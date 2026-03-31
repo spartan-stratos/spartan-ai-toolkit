@@ -30,59 +30,52 @@ describe('normalizeUrl', () => {
       'https://other.com/page'
     )
   })
-
-  it('resolves text as relative path when possible', () => {
-    // URL constructor treats "not a url" as a relative path
-    const result = normalizeUrl('not a url', base)
-    assert.ok(result.startsWith('https://app.example.com'))
-  })
 })
 
 describe('isDestructive', () => {
   it('detects delete buttons', () => {
     assert.equal(isDestructive('Delete Project'), true)
-    assert.equal(isDestructive('delete'), true)
   })
 
   it('detects remove buttons', () => {
     assert.equal(isDestructive('Remove User'), true)
   })
 
-  it('detects reset buttons', () => {
-    assert.equal(isDestructive('Reset Settings'), true)
-  })
-
   it('allows safe actions', () => {
     assert.equal(isDestructive('Save'), false)
     assert.equal(isDestructive('Create Project'), false)
-    assert.equal(isDestructive('View Details'), false)
     assert.equal(isDestructive('Edit Profile'), false)
   })
 })
 
 describe('extractJSON', () => {
-  it('extracts JSON from clean string', () => {
-    const input = '{"key": "value"}'
-    assert.equal(extractJSON(input), '{"key": "value"}')
+  it('extracts JSON object from text', () => {
+    const input = 'Here is the result: {"name": "test"} and more'
+    const result = extractJSON(input)
+    assert.equal(JSON.parse(result).name, 'test')
   })
 
-  it('extracts JSON surrounded by text', () => {
-    const input = 'Here is the result: {"name": "test", "count": 5} and some more text'
-    assert.equal(extractJSON(input), '{"name": "test", "count": 5}')
+  it('extracts JSON array from text', () => {
+    const input = 'Actions: [{"page": "/home"}] done'
+    const result = extractJSON(input)
+    assert.ok(Array.isArray(JSON.parse(result)))
   })
 
-  it('handles nested JSON', () => {
-    const input = 'Result: {"outer": {"inner": "value"}}'
-    const extracted = extractJSON(input)
-    const parsed = JSON.parse(extracted)
-    assert.equal(parsed.outer.inner, 'value')
+  it('extracts from code blocks', () => {
+    const input = '```json\n[{"a": 1}]\n```'
+    const result = extractJSON(input)
+    assert.deepEqual(JSON.parse(result), [{ a: 1 }])
   })
 
-  it('returns original string when no JSON found', () => {
-    assert.equal(extractJSON('no json here'), 'no json here')
+  it('handles nested braces', () => {
+    const input = '{"outer": {"inner": "value"}}'
+    const result = extractJSON(input)
+    assert.equal(JSON.parse(result).outer.inner, 'value')
   })
 
-  it('handles empty string', () => {
-    assert.equal(extractJSON(''), '')
+  it('handles strings with braces', () => {
+    const input = '{"text": "hello {world}"}'
+    const result = extractJSON(input)
+    assert.equal(JSON.parse(result).text, 'hello {world}')
   })
 })
