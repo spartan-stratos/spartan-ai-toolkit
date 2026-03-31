@@ -534,23 +534,25 @@ Generate a full PRD document with this structure:
 
 #### 4. Functional Requirements
 
-**Screenshots:** (embedded — show what each feature looks like)
-![Feature area overview](screenshots/NN-name.png)
+**Screenshots:** (MUST be embedded inline — show what each feature looks like)
 
 **4.1 [Feature name]** (Priority: High)
 - [What it does — specific, not vague]
 - [UI elements: buttons, forms, tables, cards, layout]
 - [Data displayed: what columns, what values, what format]
-![Feature screenshot](screenshots/NN-detail.png)
+
+![Feature name](screenshots/NN-detail.png)
 
 **4.2 [Feature name]** (Priority: High)
 - [What it does]
 - [UI details]
 
+![Feature name](screenshots/NN-detail.png)
+
 **4.3 [Feature name]** (Priority: Medium)
 - [What it does]
 
-[Continue for ALL features in this epic]
+[Continue for ALL features in this epic. EVERY feature that has a screenshot MUST embed it with `![name](path)` syntax.]
 
 #### 5. User Experience
 
@@ -653,10 +655,13 @@ Epic B (Phase 1) ──→ Epic D (Phase 2)
 - [Features that might be behind a paywall or role — couldn't access]
 ```
 
+**Screenshots in the markdown PRD are MANDATORY.** Every feature that has a screenshot must embed it inline using `![Feature name](screenshots/NN-name.png)`. The path should be relative to the PRD file location. This makes the PRD self-contained — anyone opening the markdown sees the screenshots right next to the features they describe.
+
 **Save locally first:**
 ```
 .planning/web-to-prd/
-  prd-[app-name].md
+  prd-[app-name].md          ← screenshots embedded as ![name](screenshots/NN.png)
+  screenshots/                ← actual screenshot files
 ```
 
 ---

@@ -358,7 +358,7 @@ Epic N: [Name]
 
 **No epic can skip any section.** Every epic gets all 6 sections. This is what makes the PRD actionable — a developer reads one Epic page and knows exactly what to build.
 
-**Screenshots are embedded in Section 4** next to the features they show. Not at the end, not as links — inline with the content.
+**Screenshots are embedded in Section 4** next to the features they show. Not at the end, not as links — inline with the content. In the markdown PRD, use `![Feature name](screenshots/NN-name.png)` for every feature that has a screenshot. The PRD must be self-contained — anyone opening the file sees screenshots right next to the features.
 
 **Be as detailed as possible.** Describe every button, every form field, every table column, every filter option.
 
@@ -412,11 +412,13 @@ Parent page: "[App Name] — PRD"
 Save everything locally:
 ```
 .planning/web-to-prd/
-├── prd.md                    # Full PRD document
+├── prd.md                    # Full PRD document (screenshots embedded as ![name](screenshots/NN.png))
 ├── epics.md                  # All epics with stories
 ├── dependency-graph.md       # Visual dependency map
-└── screenshots/              # Page screenshots (if taken)
+└── screenshots/              # Page screenshots
 ```
+
+**Screenshots in the markdown are mandatory.** Every feature that has a screenshot must embed it inline using `![Feature name](screenshots/NN-name.png)`. Paths are relative to the PRD file.
 
 User can import to Notion manually later.
 
@@ -433,7 +435,7 @@ User can import to Notion manually later.
 4. **Ask before clicking destructive actions.** If you see "Delete" or "Remove" buttons, don't click them during crawl.
 5. **Handle errors gracefully.** If a page fails to load, note it and move on. Don't stop the whole crawl.
 6. **Respect rate limits.** Add 1-2 second delays between page navigations to avoid being blocked.
-7. **Screenshots are optional.** Only take them if the user asks or if a page has complex layout.
+7. **Screenshots are mandatory.** Take them for every page and embed them in the markdown PRD using `![name](path)` syntax.
 8. **Login is the user's job.** Never store or ask for production credentials. Use headed mode for manual login.
 9. **Local save is always available.** Even if Notion export fails, the PRD is saved locally.
 10. **One app per run.** Don't crawl multiple domains in a single session.
