@@ -12,7 +12,7 @@ setup-local: ## Run the toolkit installer (local mode)
 
 # ── Validation ─────────────────────────────────────────
 
-validate: validate-structure validate-content ## Run all validation checks
+validate: validate-structure validate-content codex-dry-run ## Run all validation checks
 
 validate-structure: ## Check all toolkit files are in place
 	@echo "Checking toolkit structure..."
@@ -42,6 +42,17 @@ validate-structure: ## Check all toolkit files are in place
 
 validate-content: ## Check content format, naming, pack sync
 	@node toolkit/scripts/validate-content.js
+
+# ── Codex ─────────────────────────────────────────────
+
+codex: ## Generate Codex-compatible skills in .agents/skills/
+	@node toolkit/scripts/gen-codex-skills.js
+
+codex-check: ## Health check for generated Codex skills
+	@node toolkit/scripts/check-codex-skills.js
+
+codex-dry-run: ## Check if Codex skills are fresh (no writes)
+	@node toolkit/scripts/gen-codex-skills.js --dry-run
 
 # ── Linting ────────────────────────────────────────────
 

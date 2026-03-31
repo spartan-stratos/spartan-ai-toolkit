@@ -91,3 +91,16 @@ jobs:
         run: cd toolkit && npm install
       - name: Check content format, naming, and pack sync
         run: node toolkit/scripts/validate-content.js
+
+  codex-freshness:
+    name: Codex Skills Freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Generate Codex skills
+        run: node toolkit/scripts/gen-codex-skills.js
+      - name: Check Codex skills are valid
+        run: node toolkit/scripts/check-codex-skills.js

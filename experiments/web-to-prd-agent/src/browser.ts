@@ -15,12 +15,22 @@ export class Browser {
   }
 
   async launch(userDataDir?: string): Promise<void> {
-    this.browser = await chromium.launch({ headless: false })
-    this.context = await this.browser.newContext({
-      viewport: { width: 1280, height: 900 },
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    })
-    this.page = await this.context.newPage()
+    if (userDataDir) {
+      // Persistent context — cookies and login survive between runs
+      this.context = await chromium.launchPersistentContext(userDataDir, {
+        headless: false,
+        viewport: { width: 1280, height: 900 },
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      })
+      this.page = this.context.pages()[0] ?? await this.context.newPage()
+    } else {
+      this.browser = await chromium.launch({ headless: false })
+      this.context = await this.browser.newContext({
+        viewport: { width: 1280, height: 900 },
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      })
+      this.page = await this.context.newPage()
+    }
     this.page.setDefaultTimeout(NAVIGATION_TIMEOUT)
   }
 
@@ -194,7 +204,7 @@ export class Browser {
       const elements = document.querySelectorAll('*')
       for (const el of elements) {
         const style = window.getComputedStyle(el)
-        if (style.position === 'fixed' && style.zIndex && parseInt(style.zIndex) > 1000) {
+        if (style.position === 'fixed' && style.zIndex && parseInt(style.zIndex) > 100) {
           const rect = el.getBoundingClientRect()
           // Only remove overlays that cover most of the viewport
           if (rect.width > window.innerWidth * 0.5 && rect.height > window.innerHeight * 0.5) {

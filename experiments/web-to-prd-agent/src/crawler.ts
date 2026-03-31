@@ -271,6 +271,13 @@ export class Crawler {
         })
       }
 
+      // Add page screenshot to features that don't have their own
+      for (const f of features) {
+        if (f.screenshotPaths.length === 0 && page.screenshotPath) {
+          f.screenshotPaths = [page.screenshotPath]
+        }
+      }
+
       sections.push({
         name: page.title,
         pages: [{
@@ -278,6 +285,7 @@ export class Crawler {
           title: page.title,
           type: guessPageType(page),
           section: page.title,
+          screenshotPath: page.screenshotPath,
           interactions: [],
           subPages: page.links,
         }],
