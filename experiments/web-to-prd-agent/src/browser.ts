@@ -26,7 +26,7 @@ export class Browser {
 
   async goto(url: string): Promise<void> {
     const page = this.getPage()
-    await page.goto(url, { waitUntil: 'networkidle', timeout: NAVIGATION_TIMEOUT })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAVIGATION_TIMEOUT })
   }
 
   async screenshot(path: string): Promise<void> {
@@ -207,7 +207,7 @@ export class Browser {
     }
 
     // Wait for network to settle
-    await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {})
+    await page.waitForLoadState('domcontentloaded', { timeout: 5000 }).catch(() => {})
     // Small delay for animations
     await page.waitForTimeout(500)
 
@@ -237,7 +237,7 @@ export class Browser {
    */
   async goBack(): Promise<void> {
     const page = this.getPage()
-    await page.goBack({ waitUntil: 'networkidle', timeout: NAVIGATION_TIMEOUT }).catch(() => {})
+    await page.goBack({ waitUntil: 'domcontentloaded', timeout: NAVIGATION_TIMEOUT }).catch(() => {})
   }
 
   async close(): Promise<void> {
