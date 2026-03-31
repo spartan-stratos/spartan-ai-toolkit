@@ -66,7 +66,10 @@ Wait for confirmation before continuing.
 
 #### 4a. Check for existing page (incremental update)
 
-If a page for this period already exists (found in Step 7), read it to find the **last updated timestamp**. When fetching alerts, use that timestamp as the `from` date instead of the full window start — this avoids re-fetching alerts already logged and reduces token usage.
+Search the wiki for an existing page for this period (using the naming convention from Step 7). If found, read it to find the **last updated timestamp**. Ask the user: "A page for this period already exists. **Update** it or **create new**?"
+
+- If **update**: use the last updated timestamp as the `from` date instead of the full window start — this avoids re-fetching alerts already logged and reduces token usage.
+- If **create new**: use the full window start and create a separate page in Step 8.
 
 Add a `**Last updated:** <timestamp>` line at the top of the page on each update.
 
@@ -126,7 +129,8 @@ On-call Logs/
 1. Check if the year folder exists — create if missing
 2. Check if the month folder exists — create if missing
 3. Check if a page for this period already exists:
-   - If found: ask "A page for this period exists. **Update** it or **create new**?"
+   - If found and user chose **update** in Step 4a: update this page in Step 8
+   - If found and user chose **create new** in Step 4a: create a new page in Step 8
    - If not found: proceed to Step 8
 
 ### 8. Create the Log Page
@@ -140,7 +144,7 @@ Create the page on the wiki platform:
 
 | Alert | Count | Times | Cause | Resolution |
 |-------|-------|-------|-------|------------|
-| <monitor name> | <N> | <timestamp 1>, <timestamp 2>, ... | _(to fill)_ | Still active / _(to fill)_ |
+| <monitor name> | <N> | <timestamp 1>, <timestamp 2>, ... | | Still active |
 
 **Total alerts:** <N> across <M> unique monitors
 
@@ -158,8 +162,8 @@ Create the page on the wiki platform:
 **Formatting:**
 - Link alert names to their monitoring page
 - Link timestamps to the specific event
-- Leave "Cause" and "Resolution" blank for the engineer to fill post-hoc
-- Mark active monitors as "Still active" in Resolution
+- Leave "Cause" column empty for the engineer to fill post-hoc
+- Set "Resolution" to "Still active" for monitors currently in Alert status; leave empty for resolved monitors (engineer fills post-hoc)
 
 ### 9. Present Result
 
@@ -187,7 +191,7 @@ If there are unresolved alerts:
 - Always confirm the date range before fetching alerts
 - Only include production alerts unless the user explicitly asks for other environments
 - Never create duplicate wiki pages — check for existing ones first
-- Leave "Cause" and "Resolution" columns blank — the engineer fills these post-hoc
+- Leave "Cause" column empty — the engineer fills it post-hoc. Set "Resolution" to "Still active" for active monitors, leave empty for resolved ones
 - Paginate fully — do not present partial alert data
 
 ## Output

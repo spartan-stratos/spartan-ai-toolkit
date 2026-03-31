@@ -309,6 +309,8 @@ Skills give Claude deeper knowledge in specific areas. They're loaded automatica
 | `content-engine` | research | Content strategy and production |
 | `startup-pipeline` | research | Full startup research pipeline |
 | `web-to-prd` | product | Scan web apps, extract features, generate PRD, export to Notion |
+| `ops-investigate-alert` | ops | Investigate monitoring alerts end-to-end |
+| `ops-oncall-log` | ops | Create on-call log from monitoring alerts |
 
 ---
 
