@@ -57,3 +57,6 @@ experiments/web-to-prd-agent/.playwright-mcp/
 
 # Git worktrees
 .worktrees/
+
+# Generated Codex skills (created by gen-codex-skills.js)
+.agents/

@@ -1,6 +1,6 @@
 {
   "name": "@c0x12c/spartan-ai-toolkit",
-  "version": "1.13.0",
+  "version": "1.14.0",
   "description": "Engineering discipline layer for AI coding agents — commands, rules, skills, agents, and packs for Claude Code",
   "type": "module",
   "bin": {
@@ -37,7 +37,9 @@
   },
   "scripts": {
     "test": "node --test lib/resolver.test.js lib/assembler.test.js lib/detector.test.js",
-    "prepublishOnly": "node scripts/compile-packs.js"
+    "gen:codex": "node scripts/gen-codex-skills.js",
+    "check:codex": "node scripts/check-codex-skills.js",
+    "prepublishOnly": "node scripts/compile-packs.js && node scripts/gen-codex-skills.js"
   },
   "engines": {
     "node": ">=18"

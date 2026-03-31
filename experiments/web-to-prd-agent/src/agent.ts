@@ -42,10 +42,11 @@ export class Agent {
     }
 
     try {
-      // Step 1: Launch browser
+      // Step 1: Launch browser with persistent profile (keeps login cookies)
       this.state.step = 'prerequisites'
-      this.log('Launching browser...')
-      await this.browser.launch()
+      const profileDir = join(this.options.outputDir, '.browser-profile')
+      this.log('Launching browser (persistent profile — login is saved between runs)...')
+      await this.browser.launch(profileDir)
 
       // Step 2: Navigate and handle login
       this.state.step = 'login'

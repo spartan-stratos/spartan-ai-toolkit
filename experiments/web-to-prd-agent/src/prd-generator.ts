@@ -360,6 +360,7 @@ Rules for the PRD:
 6. The main Narrative should be ~200 words.
 7. Build Roadmap should group epics by phase with dependencies.
 8. Open Questions should list anything unclear from the crawl.
+9. IMPORTANT: Include screenshot paths from the feature map in functionalRequirements.screenshotPaths. Each page has a screenshotPath — use it in the relevant epic's requirements so the PRD links to actual screenshots.
 
 IMPORTANT: Output ONLY a single JSON object matching this schema. No markdown, no explanation, no text before or after. Just the raw JSON.
 

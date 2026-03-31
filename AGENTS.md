@@ -2,12 +2,44 @@
 
 Engineering discipline layer for AI coding tools. Provides rules, skills, workflows, and agents.
 
+## Hosts
+
+Spartan supports two AI agent hosts:
+
+| | Claude Code | Codex / OpenAI Agents |
+|---|---|---|
+| **Source** | `toolkit/skills/{name}/SKILL.md` (committed) | `.agents/skills/spartan-{name}/SKILL.md` (generated, gitignored) |
+| **Frontmatter** | Full — name, description, allowed_tools | Minimal — name + description only |
+| **Agent metadata** | N/A | `agents/openai.yaml` per skill |
+| **Install** | `npx spartan-ai-toolkit@latest` | `node toolkit/scripts/gen-codex-skills.js` |
+
+**Claude skills are the source of truth.** Codex skills are generated from them. Edit `toolkit/skills/`, never `.agents/skills/`.
+
+## Build commands
+
+```bash
+# Generate Codex skills from Claude sources
+make codex
+# or: node toolkit/scripts/gen-codex-skills.js
+
+# Check if Codex skills are fresh (CI use)
+make codex-dry-run
+# or: node toolkit/scripts/gen-codex-skills.js --dry-run
+
+# Health dashboard for Codex skills
+make codex-check
+# or: node toolkit/scripts/check-codex-skills.js
+
+# Full validation (structure + content + Codex freshness)
+make validate
+```
+
 ## Rules
 
 Coding standards in `toolkit/rules/{pack-name}/`. Apply these to your project:
 
 - **KOTLIN** — Kotlin null safety, Either error handling, no `!!` (`rules/backend-micronaut/`)
-- **ARCHITECTURE** — Layered architecture: Controller → Manager → Repository (`rules/shared-backend/`)
+- **ARCHITECTURE** — Layered architecture: Controller -> Manager -> Repository (`rules/shared-backend/`)
 - **API_DESIGN** — RPC-style API design, query params only, no path params (`rules/backend-micronaut/`)
 - **SCHEMA** — No foreign keys, TEXT not VARCHAR, soft deletes, gen_random_uuid() (`rules/database/`)
 - **FRONTEND** — Build check before commit, cleanup imports, null safety (`rules/frontend-react/`)
@@ -21,17 +53,30 @@ Available in `toolkit/skills/`. Each skill is a directory with a `SKILL.md` defi
 
 ### Backend
 
-- `api-endpoint-creator` — Generate Controller → Manager → Repository stack
+- `api-endpoint-creator` — Generate Controller -> Manager -> Repository stack
 - `backend-api-design` — RPC-style API design patterns
 - `database-patterns` — Schema design, migrations, Exposed ORM
-- `database-table-creator` — SQL migration → Table → Entity → Repository → Tests
+- `database-table-creator` — SQL migration -> Table -> Entity -> Repository -> Tests
 - `kotlin-best-practices` — Null safety, Either, coroutines quick reference
 - `security-checklist` — Auth, validation, OWASP prevention
 - `testing-strategies` — Integration test patterns for Micronaut
+- `ci-cd-patterns` — CI/CD pipeline patterns for GitHub Actions
+- `service-debugging` — Structured debugging runbook
 
 ### Frontend
 
 - `ui-ux-pro-max` — Design system with 67 styles, 96 palettes, 13 stacks
+- `design-intelligence` — Design system bootstrapping and token generation
+- `design-workflow` — Anti-AI-generic design guidelines
+- `browser-qa` — Real browser QA with Playwright
+
+### Infrastructure
+
+- `terraform-best-practices` — Terraform conventions quick reference
+- `terraform-module-creator` — Create reusable Terraform modules
+- `terraform-review` — PR review for Terraform changes
+- `terraform-security-audit` — Security audit for Terraform codebases
+- `terraform-service-scaffold` — Generate service-level Terraform
 
 ### Research
 
@@ -45,6 +90,7 @@ Available in `toolkit/skills/`. Each skill is a directory with a `SKILL.md` defi
 - `article-writing` — Long-form content creation
 - `content-engine` — Content strategy and production
 - `startup-pipeline` — Full startup research pipeline
+- `web-to-prd` — Scan live web app, extract features, generate PRD
 
 ## Agents
 

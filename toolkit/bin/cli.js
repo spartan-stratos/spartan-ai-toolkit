@@ -8,7 +8,7 @@
 //   npx spartan-ai-toolkit@latest --all
 //   npx spartan-ai-toolkit@latest --local
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync, readdirSync, copyFileSync } from 'node:fs';
 import { join, dirname, resolve as pathResolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { homedir } from 'node:os';
@@ -705,6 +705,34 @@ async function main() {
     }
   } finally {
     closeRL();
+  }
+
+  // Generate Codex-compatible skills for codex agent
+  if (agent === 'codex') {
+    console.log(`${blue('[+]')} ${bold('Generating Codex skills...')}`);
+    try {
+      const { execSync } = await import('child_process');
+      const repoRoot = join(PKG_ROOT, '..');
+      execSync('node toolkit/scripts/gen-codex-skills.js', { cwd: repoRoot, stdio: 'pipe' });
+      const srcAgents = join(repoRoot, '.agents', 'skills');
+      const targets = getTargets();
+      const destBase = join(targets.base, '..', '.agents', 'skills');
+      if (existsSync(srcAgents)) {
+        mkdirSync(destBase, { recursive: true });
+        const dirs = readdirSync(srcAgents, { withFileTypes: true }).filter(d => d.isDirectory());
+        for (const d of dirs) {
+          const destAgentsDir = join(destBase, d.name, 'agents');
+          mkdirSync(destAgentsDir, { recursive: true });
+          const skillSrc = join(srcAgents, d.name, 'SKILL.md');
+          const yamlSrc = join(srcAgents, d.name, 'agents', 'openai.yaml');
+          if (existsSync(skillSrc)) copyFileSync(skillSrc, join(destBase, d.name, 'SKILL.md'));
+          if (existsSync(yamlSrc)) copyFileSync(yamlSrc, join(destAgentsDir, 'openai.yaml'));
+        }
+        console.log(`  ${green('+')} ${dirs.length} Codex skills generated in .agents/skills/\n`);
+      }
+    } catch (e) {
+      console.log(`  ${C.yellow}Warning: Codex skill generation failed — ${e.message}${C.reset}\n`);
+    }
   }
 
   // Export AGENTS.md alongside normal install when --format=agents-md

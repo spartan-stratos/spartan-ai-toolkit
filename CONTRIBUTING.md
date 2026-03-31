@@ -86,6 +86,43 @@ Every file gets loaded into Claude's context. Shorter = cheaper = faster. Rules:
 
 ---
 
+## Codex / OpenAI Agents Support
+
+Claude skills are the source of truth. Codex skills are generated from them.
+
+```bash
+# Generate Codex-compatible skills
+make codex
+# or: node toolkit/scripts/gen-codex-skills.js
+
+# Check if generated skills are fresh (CI)
+make codex-dry-run
+
+# Full health check (coverage, no Claude path leaks, description limits)
+make codex-check
+```
+
+### What changes between hosts
+
+| Aspect | Claude | Codex |
+|--------|--------|-------|
+| Location | `toolkit/skills/{name}/SKILL.md` (committed) | `.agents/skills/spartan-{name}/SKILL.md` (gitignored) |
+| Frontmatter | name, description, allowed_tools | name + description only (1024 char limit) |
+| Agent metadata | N/A | `agents/openai.yaml` per skill |
+
+### Adding a new skill
+
+1. Create `toolkit/skills/{name}/SKILL.md` with Claude frontmatter
+2. Run `make codex` to generate the Codex version
+3. Run `make validate` — includes Codex freshness check
+4. Commit the Claude SKILL.md only — `.agents/` is gitignored
+
+### Editing a skill
+
+Edit `toolkit/skills/{name}/SKILL.md`, then run `make codex`. Never edit `.agents/skills/` directly.
+
+---
+
 ## Validation
 
 Run before every PR:
@@ -99,6 +136,7 @@ This checks:
 - Frontmatter has the right fields
 - Naming follows conventions (kebab-case, UPPER_SNAKE_CASE)
 - packs.js and packs.sh are in sync
+- Codex skills are fresh (match Claude sources)
 - Warns about bloated files and emoji headers
 
 ---
