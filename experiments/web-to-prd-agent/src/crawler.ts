@@ -58,6 +58,10 @@ export class Crawler {
         await this.browser.goto(url)
         await delay(DELAY_MS)
 
+        // Dismiss any popups/overlays blocking the page
+        const dismissed = await this.browser.dismissOverlays()
+        if (dismissed > 0) await delay(500)
+
         const title = await this.browser.getTitle()
         const links = await this.browser.getAllLinks()
         const elements = await this.browser.getAllInteractiveElements()

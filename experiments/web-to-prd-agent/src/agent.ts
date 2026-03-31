@@ -142,10 +142,13 @@ export class Agent {
     this.log(`Navigating to ${this.options.url}...`)
     await this.browser.goto(this.options.url)
 
+    // Dismiss any initial overlays/popups
+    await this.browser.dismissOverlays()
+
     const title = await this.browser.getTitle()
     const url = await this.browser.getUrl()
 
-    // Simple login detection: check URL and page content
+    // Check if this is a login page (URL or content signals)
     const isLoginPage = url.includes('/login') || url.includes('/signin') ||
       url.includes('/auth') || title.toLowerCase().includes('sign in') ||
       title.toLowerCase().includes('log in')
@@ -171,6 +174,14 @@ export class Agent {
     }
 
     this.log(`Page loaded: ${title}`)
+    this.log('')
+    this.log('Tip: If you want to crawl features behind login, log in via the browser window now.')
+    this.log('     The crawler will wait 15 seconds before starting...')
+    this.log('')
+    await new Promise(resolve => setTimeout(resolve, 15000))
+
+    // Dismiss any overlays that appeared during the wait
+    await this.browser.dismissOverlays()
   }
 
   private printSummary(elapsedSeconds: number): void {

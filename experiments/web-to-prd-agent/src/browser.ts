@@ -184,11 +184,38 @@ export class Browser {
   }
 
   /**
+   * Dismiss any fixed overlays/popups blocking the page.
+   * Removes elements with position:fixed that cover the viewport.
+   */
+  async dismissOverlays(): Promise<number> {
+    const page = this.getPage()
+    return page.evaluate(() => {
+      let dismissed = 0
+      const elements = document.querySelectorAll('*')
+      for (const el of elements) {
+        const style = window.getComputedStyle(el)
+        if (style.position === 'fixed' && style.zIndex && parseInt(style.zIndex) > 1000) {
+          const rect = el.getBoundingClientRect()
+          // Only remove overlays that cover most of the viewport
+          if (rect.width > window.innerWidth * 0.5 && rect.height > window.innerHeight * 0.5) {
+            (el as HTMLElement).style.display = 'none'
+            dismissed++
+          }
+        }
+      }
+      return dismissed
+    })
+  }
+
+  /**
    * Click an element and wait for any resulting changes.
    * Returns the URL after clicking (for detecting navigation).
    */
   async clickAndWait(selector: string): Promise<{ urlAfter: string }> {
     const page = this.getPage()
+
+    // Dismiss any overlays that might block the click
+    await this.dismissOverlays()
 
     try {
       await page.click(selector, { timeout: CLICK_TIMEOUT })
