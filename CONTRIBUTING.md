@@ -290,7 +290,7 @@ claude-sections: []
 ### Installing a Community Pack
 
 ```bash
-npx spartan-ai-toolkit@latest --pack-dir=./my-pack
+npx @c0x12c/ai-toolkit@latest --pack-dir=./my-pack
 ```
 
 The CLI validates your pack (name format, no collisions, deps exist), merges it with built-in packs, and shows it in the menu.

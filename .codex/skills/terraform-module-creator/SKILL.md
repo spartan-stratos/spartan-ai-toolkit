@@ -207,7 +207,7 @@ terraform {
 
 New modules should be contributed to the [c0x12c Terraform Registry](https://registry.terraform.io/namespaces/c0x12c):
 
-1. Create a new repo at `https://github.com/spartan-stratos/terraform-aws-{module-name}` following the Terraform registry naming convention
+1. Create a new repo at `https://github.com/c0x12c/terraform-aws-{module-name}` following the Terraform registry naming convention
 2. Push the module code with proper `versions.tf`, `variables.tf`, `outputs.tf`
 3. Tag a release: `git tag v0.1.0 && git push --tags`
 4. The registry auto-publishes from GitHub tags

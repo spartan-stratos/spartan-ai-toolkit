@@ -11,7 +11,7 @@ Spartan supports two AI agent hosts:
 | **Source** | `toolkit/skills/{name}/SKILL.md` (committed) | `.agents/skills/spartan-{name}/SKILL.md` (generated, gitignored) |
 | **Frontmatter** | Full — name, description, allowed_tools | Minimal — name + description only |
 | **Agent metadata** | N/A | `agents/openai.yaml` per skill |
-| **Install** | `npx spartan-ai-toolkit@latest` | `node toolkit/scripts/gen-codex-skills.js` |
+| **Install** | `npx @c0x12c/ai-toolkit@latest` | `node toolkit/scripts/gen-codex-skills.js` |
 
 **Claude skills are the source of truth.** Codex skills are generated from them. Edit `toolkit/skills/`, never `.agents/skills/`.
 
@@ -103,10 +103,10 @@ Available in `toolkit/skills/`. Each skill is a directory with a `SKILL.md` defi
 
 ```bash
 # Full toolkit (commands + packs + rules + skills + agents)
-npx spartan-ai-toolkit@latest
+npx @c0x12c/ai-toolkit@latest
 
 # Skills only (works with any AI agent)
-npx skills add spartan-stratos/spartan-ai-toolkit
+npx skills add c0x12c/ai-toolkit
 ```
 
 ## More Info

@@ -11,20 +11,20 @@ Three ways to install. Pick one.
 ### Option 1: npx (recommended)
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest
+npx @c0x12c/ai-toolkit@latest
 ```
 
 Interactive menu — pick your AI tool and packs. Works out of the box.
 
 ```bash
 # Or specify packs directly
-npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,product
+npx @c0x12c/ai-toolkit@latest --packs=backend-micronaut,product
 
 # Install everything
-npx @c0x12c/spartan-ai-toolkit@latest --all
+npx @c0x12c/ai-toolkit@latest --all
 
 # Install for Cursor instead of Claude Code
-npx @c0x12c/spartan-ai-toolkit@latest --agent=cursor
+npx @c0x12c/ai-toolkit@latest --agent=cursor
 ```
 
 **Supported agents:** `claude-code` (default), `cursor`, `windsurf`, `codex`, `copilot`
@@ -32,8 +32,8 @@ npx @c0x12c/spartan-ai-toolkit@latest --agent=cursor
 ### Option 2: Setup script
 
 ```bash
-git clone https://github.com/spartan-stratos/spartan-ai-toolkit.git
-cd spartan-ai-toolkit/toolkit
+git clone https://github.com/c0x12c/ai-toolkit.git
+cd ai-toolkit/toolkit
 chmod +x scripts/setup.sh
 ./scripts/setup.sh --global
 ```
@@ -103,7 +103,7 @@ Packs group commands, rules, skills, and agents by use case. **Core is always in
 ### "I'm building a Kotlin + Micronaut backend"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut
+npx @c0x12c/ai-toolkit@latest --packs=backend-micronaut
 ```
 
 This pulls in `backend-micronaut` + its dependencies (`database` and `shared-backend` auto-included). You get migration commands, API design rules, Kotlin coding standards, test patterns, and two expert agents.
@@ -111,7 +111,7 @@ This pulls in `backend-micronaut` + its dependencies (`database` and `shared-bac
 ### "I'm building a React + Next.js frontend"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --packs=frontend-react
+npx @c0x12c/ai-toolkit@latest --packs=frontend-react
 ```
 
 You get Next.js scaffolding, Figma-to-code, E2E testing setup, frontend review, and the UI/UX design skill.
@@ -119,13 +119,13 @@ You get Next.js scaffolding, Figma-to-code, E2E testing setup, frontend review, 
 ### "Full-stack Kotlin + Next.js"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,frontend-react
+npx @c0x12c/ai-toolkit@latest --packs=backend-micronaut,frontend-react
 ```
 
 ### "I'm managing AWS infrastructure with Terraform"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --packs=infrastructure
+npx @c0x12c/ai-toolkit@latest --packs=infrastructure
 ```
 
 You get Terraform scaffolding (ECS + EKS), module creation, security audits, drift detection, cost optimization, and two infrastructure agents. Rules enforce naming, state management, provider placement, and security patterns.
@@ -133,7 +133,7 @@ You get Terraform scaffolding (ECS + EKS), module creation, security audits, dri
 ### "I'm running a multi-week project"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --packs=backend-micronaut,project-mgmt
+npx @c0x12c/ai-toolkit@latest --packs=backend-micronaut,project-mgmt
 ```
 
 Adds project lifecycle, phases, workstreams, and GSD v5 wave execution on top of your backend tools.
@@ -141,7 +141,7 @@ Adds project lifecycle, phases, workstreams, and GSD v5 wave execution on top of
 ### "I'm exploring startup ideas"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --packs=research
+npx @c0x12c/ai-toolkit@latest --packs=research
 ```
 
 Research pack pulls in `product` as a dependency. You get brainstorming, validation, market research, competitor teardowns, pitch materials, and investor outreach.
@@ -149,7 +149,7 @@ Research pack pulls in `product` as a dependency. You get brainstorming, validat
 ### "Give me everything"
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --all
+npx @c0x12c/ai-toolkit@latest --all
 ```
 
 ---
@@ -359,16 +359,16 @@ All content is standard markdown. The npx installer supports multiple agents:
 
 ```bash
 # Cursor — installs rules to .cursor/rules/
-npx @c0x12c/spartan-ai-toolkit@latest --agent=cursor
+npx @c0x12c/ai-toolkit@latest --agent=cursor
 
 # Windsurf — installs rules to .windsurf/rules/
-npx @c0x12c/spartan-ai-toolkit@latest --agent=windsurf
+npx @c0x12c/ai-toolkit@latest --agent=windsurf
 
 # Codex — installs to .codex/
-npx @c0x12c/spartan-ai-toolkit@latest --agent=codex
+npx @c0x12c/ai-toolkit@latest --agent=codex
 
 # Copilot — installs to .github/copilot/
-npx @c0x12c/spartan-ai-toolkit@latest --agent=copilot
+npx @c0x12c/ai-toolkit@latest --agent=copilot
 ```
 
 For other tools, copy the rule files from `toolkit/rules/` into your tool's config directory.

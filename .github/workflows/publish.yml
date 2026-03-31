@@ -41,7 +41,7 @@ jobs:
         id: check
         run: |
           PKG_VERSION=$(node -p "require('./toolkit/package.json').version")
-          if npm view @c0x12c/spartan-ai-toolkit@$PKG_VERSION version 2>/dev/null; then
+          if npm view @c0x12c/ai-toolkit@$PKG_VERSION version 2>/dev/null; then
             echo "already_published=true" >> "$GITHUB_OUTPUT"
             echo "v$PKG_VERSION already on npm, skipping."
           else

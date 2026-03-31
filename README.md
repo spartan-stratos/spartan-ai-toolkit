@@ -6,10 +6,10 @@
     Structured workflows &middot; Configurable rules &middot; Quality gates &middot; Any stack
   </p>
   <p align="center">
-    <a href="https://www.npmjs.com/package/@c0x12c/spartan-ai-toolkit"><img src="https://img.shields.io/npm/v/@c0x12c/spartan-ai-toolkit.svg" alt="npm version"></a>
-    <a href="https://www.npmjs.com/package/@c0x12c/spartan-ai-toolkit"><img src="https://img.shields.io/npm/dm/@c0x12c/spartan-ai-toolkit.svg" alt="npm downloads"></a>
-    <a href="https://github.com/spartan-stratos/spartan-ai-toolkit/stargazers"><img src="https://img.shields.io/github/stars/spartan-stratos/spartan-ai-toolkit.svg" alt="GitHub stars"></a>
-    <a href="https://github.com/spartan-stratos/spartan-ai-toolkit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/spartan-stratos/spartan-ai-toolkit.svg" alt="license"></a>
+    <a href="https://www.npmjs.com/package/@c0x12c/ai-toolkit"><img src="https://img.shields.io/npm/v/@c0x12c/ai-toolkit.svg" alt="npm version"></a>
+    <a href="https://www.npmjs.com/package/@c0x12c/ai-toolkit"><img src="https://img.shields.io/npm/dm/@c0x12c/ai-toolkit.svg" alt="npm downloads"></a>
+    <a href="https://github.com/c0x12c/ai-toolkit/stargazers"><img src="https://img.shields.io/github/stars/c0x12c/ai-toolkit.svg" alt="GitHub stars"></a>
+    <a href="https://github.com/c0x12c/ai-toolkit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/c0x12c/ai-toolkit.svg" alt="license"></a>
   </p>
 </p>
 
@@ -20,7 +20,7 @@ AI coding agents are fast. They're also careless. They skip tests, ignore your c
 **Spartan fixes that.** One command runs a full engineering workflow &mdash; spec, plan, TDD, code review, PR &mdash; with quality gates between each step. Your rules, your standards, enforced every time.
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --local
+npx @c0x12c/ai-toolkit@latest --local
 ```
 
 Works with **Claude Code**, **Codex**, **Cursor**, **Windsurf**, and **Copilot**. Rules are plain markdown &mdash; works with any AI tool.
@@ -43,7 +43,7 @@ Works with **Claude Code**, **Codex**, **Cursor**, **Windsurf**, and **Copilot**
 
 ```bash
 # 1. Install (30 seconds, interactive menu)
-npx @c0x12c/spartan-ai-toolkit@latest --local
+npx @c0x12c/ai-toolkit@latest --local
 
 # 2. Set up rules for your stack
 /spartan:init-rules
@@ -138,24 +138,24 @@ Three ways. Pick one.
 ### Option 1: npx (recommended)
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --local
+npx @c0x12c/ai-toolkit@latest --local
 ```
 
 Interactive menu. Pick your AI tool and packs. Done in 30 seconds.
 
 ```bash
 # Pick specific packs
-npx @c0x12c/spartan-ai-toolkit@latest --local --packs=backend-micronaut,frontend-react
+npx @c0x12c/ai-toolkit@latest --local --packs=backend-micronaut,frontend-react
 
 # Install everything
-npx @c0x12c/spartan-ai-toolkit@latest --local --all
+npx @c0x12c/ai-toolkit@latest --local --all
 ```
 
 ### Option 2: Setup script
 
 ```bash
-git clone https://github.com/spartan-stratos/spartan-ai-toolkit.git
-cd spartan-ai-toolkit/toolkit
+git clone https://github.com/c0x12c/ai-toolkit.git
+cd ai-toolkit/toolkit
 chmod +x scripts/setup.sh && ./scripts/setup.sh --local
 ```
 
@@ -171,11 +171,11 @@ Search for **"Spartan AI Toolkit"** in the Claude Code plugin marketplace.
 ### Not using Claude Code?
 
 ```bash
-npx @c0x12c/spartan-ai-toolkit@latest --local --agent=claude-code  # default
-npx @c0x12c/spartan-ai-toolkit@latest --local --agent=codex        # full install
-npx @c0x12c/spartan-ai-toolkit@latest --local --agent=cursor       # rules only
-npx @c0x12c/spartan-ai-toolkit@latest --local --agent=windsurf     # rules only
-npx @c0x12c/spartan-ai-toolkit@latest --local --agent=copilot      # rules only
+npx @c0x12c/ai-toolkit@latest --local --agent=claude-code  # default
+npx @c0x12c/ai-toolkit@latest --local --agent=codex        # full install
+npx @c0x12c/ai-toolkit@latest --local --agent=cursor       # rules only
+npx @c0x12c/ai-toolkit@latest --local --agent=windsurf     # rules only
+npx @c0x12c/ai-toolkit@latest --local --agent=copilot      # rules only
 ```
 
 | Tool | What gets installed | Where |
@@ -427,11 +427,11 @@ See [`bridges/`](bridges/) for setup.
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=spartan-stratos%2Fspartan-ai-toolkit&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=c0x12c%2Fai-toolkit&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=spartan-stratos/spartan-ai-toolkit&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=spartan-stratos/spartan-ai-toolkit&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=spartan-stratos/spartan-ai-toolkit&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=c0x12c/ai-toolkit&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=c0x12c/ai-toolkit&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=c0x12c/ai-toolkit&type=date&legend=top-left" />
  </picture>
 </a>
 

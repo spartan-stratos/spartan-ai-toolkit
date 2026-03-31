@@ -8,6 +8,27 @@ allowed_tools:
   - Glob
   - Grep
   - WebSearch
+  - mcp__playwright__browser_navigate
+  - mcp__playwright__browser_click
+  - mcp__playwright__browser_snapshot
+  - mcp__playwright__browser_take_screenshot
+  - mcp__playwright__browser_type
+  - mcp__playwright__browser_tabs
+  - mcp__playwright__browser_close
+  - mcp__playwright__browser_hover
+  - mcp__playwright__browser_fill_form
+  - mcp__playwright__browser_select_option
+  - mcp__playwright__browser_press_key
+  - mcp__playwright__browser_navigate_back
+  - mcp__playwright__browser_wait_for
+  - mcp__playwright__browser_evaluate
+  - mcp__playwright__browser_resize
+  - mcp__playwright__browser_console_messages
+  - mcp__playwright__browser_network_requests
+  - mcp__playwright__browser_drag
+  - mcp__playwright__browser_file_upload
+  - mcp__playwright__browser_handle_dialog
+  - mcp__playwright__browser_run_code
 ---
 
 # Web-to-PRD Skill
@@ -120,46 +141,61 @@ Firecrawl is optional. Playwright alone handles everything.
 
 ## Prerequisite Check Logic
 
-Run this check at the start. **Claude handles installation — don't ask the user to run install commands.**
+Run this check at the start.
+
+**IMPORTANT: `claude mcp add/remove` does NOT make tools available mid-session.** MCP tools only load when Claude Code starts. Never try to install or reconfigure MCP servers during a running session — it won't work and wastes time.
 
 ```
 CHECK 1: Playwright MCP
-  A) Try calling any Playwright tool (e.g., browser_snapshot)
-     If not found → auto-install with Chrome profile (see below)
+  A) Try calling any Playwright tool (e.g., browser_snapshot or browser_navigate)
 
-  B) If found → check the config (grep .claude.json for playwright args)
+  If tool works → check the config:
+     Read .claude.json for playwright args
      If --user-data-dir points to ~/.playwright-profile → good, proceed
-     If --user-data-dir points to real Chrome profile → risky (extensions cause timeouts), ask to switch
-     If no --user-data-dir (clean mode) → ask: want persistent profile for saved logins?
+     If --user-data-dir points to real Chrome profile → warn user (extensions cause timeouts)
+     If no --user-data-dir (clean mode) → OK for public sites
      If --cdp-endpoint → good, proceed
 
-  Auto-install: claude mcp remove + add with --user-data-dir="$HOME/.playwright-profile" --browser=chrome
+  If tool NOT found → Playwright MCP is not loaded. Show this message and STOP:
 
-CHECK 2: Notion MCP
+     "Playwright MCP is not available. I need it to open a browser.
+
+     Run this in your terminal (outside Claude Code):
+       claude mcp add playwright -- npx @playwright/mcp@latest --user-data-dir=$HOME/.playwright-profile --browser=chrome
+
+     Then restart Claude Code and run /spartan:web-to-prd again."
+
+  NEVER run `claude mcp add` or `claude mcp remove` yourself during the session.
+  It changes the config file but won't load the tools until restart.
+
+CHECK 2: Notion MCP (OPTIONAL — not a blocker)
   Try calling notion-search with a simple query
-  If not found → show instructions (needs manual auth, can't auto-install)
-  If auth error → tell user to re-authenticate
-  If found → continue
+  If found → great, will export to Notion at the end
+  If not found → note it, will save PRD locally instead. Continue with crawl.
 
-BOTH OK → proceed to crawl (no need to close Chrome — separate profile has no conflict)
+Playwright OK → proceed to crawl
 ```
 
-**Notion can't be auto-installed** because it needs the user to authorize their workspace. Show setup instructions and STOP.
+**Notion is optional.** The PRD is always saved locally. Notion export is a bonus step at the end.
 
 ---
 
 ## Crawl Strategy
 
-### Step 0: Clean up stale browser processes (before every run)
+### Step 0: Clean up stale lock files (before every run)
 
-Playwright MCP leaves orphan Chrome processes from previous runs. Always clean up before the first `browser_navigate`:
+Stale lock files from previous browser sessions can cause "Opening in existing browser session" errors. **Only remove lock files — never kill processes:**
 
 ```bash
-pkill -f "playwright-profile" 2>/dev/null || true
-rm -f "$HOME/.playwright-profile/SingletonLock" "$HOME/.playwright-profile/SingletonCookie" "$HOME/.playwright-profile/SingletonSocket" 2>/dev/null
+rm -f "$HOME/.playwright-profile/SingletonLock" \
+      "$HOME/.playwright-profile/SingletonCookie" \
+      "$HOME/.playwright-profile/SingletonSocket" 2>/dev/null
+echo "Browser cleanup done"
 ```
 
-If navigate still fails with "Opening in existing browser session" → retry once after 2 seconds. If still fails → user needs to restart Claude Code.
+**WARNING:** Do NOT run `pkill -f "playwright-profile"` — it kills the Playwright MCP server process too, disconnecting all browser tools mid-session.
+
+If navigate still fails after cleanup → retry once after 2 seconds. If still fails → user needs to restart Claude Code.
 
 ### Step 1: Login FIRST (mandatory before crawling)
 
@@ -433,7 +469,7 @@ User can import to Notion manually later.
 4. **Ask before clicking destructive actions.** If you see "Delete" or "Remove" buttons, don't click them during crawl.
 5. **Handle errors gracefully.** If a page fails to load, note it and move on. Don't stop the whole crawl.
 6. **Respect rate limits.** Add 1-2 second delays between page navigations to avoid being blocked.
-7. **Screenshots are optional.** Only take them if the user asks or if a page has complex layout.
+7. **Screenshots are mandatory.** Take them for every page and embed them in the markdown PRD using `![name](path)` syntax.
 8. **Login is the user's job.** Never store or ask for production credentials. Use headed mode for manual login.
 9. **Local save is always available.** Even if Notion export fails, the PRD is saved locally.
 10. **One app per run.** Don't crawl multiple domains in a single session.

@@ -2,11 +2,11 @@
 
 // Spartan AI Toolkit — npx installer
 // Usage:
-//   npx spartan-ai-toolkit@latest
-//   npx spartan-ai-toolkit@latest --agent=cursor
-//   npx spartan-ai-toolkit@latest --packs=backend-micronaut,product
-//   npx spartan-ai-toolkit@latest --all
-//   npx spartan-ai-toolkit@latest --local
+//   npx @c0x12c/ai-toolkit@latest
+//   npx @c0x12c/ai-toolkit@latest --agent=cursor
+//   npx @c0x12c/ai-toolkit@latest --packs=backend-micronaut,product
+//   npx @c0x12c/ai-toolkit@latest --all
+//   npx @c0x12c/ai-toolkit@latest --local
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync, readdirSync, copyFileSync } from 'node:fs';
 import { join, dirname, resolve as pathResolve } from 'node:path';
@@ -104,7 +104,7 @@ if (showHelp) {
   ${bold('Spartan AI Toolkit')} — installer
 
   ${bold('Usage:')}
-    npx spartan-ai-toolkit@latest [options]
+    npx @c0x12c/ai-toolkit@latest [options]
 
   ${bold('Options:')}
     --agent=NAME    Agent to set up for (default: claude-code)
@@ -124,25 +124,25 @@ ${Object.entries(categories).map(([cat, lines]) => `\n    ${bold(cat + ':')}
 ${lines.join('\n')}`).join('\n')}
 
   ${bold('Examples:')}
-    ${cyan('npx spartan-ai-toolkit@latest')}
+    ${cyan('npx @c0x12c/ai-toolkit@latest')}
       Interactive — pick agent and packs from menu
 
-    ${cyan('npx spartan-ai-toolkit@latest --packs=frontend-react,product')}
+    ${cyan('npx @c0x12c/ai-toolkit@latest --packs=frontend-react,product')}
       Next.js app with product thinking tools
 
-    ${cyan('npx spartan-ai-toolkit@latest --packs=backend-micronaut,project-mgmt')}
+    ${cyan('npx @c0x12c/ai-toolkit@latest --packs=backend-micronaut,project-mgmt')}
       Kotlin APIs with full project lifecycle
 
-    ${cyan('npx spartan-ai-toolkit@latest --all')}
+    ${cyan('npx @c0x12c/ai-toolkit@latest --all')}
       Everything installed
 
-    ${cyan('npx spartan-ai-toolkit@latest --agent=cursor')}
+    ${cyan('npx @c0x12c/ai-toolkit@latest --agent=cursor')}
       Install rules for Cursor (rules + AGENTS.md only)
 
-    ${cyan('npx spartan-ai-toolkit@latest --auto')}
+    ${cyan('npx @c0x12c/ai-toolkit@latest --auto')}
       Auto-detect your tech stack and install matching packs
 
-    ${cyan('npx spartan-ai-toolkit@latest --format=agents-md --packs=backend-micronaut')}
+    ${cyan('npx @c0x12c/ai-toolkit@latest --format=agents-md --packs=backend-micronaut')}
       Export AGENTS.md for any AI coding tool
 `);
   process.exit(0);
@@ -761,7 +761,7 @@ async function main() {
     console.log(`     ${cyan('/spartan')}`);
     console.log('');
     console.log(`  2. To change packs later, run again:`);
-    console.log(`     ${cyan('npx spartan-ai-toolkit@latest')}`);
+    console.log(`     ${cyan('npx @c0x12c/ai-toolkit@latest')}`);
     console.log('');
   } else {
     console.log(`  ${bold('Next steps:')}`);
