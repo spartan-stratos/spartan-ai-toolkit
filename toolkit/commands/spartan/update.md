@@ -22,12 +22,12 @@ If `REPO_PATH` is empty or the directory doesn't exist, try to find it:
 
 ```bash
 # Common locations
-for dir in ~/spartan-ai-toolkit ~/Documents/Code/Spartan/spartan-ai-toolkit ~/Code/spartan-ai-toolkit; do
+for dir in ~/ai-toolkit ~/Documents/Code/Spartan/ai-toolkit ~/Code/ai-toolkit; do
   [ -d "$dir/toolkit" ] && echo "Found: $dir" && break
 done
 ```
 
-If still not found, ask the user: "Where did you clone spartan-ai-toolkit?"
+If still not found, ask the user: "Where did you clone ai-toolkit?"
 
 ---
 

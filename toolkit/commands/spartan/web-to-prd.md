@@ -15,24 +15,15 @@ You are the **Web-to-PRD pipeline** — scan a live web app, extract every featu
 
 ## Step 0: Prerequisite Check
 
-**This step is mandatory. Do NOT skip it. Do NOT proceed until all checks pass.**
+**This step is mandatory. Do NOT skip it.**
 
-**You (Claude) handle the setup. Don't ask the user to run install commands — do it yourself.**
+**IMPORTANT: `claude mcp add/remove` does NOT make tools available mid-session.** MCP tools only load when Claude Code starts. NEVER try to install or reconfigure MCP servers during a running session — it changes the config but won't load the tools. This causes the session to get stuck in a loop.
 
-### Check 1: Playwright MCP
+### Check 1: Playwright MCP (REQUIRED)
 
-Two checks: (A) is it installed? (B) is it using the Chrome profile?
+Try to call any Playwright MCP tool (like `browser_snapshot` or `browser_navigate`).
 
-**Step A: Check if Playwright MCP is installed**
-
-Try to use any Playwright MCP tool (like `browser_snapshot` or `browser_navigate`).
-
-If tool not found → go to **Auto-Install** below.
-If tool found → go to **Step B**.
-
-**Step B: Check if it's configured properly**
-
-Read the MCP config:
+**If the tool works** → check config is good:
 
 ```bash
 cat ~/.claude.json 2>/dev/null | grep -A5 playwright || \
@@ -40,93 +31,50 @@ cat .claude.json 2>/dev/null | grep -A5 playwright || \
 echo "NO_CONFIG_FOUND"
 ```
 
-| What you see in config | Status | Action |
-|------------------------|--------|--------|
-| `--user-data-dir` with `.playwright-profile` | Good (default) | Proceed |
-| `--user-data-dir` pointing to real Chrome profile | Risky — extensions cause timeouts | Ask: "Your Playwright uses the real Chrome profile. Extensions can slow it down. Switch to a clean profile?" If yes → **Auto-Install** |
-| No `--user-data-dir` (clean mode) | OK for public sites | If site needs login → ask: "Want me to set up a persistent profile so logins are saved?" |
-| `--cdp-endpoint` | Advanced mode | OK — proceed |
+| Config | Status | Action |
+|--------|--------|--------|
+| `--user-data-dir` with `.playwright-profile` | Good | Proceed |
+| `--user-data-dir` pointing to real Chrome profile | Risky | Warn: extensions cause timeouts |
+| No `--user-data-dir` (clean mode) | OK for public sites | Proceed |
+| `--cdp-endpoint` | Advanced mode | Proceed |
 
-**Auto-Install (handles both fresh install and reconfigure):**
-
-```bash
-# Remove old config
-claude mcp remove playwright 2>/dev/null || true
-
-# Add with persistent separate profile (no extensions, fast, Chrome stays open)
-claude mcp add playwright -- npx @playwright/mcp@latest --user-data-dir="$HOME/.playwright-profile" --browser=chrome
-```
-
-After install, tell the user:
-
-> "Playwright MCP is ready. It uses a separate lightweight profile (no extensions, fast).
->
-> For public sites: ready to go.
-> For login-protected sites: first run will open a browser — log in there. Your login is saved for next time."
-
-**No need to close Chrome.** Separate profile = no conflict with your running Chrome.
-
-**If the install command fails**, fall back to clean session:
-```bash
-claude mcp remove playwright 2>/dev/null || true
-claude mcp add playwright -- npx @playwright/mcp@latest
-```
-Tell user: "Installed Playwright without persistent profile. Login-protected sites won't save logins between runs."
-
-**Why NOT use the real Chrome profile:**
-- Loads ALL extensions (AdBlock, LastPass, etc.) → timeouts, hangs
-- Requires closing Chrome first (profile lock)
-- Stale `SingletonLock` files cause infinite hangs after Chrome crash
-- A lightweight separate profile is faster and more reliable
-
-### Check 2: Notion MCP
-
-Try to call `notion-search` with query "test".
-
-**If tool not found:**
+**If the tool is NOT found** → Playwright MCP is not loaded. Show this and STOP:
 
 ```
-Notion MCP is not connected.
+Playwright MCP is not available. I need it to control a browser.
 
-To connect:
-  1. Go to Claude Code settings (or Claude Desktop > Settings)
-  2. Find "Integrations" or "MCP Servers"
-  3. Enable "Notion" and authorize your workspace
+Run this in your terminal (outside Claude Code):
 
-Alternative: Install via CLI:
-  claude mcp add notion -- npx @anthropic-ai/mcp-notion
+  claude mcp add playwright -- npx @playwright/mcp@latest --user-data-dir=$HOME/.playwright-profile --browser=chrome
 
-Then restart Claude Code and re-run:
+Then restart Claude Code and run:
 
   /spartan:web-to-prd {{ args[0] | default: "URL" }}
 ```
 
-**STOP here. Do not continue.**
+**Do NOT try to run `claude mcp add` yourself.** It won't load the tools in this session.
 
-**If auth error (needs re-authentication):**
+### Check 2: Notion MCP (OPTIONAL)
 
-```
-Notion MCP needs re-authentication.
+Try to call `notion-search` with query "test".
 
-Open Claude Code settings and re-authorize Notion access to your workspace.
-```
+- **If found** → will export to Notion at the end.
+- **If not found** → note it, PRD will be saved locally. This is fine — continue the crawl.
 
-**STOP here.**
+Notion is a nice-to-have. The PRD always saves locally regardless.
 
-### Check 3: Confirm both are working
-
-Show status:
+### Show status and proceed
 
 ```
 Prerequisite Check:
   Playwright MCP: [connected / not found]
-  Notion MCP:     [connected / not found / needs auth]
+  Notion MCP:     [connected / not found] (optional)
 
-[If both connected]: Ready to scan. Proceeding...
-[If any missing]:    Fix the issues above and re-run.
+[If Playwright connected]: Ready to scan. Proceeding...
+[If Playwright missing]:   Install instructions above. STOP.
 ```
 
-**Only proceed to Step 1 if BOTH are connected.**
+**Only Playwright is required. Notion is optional.**
 
 ---
 

@@ -1,10 +1,10 @@
 {
-  "name": "@c0x12c/spartan-ai-toolkit",
-  "version": "1.14.0",
+  "name": "@c0x12c/ai-toolkit",
+  "version": "1.15.0",
   "description": "Engineering discipline layer for AI coding agents — commands, rules, skills, agents, and packs for Claude Code",
   "type": "module",
   "bin": {
-    "spartan-ai-toolkit": "./bin/cli.js"
+    "ai-toolkit": "./bin/cli.js"
   },
   "files": [
     "bin/",
@@ -33,7 +33,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/spartan-stratos/spartan-ai-toolkit"
+    "url": "https://github.com/c0x12c/ai-toolkit"
   },
   "scripts": {
     "test": "node --test lib/resolver.test.js lib/assembler.test.js lib/detector.test.js",
