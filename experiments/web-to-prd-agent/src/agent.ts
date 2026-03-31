@@ -1,9 +1,7 @@
-import { writeFileSync, readFileSync, existsSync, mkdirSync, unlinkSync } from 'node:fs'
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { tmpdir } from 'node:os'
-import { randomUUID } from 'node:crypto'
 import { ClaudeCLI } from './claude-cli.js'
-import { checkPrerequisites, installPlaywrightMCP, cleanStaleLockFiles, buildMCPConfig } from './mcp-setup.js'
+import { Browser } from './browser.js'
 import { Crawler } from './crawler.js'
 import { Screenshotter } from './screenshotter.js'
 import { PRDGenerator } from './prd-generator.js'
@@ -15,7 +13,7 @@ export class Agent {
   private state: AgentState
   private claude: ClaudeCLI
   private claudeOptions: ClaudeOptions
-  private mcpConfigPath: string
+  private browser: Browser
   private log: (msg: string) => void
 
   constructor(options: CLIOptions) {
@@ -27,66 +25,56 @@ export class Agent {
       errors: [],
     }
 
-    // Write MCP config to OS temp dir (cleaned up on exit)
-    const sessionSlug = randomUUID().slice(0, 8)
-    this.mcpConfigPath = join(tmpdir(), `spartan-prd-mcp-${sessionSlug}.json`)
-    const mcpConfig = buildMCPConfig()
-    writeFileSync(this.mcpConfigPath, JSON.stringify(mcpConfig, null, 2))
-
+    // No MCP needed — Playwright is used directly
     this.claudeOptions = {
-      mcpConfig: this.mcpConfigPath,
-      allowedTools: 'mcp__playwright__*',
       outputFormat: 'json',
     }
 
-    this.claude = new ClaudeCLI({
-      outputFormat: 'json',
-    })
+    this.claude = new ClaudeCLI({ outputFormat: 'json' })
+    this.browser = new Browser({ log: this.log })
   }
 
-  /**
-   * Run the full agent pipeline.
-   */
   async run(): Promise<void> {
     const startTime = Date.now()
 
-    try {
-      // Step 0: Prerequisites
-      await this.checkPrerequisites()
+    if (!existsSync(this.options.outputDir)) {
+      mkdirSync(this.options.outputDir, { recursive: true })
+    }
 
-      // Step 1: Login handling
+    try {
+      // Step 1: Launch browser
+      this.state.step = 'prerequisites'
+      this.log('Launching browser...')
+      await this.browser.launch()
+
+      // Step 2: Navigate and handle login
+      this.state.step = 'login'
       await this.handleLogin()
 
-      // Step 2: Pass 1 — map all pages
-      const sessionId = randomUUID()
+      // Step 3: Mechanical crawl (Playwright only — $0)
+      this.state.step = 'crawl-pass1'
       const screenshotter = new Screenshotter(this.options.outputDir)
       const crawler = new Crawler({
+        browser: this.browser,
         claude: this.claude,
         screenshotter,
         appUrl: this.options.url,
-        sessionId,
         claudeOptions: this.claudeOptions,
         maxPages: this.options.maxPages,
         log: this.log,
       })
 
-      this.state.step = 'crawl-pass1'
-      await crawler.pass1()
-      this.state.crawlState = crawler.getState()
+      await crawler.mechanicalCrawl()
 
-      // Show sitemap and ask user
       this.log('')
       this.log(crawler.getSitemap())
       this.log('')
-      this.log('Review the sitemap above. The agent will now explore every feature on each page.')
-      this.log('')
 
-      // Step 3: Pass 2 — deep exploration
+      // Step 4: AI-guided exploration (2 AI calls)
       this.state.step = 'crawl-pass2'
-      await crawler.pass2()
-      this.state.crawlState = crawler.getState()
+      await crawler.aiGuidedExploration()
 
-      // Step 4: Coverage check
+      // Step 5: Coverage report
       this.state.step = 'coverage-check'
       const coverage = crawler.calculateCoverage()
       this.state.coverageReport = coverage
@@ -95,23 +83,13 @@ export class Agent {
       this.log('Coverage Report:')
       this.log(`  Pages visited:        ${coverage.pagesVisited}`)
       this.log(`  Screenshots taken:    ${coverage.screenshotsTaken}`)
-      this.log(`  Buttons clicked:      ${coverage.buttonsClicked}`)
+      this.log(`  Elements clicked:     ${coverage.buttonsClicked}`)
       this.log(`  Modals found:         ${coverage.modalsFound}`)
       this.log(`  Forms found:          ${coverage.formsFound}`)
-      this.log(`  Tabs explored:        ${coverage.tabsExplored}`)
-      this.log(`  Sections explored:    ${coverage.sectionsExplored.join(', ')}`)
-      if (coverage.sectionsSkipped.length > 0) {
-        this.log(`  Sections SKIPPED:     ${coverage.sectionsSkipped.join(', ')}`)
-      }
-      this.log(`  Status:               ${coverage.passed ? 'PASSED' : 'NEEDS ATTENTION'}`)
-      if (!coverage.passed) {
-        for (const f of coverage.failures) {
-          this.log(`    - ${f}`)
-        }
-      }
+      this.log(`  Dropdowns opened:     ${coverage.dropdownsOpened}`)
       this.log('')
 
-      // Step 5: Build feature map and generate PRD
+      // Step 6: Generate PRD (1 AI call)
       this.state.step = 'generate-prd'
       const featureMap = crawler.buildFeatureMap()
       this.state.featureMap = featureMap
@@ -125,13 +103,12 @@ export class Agent {
       const prd = await generator.generate(featureMap)
       this.state.prd = prd
 
-      // Save locally
       const prdPath = generator.savePRD(prd, this.options.outputDir)
       const featuresPath = generator.saveFeatureMap(featureMap, this.options.outputDir)
       this.log(`PRD saved: ${prdPath}`)
       this.log(`Features saved: ${featuresPath}`)
 
-      // Step 6: Export to Notion (optional)
+      // Step 7: Notion export (optional)
       if (!this.options.noNotion) {
         this.state.step = 'export-notion'
         const exporter = new NotionExporter({
@@ -139,10 +116,8 @@ export class Agent {
           claudeOptions: this.claudeOptions,
           log: this.log,
         })
-
         const notionResult = await exporter.export(prd)
         this.state.notionResult = notionResult
-
         if (notionResult.parentPageUrl) {
           this.log(`Notion page: ${notionResult.parentPageUrl}`)
         }
@@ -152,8 +127,6 @@ export class Agent {
       this.state.step = 'done'
       const elapsed = Math.round((Date.now() - startTime) / 1000)
       this.printSummary(elapsed)
-
-      // Save state for resume
       this.saveState()
     } catch (err) {
       this.state.errors.push((err as Error).message)
@@ -161,112 +134,45 @@ export class Agent {
       this.saveState()
       throw err
     } finally {
-      // Clean up temp MCP config
-      try { unlinkSync(this.mcpConfigPath) } catch { /* already gone */ }
+      await this.browser.close()
     }
   }
 
-  /**
-   * Check all prerequisites are met.
-   */
-  private async checkPrerequisites(): Promise<void> {
-    this.state.step = 'prerequisites'
-    this.log('Checking prerequisites...')
-
-    const status = checkPrerequisites()
-
-    if (!status.claudeCLI) {
-      throw new Error('claude CLI not found. Install: https://docs.anthropic.com/en/docs/claude-code')
-    }
-
-    if (!status.mcp.playwright) {
-      this.log('  Playwright MCP not found. Installing...')
-      const installed = installPlaywrightMCP()
-      if (!installed) {
-        throw new Error('Failed to install Playwright MCP. Try manually: claude mcp add playwright -- npx @playwright/mcp@latest')
-      }
-      this.log('  Playwright MCP installed.')
-    }
-
-    if (!status.mcp.notion && !this.options.noNotion) {
-      this.log('  Notion MCP not found. Notion export will be skipped.')
-      this.log('  To enable: claude mcp add notion -- npx @anthropic-ai/mcp-notion')
-      this.options.noNotion = true
-    }
-
-    // Clean stale browser processes
-    const cleaned = cleanStaleLockFiles()
-    if (cleaned > 0) {
-      this.log(`  Cleaned ${cleaned} stale browser lock file(s).`)
-    }
-
-    this.log('  Prerequisites OK.')
-  }
-
-  /**
-   * Navigate to URL and handle login if needed.
-   */
   private async handleLogin(): Promise<void> {
-    this.state.step = 'login'
     this.log(`Navigating to ${this.options.url}...`)
+    await this.browser.goto(this.options.url)
 
-    const result = await this.claude.ask(
-      `Navigate to ${this.options.url}. Take a snapshot of the page. ` +
-      `Check if this is a login page. Return JSON: ` +
-      `{"isLoginPage": true/false, "title": "page title", "loginSignals": ["what made you think it's a login page"]}`,
-      this.claudeOptions
-    )
+    const title = await this.browser.getTitle()
+    const url = await this.browser.getUrl()
 
-    try {
-      const parsed = JSON.parse(result)
-      if (parsed.isLoginPage) {
-        this.log('')
-        this.log('This app needs login. A browser window should be open on your screen.')
-        this.log('Please log in directly in that browser window.')
-        this.log('')
-        this.log('After logging in, the agent will continue automatically.')
-        this.log('(Waiting for login... the page will be checked periodically)')
-        this.log('')
+    // Simple login detection: check URL and page content
+    const isLoginPage = url.includes('/login') || url.includes('/signin') ||
+      url.includes('/auth') || title.toLowerCase().includes('sign in') ||
+      title.toLowerCase().includes('log in')
 
-        // Wait and re-check every 10 seconds
-        let loggedIn = false
-        for (let i = 0; i < 30; i++) { // Max 5 minutes
-          await new Promise(resolve => setTimeout(resolve, 10000))
+    if (isLoginPage) {
+      this.log('')
+      this.log('This app needs login. A browser window is open on your screen.')
+      this.log('Please log in directly in that browser window.')
+      this.log('')
+      this.log('Waiting for login... (checking every 10 seconds, max 5 minutes)')
 
-          const check = await this.claude.ask(
-            'Take a snapshot of the current page. Is this still a login page? ' +
-            'Return JSON: {"isLoginPage": true/false, "title": "page title"}',
-            this.claudeOptions
-          )
-
-          try {
-            const checkParsed = JSON.parse(check)
-            if (!checkParsed.isLoginPage) {
-              loggedIn = true
-              this.log(`Logged in. Now on: ${checkParsed.title}`)
-              break
-            }
-          } catch {
-            // Parse failed — keep waiting
-          }
+      for (let i = 0; i < 30; i++) {
+        await new Promise(resolve => setTimeout(resolve, 10000))
+        const currentUrl = await this.browser.getUrl()
+        if (!currentUrl.includes('/login') && !currentUrl.includes('/signin') && !currentUrl.includes('/auth')) {
+          const newTitle = await this.browser.getTitle()
+          this.log(`Logged in. Now on: ${newTitle}`)
+          return
         }
-
-        if (!loggedIn) {
-          throw new Error('Login timeout (5 minutes). Please log in and try again with --resume.')
-        }
-      } else {
-        this.log(`Page loaded: ${parsed.title ?? 'Unknown'}`)
       }
-    } catch (err) {
-      if ((err as Error).message.includes('Login timeout')) throw err
-      // JSON parse failed — not a big deal, continue
-      this.log('Page loaded.')
+
+      throw new Error('Login timeout (5 minutes). Please log in and try again.')
     }
+
+    this.log(`Page loaded: ${title}`)
   }
 
-  /**
-   * Print the final summary.
-   */
   private printSummary(elapsedSeconds: number): void {
     const prd = this.state.prd
     const coverage = this.state.coverageReport
@@ -281,6 +187,7 @@ export class Agent {
     this.log(`URL:       ${this.options.url}`)
     this.log(`Time:      ${minutes} minutes`)
     this.log(`Scanned:   ${coverage?.pagesVisited ?? 0} pages`)
+    this.log(`AI calls:  ~3-5 (vs 80-150 in v1)`)
     this.log('')
     this.log('Generated:')
     this.log(`  - ${prd?.epics.length ?? 0} Epics`)
@@ -296,54 +203,31 @@ export class Agent {
     if (this.state.errors.length > 0) {
       this.log('')
       this.log(`Warnings: ${this.state.errors.length}`)
-      for (const e of this.state.errors) {
-        this.log(`  - ${e}`)
-      }
+      for (const e of this.state.errors) this.log(`  - ${e}`)
     }
     this.log('')
   }
 
-  /**
-   * Save agent state for resume support.
-   */
   private saveState(): void {
     if (!existsSync(this.options.outputDir)) {
       mkdirSync(this.options.outputDir, { recursive: true })
     }
-
     const statePath = join(this.options.outputDir, 'agent-state.json')
-
-    // Convert Maps/Sets to plain objects for JSON
     const serializable = {
       ...this.state,
-      crawlState: this.state.crawlState
-        ? {
-            ...this.state.crawlState,
-            pages: Object.fromEntries(this.state.crawlState.pages),
-            visited: Array.from(this.state.crawlState.visited),
-          }
-        : undefined,
+      crawlState: undefined,
       notionResult: this.state.notionResult
-        ? {
-            ...this.state.notionResult,
-            epicPageUrls: Object.fromEntries(this.state.notionResult.epicPageUrls),
-          }
+        ? { ...this.state.notionResult, epicPageUrls: Object.fromEntries(this.state.notionResult.epicPageUrls) }
         : undefined,
     }
-
     writeFileSync(statePath, JSON.stringify(serializable, null, 2))
   }
 
-  /**
-   * Load state from a previous run (for --resume).
-   */
   static loadState(outputDir: string): AgentState | null {
     const statePath = join(outputDir, 'agent-state.json')
     if (!existsSync(statePath)) return null
-
     try {
-      const raw = readFileSync(statePath, 'utf-8')
-      return JSON.parse(raw)
+      return JSON.parse(readFileSync(statePath, 'utf-8'))
     } catch {
       return null
     }
