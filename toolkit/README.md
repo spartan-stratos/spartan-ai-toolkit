@@ -59,7 +59,7 @@ Scan a live web app, extract every feature, generate a structured PRD with epics
 /spartan:web-to-prd "https://screensdesign.com"
 ```
 
-![Web-to-PRD scanning screensdesign.com](../docs/images/web-to-prd-demo.png)
+![Web-to-PRD scanning screensdesign.com](https://raw.githubusercontent.com/c0x12c/ai-toolkit/main/docs/images/web-to-prd-demo.png)
 
 Uses Playwright MCP (browser control) + Notion MCP (export). Auto-installs prerequisites, handles login, and asks for confirmation at each step.
 
