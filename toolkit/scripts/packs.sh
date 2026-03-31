@@ -118,9 +118,9 @@ PACK_DESC_ops="Deploy & infrastructure"
 PACK_HIDDEN_ops=false
 PACK_COMING_SOON_ops=false
 PACK_DEPENDS_ops=""
-PACK_COMMANDS_ops="deploy env-setup"
+PACK_COMMANDS_ops="deploy env-setup ops-investigate-alert ops-oncall-log"
 PACK_RULES_ops=""
-PACK_SKILLS_ops=""
+PACK_SKILLS_ops="ops-investigate-alert ops-oncall-log"
 PACK_AGENTS_ops=""
 PACK_CLAUDE_SECTIONS_ops="50-ops.md"
 
