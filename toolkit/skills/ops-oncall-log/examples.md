@@ -2,7 +2,7 @@
 
 ## Example: Weekly Log (Confluence)
 
-**Input:** `/spartan:oncall-log Mar 21 - Mar 28`
+**Input:** `/spartan:ops-oncall-log Mar 21 - Mar 28`
 
 **Generated page:**
 
@@ -32,7 +32,7 @@ Payments 5xx was a transient issue caused by a third-party API outage. No action
 
 ## Example: Daily Log (Notion)
 
-**Input:** `/spartan:oncall-log today`
+**Input:** `/spartan:ops-oncall-log today`
 
 **Generated page:**
 

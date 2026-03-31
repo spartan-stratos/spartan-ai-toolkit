@@ -1,5 +1,5 @@
 ---
-name: oncall-log
+name: ops-oncall-log
 description: "Create a structured on-call log by pulling alerts from monitoring and writing a summary to your team's wiki. Requires a monitoring MCP (recommended: Datadog) and a wiki MCP (Confluence or Notion)."
 allowed_tools:
   - Read

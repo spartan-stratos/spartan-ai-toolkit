@@ -7,13 +7,13 @@ hidden: false
 commands:
   - deploy
   - env-setup
-  - investigate-alert
-  - oncall-log
+  - ops-investigate-alert
+  - ops-oncall-log
 
 rules: []
 skills:
-  - investigate-alert
-  - oncall-log
+  - ops-investigate-alert
+  - ops-oncall-log
 agents: []
 
 claude-sections:

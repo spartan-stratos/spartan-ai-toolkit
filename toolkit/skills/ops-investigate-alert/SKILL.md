@@ -1,5 +1,5 @@
 ---
-name: investigate-alert
+name: ops-investigate-alert
 description: "Investigate a monitoring alert end-to-end. Pulls metrics, logs, traces, and recent code changes to identify root cause. Works with any monitoring MCP."
 allowed_tools:
   - Read
