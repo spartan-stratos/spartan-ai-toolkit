@@ -91,13 +91,13 @@ dependencies {
     }
   });
 
-  it('detects Python backend (FastAPI) — marks as coming soon', () => {
+  it('detects Python backend (FastAPI)', () => {
     setup();
     try {
       writeFileSync(join(TMP, 'requirements.txt'), 'fastapi==0.100.0\nuvicorn==0.23.0\n');
       const result = detectStacks(TMP);
-      assert.ok(!result.detected.some(d => d.pack === 'backend-python'), 'should NOT be in detected');
-      assert.ok(result.comingSoon.some(d => d.pack === 'backend-python'), 'should be in comingSoon');
+      assert.ok(result.detected.some(d => d.pack === 'backend-python'), 'should be in detected');
+      assert.ok(!result.comingSoon.some(d => d.pack === 'backend-python'), 'should NOT be in comingSoon');
     } finally {
       cleanup();
     }
@@ -108,7 +108,8 @@ dependencies {
     try {
       writeFileSync(join(TMP, 'manage.py'), '#!/usr/bin/env python\nimport django\n');
       const result = detectStacks(TMP);
-      assert.ok(result.comingSoon.some(d => d.pack === 'backend-python'), 'should detect python as coming soon');
+      assert.ok(result.detected.some(d => d.pack === 'backend-python'), 'should detect python in detected');
+      assert.ok(!result.comingSoon.some(d => d.pack === 'backend-python'), 'should NOT be in comingSoon');
     } finally {
       cleanup();
     }
