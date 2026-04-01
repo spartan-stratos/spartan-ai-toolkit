@@ -24,6 +24,7 @@ __pycache__/
 # Environment
 .env
 .env.local
+.spartan/ai.env
 
 # Planning / session state
 .planning/

@@ -341,6 +341,22 @@ function copyDir(src, dest) {
   cpSync(src, dest, { recursive: true });
 }
 
+/** Ensure .spartan/ai.env is in the project .gitignore (local installs only). */
+function ensureGitignore(projectDir) {
+  const gitignorePath = join(projectDir, '.gitignore');
+  const entry = '.spartan/ai.env';
+
+  if (existsSync(gitignorePath)) {
+    const content = readFileSync(gitignorePath, 'utf-8');
+    if (content.includes(entry)) return; // already there
+    const newline = content.endsWith('\n') ? '' : '\n';
+    writeFileSync(gitignorePath, content + newline + '\n# Spartan AI config (contains API keys)\n' + entry + '\n', 'utf-8');
+  } else {
+    writeFileSync(gitignorePath, '# Spartan AI config (contains API keys)\n' + entry + '\n', 'utf-8');
+  }
+  console.log(`  ${green('+')} Added ${entry} to .gitignore`);
+}
+
 /** Get the source root for a pack (built-in uses PKG_ROOT, community uses pack-dir). */
 function getPackSource(packName) {
   return externalPackSources[packName] || PKG_ROOT;
@@ -859,6 +875,11 @@ async function main() {
     const agentsContent = assembleAGENTSmd(SRC.claudeMd, SRC.agents, selectedPacks, PACKS);
     writeFileSync(agentsMdPath, agentsContent, 'utf-8');
     console.log(`  ${green('+')} AGENTS.md (works with Cursor, Copilot, Windsurf, Codex, and 20+ tools)\n`);
+  }
+
+  // Ensure .spartan/ai.env is gitignored (local installs only)
+  if (mode === 'local') {
+    ensureGitignore(process.cwd());
   }
 
   // Success

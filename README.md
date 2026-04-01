@@ -426,6 +426,36 @@ Type `/spartan` for the smart router. Or go direct:
 
 ---
 
+## AI-Powered Design (Optional)
+
+The design workflow (`/spartan:ux`) can generate real images for prototypes using Google Gemini.
+
+### Setup
+
+1. Get a [Gemini API key](https://aistudio.google.com/apikey)
+
+2. Create `.spartan/ai.env` in your project root:
+
+```bash
+echo "GEMINI_API_KEY=your-key-here" > .spartan/ai.env
+```
+
+3. Install Python dependencies:
+
+```bash
+pip install google-genai Pillow
+```
+
+4. Use it:
+
+```bash
+/spartan:ux prototype    # generates images for your design
+```
+
+> **Note:** The installer adds `.spartan/ai.env` to `.gitignore` automatically. If you set this up manually, make sure `.spartan/ai.env` is in your `.gitignore` &mdash; never commit API keys.
+
+---
+
 ## Telegram Bridge
 
 Control your AI coding sessions from your phone.

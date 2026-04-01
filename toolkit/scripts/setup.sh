@@ -750,6 +750,25 @@ echo -e "  ${GREEN}✓${NC} Packs saved: ${SELECTED_PACKS}"
 echo ""
 
 # ─────────────────────────────────────────────────────────────
+# Step 11.5: Ensure .spartan/ai.env is in .gitignore
+# ─────────────────────────────────────────────────────────────
+if [[ "$MODE" == "local" ]]; then
+  GITIGNORE_FILE="$(pwd)/.gitignore"
+  ENTRY=".spartan/ai.env"
+
+  if [[ -f "$GITIGNORE_FILE" ]]; then
+    if ! grep -qF "$ENTRY" "$GITIGNORE_FILE"; then
+      printf '\n# Spartan AI config (contains API keys)\n%s\n' "$ENTRY" >> "$GITIGNORE_FILE"
+      echo -e "  ${GREEN}✓${NC} Added ${ENTRY} to .gitignore"
+    fi
+  else
+    printf '# Spartan AI config (contains API keys)\n%s\n' "$ENTRY" > "$GITIGNORE_FILE"
+    echo -e "  ${GREEN}✓${NC} Created .gitignore with ${ENTRY}"
+  fi
+  echo ""
+fi
+
+# ─────────────────────────────────────────────────────────────
 # Done
 # ─────────────────────────────────────────────────────────────
 echo -e "${BOLD}${GREEN}╔══════════════════════════════════════════╗${NC}"
