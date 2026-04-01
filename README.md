@@ -68,13 +68,13 @@ Nothing ships without passing every gate.
 
 | What | Count | Description |
 |------|-------|-------------|
-| **Slash commands** | 67 | End-to-end workflows, not just prompts |
-| **Coding rules** | 22 | Your standards, enforced automatically |
-| **Skills** | 28 | Domain knowledge (Kotlin, React, DB, security, etc.) |
-| **Agents** | 9 | Specialized reviewers, researchers, planners |
+| **Slash commands** | 72 | End-to-end workflows, not just prompts |
+| **Coding rules** | 23 | Your standards, enforced automatically |
+| **Skills** | 31 | Domain knowledge (Kotlin, React, DB, security, etc.) |
+| **Agents** | 10 | Specialized reviewers, researchers, planners |
 | **Stack profiles** | 8 | Pre-built configs for Go, Python, Java, Kotlin, React, etc. |
 | **Quality gates** | 5 | Automated checkpoints between every step |
-| **Agent memory** | &mdash; | Decisions survive across sessions |
+| **Agent memory** | 3 layers | Index &rarr; topics &rarr; transcripts (grep-only archive) |
 
 ---
 
@@ -227,18 +227,25 @@ Leaders call the right skill at the right time based on your stack:
 
 ### Agent memory: context across sessions
 
-AI forgets everything when you close the terminal. Agent memory fixes that.
+AI forgets everything when you close the terminal. Agent memory fixes that with 3 layers:
 
 ```
 .memory/
-  index.md     — Quick reference to all knowledge
-  decisions/   — Architecture decisions
-  patterns/    — Code patterns found
-  knowledge/   — Domain facts, gotchas
-  blockers/    — Known issues
+  index.md        — Layer 1: always loaded, pointers only (~150 chars per line)
+  decisions/      — Layer 2: loaded on demand when relevant
+  patterns/       —   architecture decisions, code patterns
+  knowledge/      —   domain facts, API gotchas
+  blockers/       —   known issues and workarounds
+  transcripts/    — Layer 3: never loaded, grep-only archive
 ```
 
-Leaders read and write memory automatically. Decisions from one session carry forward to the next.
+| Layer | Loaded | Purpose |
+|-------|--------|---------|
+| Index | Every turn | Quick lookup &mdash; what do we know? |
+| Topics | On demand | Full knowledge when the task needs it |
+| Transcripts | Never (grep only) | "What did we try last week?" without wasting context |
+
+Leaders read and write memory automatically. `/spartan:memory-consolidate` cleans stale entries. `/spartan:magic-doc` keeps docs in sync with code.
 
 ### Configurable rules
 
@@ -356,6 +363,8 @@ Type `/spartan` for the smart router. Or go direct:
 | `scan-rules` | Auto-generate rules from code patterns |
 | `lint-rules` | Validate your config and rule files |
 | `context-save` | Save session state to resume later |
+| `magic-doc [file]` | Auto-update a doc file to match current codebase |
+| `memory-consolidate` | Clean up agent memory &mdash; deduplicate, remove stale entries |
 | `update` | Check for toolkit updates |
 | `careful` | Warn before destructive ops |
 | `freeze <dir>` | Lock edits to one directory |
