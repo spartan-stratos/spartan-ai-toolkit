@@ -186,6 +186,19 @@ npx @c0x12c/ai-toolkit@latest --local --agent=copilot      # rules only
 | **Windsurf** | Rules + AGENTS.md | `.windsurf/rules/` |
 | **Copilot** | Rules + AGENTS.md | `.github/instructions/` |
 
+### Uninstall
+
+```bash
+# Remove from current project
+npx @c0x12c/ai-toolkit@latest --uninstall --local
+
+# Remove global install
+npx @c0x12c/ai-toolkit@latest --uninstall --global
+
+# Remove for other agents
+npx @c0x12c/ai-toolkit@latest --uninstall --local --agent=cursor
+```
+
 ---
 
 ## How It Works

@@ -69,9 +69,11 @@ let showHelp = false;
 let format = '';  // '' = default, 'agents-md' = export AGENTS.md
 let autoDetect = false;
 let packDirArg = '';  // external community pack directory
+let doUninstall = false;
 
 for (const arg of args) {
   if (arg === '--help' || arg === '-h') showHelp = true;
+  else if (arg === '--uninstall') doUninstall = true;
   else if (arg.startsWith('--agent=')) agent = arg.split('=')[1];
   else if (arg.startsWith('--packs=')) packsArg = arg.split('=')[1];
   else if (arg.startsWith('--format=')) format = arg.split('=')[1];
@@ -117,6 +119,7 @@ if (showHelp) {
     --all           Install all packs
     --global        Install to home dir (default for claude-code/codex)
     --local         Install to current project dir
+    --uninstall     Remove all Spartan files (use with --local or --global)
     --help          Show this help
 
   ${bold('Packs:')}
@@ -146,6 +149,104 @@ ${lines.join('\n')}`).join('\n')}
       Export AGENTS.md for any AI coding tool
 `);
   process.exit(0);
+}
+
+// ── Uninstall ──────────────────────────────────────────────────────
+import { rmSync } from 'node:fs';
+
+async function uninstall() {
+  const home = homedir();
+  const cwd = process.cwd();
+
+  let base, claudeMdPath, agentsMdPath, configDir;
+
+  if (agent === 'claude-code') {
+    base = mode === 'global' ? join(home, '.claude') : join(cwd, '.claude');
+    claudeMdPath = mode === 'global' ? join(home, '.claude', 'CLAUDE.md') : join(cwd, 'CLAUDE.md');
+    configDir = join(cwd, '.spartan');
+  } else if (agent === 'codex') {
+    base = mode === 'global' ? join(home, '.codex') : join(cwd, '.codex');
+    claudeMdPath = mode === 'global' ? join(home, '.codex', 'CLAUDE.md') : join(cwd, 'CLAUDE.md');
+    configDir = join(cwd, '.spartan');
+  } else {
+    // cursor, windsurf, copilot
+    const rulesDir = {
+      cursor:   join(cwd, '.cursor', 'rules'),
+      windsurf: join(cwd, '.windsurf', 'rules'),
+      copilot:  join(cwd, '.github', 'instructions'),
+    }[agent];
+    base = null;
+    agentsMdPath = join(cwd, 'AGENTS.md');
+    configDir = null;
+
+    console.log(`\n  Removing ${bold(agent)} files...\n`);
+
+    if (rulesDir && existsSync(rulesDir)) {
+      rmSync(rulesDir, { recursive: true, force: true });
+      console.log(`  ${green('-')} ${rulesDir}`);
+    }
+    if (agentsMdPath && existsSync(agentsMdPath)) {
+      rmSync(agentsMdPath);
+      console.log(`  ${green('-')} AGENTS.md`);
+    }
+
+    console.log(`\n  ${bold(green('Uninstall done.'))}\n`);
+    return;
+  }
+
+  // Claude Code / Codex uninstall
+  const targets = [
+    { path: join(base, 'commands', 'spartan'),    label: 'commands/spartan/' },
+    { path: join(base, 'commands', 'spartan.md'), label: 'commands/spartan.md' },
+    { path: join(base, 'rules'),                  label: 'rules/' },
+    { path: join(base, 'skills'),                 label: 'skills/' },
+    { path: join(base, 'agents'),                 label: 'agents/' },
+    { path: join(base, '.spartan-packs'),          label: '.spartan-packs' },
+    { path: join(base, '.spartan-version'),        label: '.spartan-version' },
+    { path: join(base, '.spartan-repo'),           label: '.spartan-repo' },
+  ];
+
+  console.log(`\n  Removing Spartan from ${bold(mode)} (${base})...\n`);
+
+  let removed = 0;
+  for (const { path, label } of targets) {
+    if (existsSync(path)) {
+      rmSync(path, { recursive: true, force: true });
+      console.log(`  ${green('-')} ${label}`);
+      removed++;
+    }
+  }
+
+  if (claudeMdPath && existsSync(claudeMdPath)) {
+    rmSync(claudeMdPath);
+    console.log(`  ${green('-')} CLAUDE.md`);
+    removed++;
+  }
+
+  if (configDir && existsSync(configDir)) {
+    rmSync(configDir, { recursive: true, force: true });
+    console.log(`  ${green('-')} .spartan/`);
+    removed++;
+  }
+
+  // Clean up .bak files
+  const bakPattern = claudeMdPath ? dirname(claudeMdPath) : base;
+  if (bakPattern && existsSync(bakPattern)) {
+    const entries = readdirSync(bakPattern);
+    for (const entry of entries) {
+      if (entry.startsWith('CLAUDE.md.') && entry.endsWith('.bak')) {
+        rmSync(join(bakPattern, entry));
+        console.log(`  ${green('-')} ${entry}`);
+        removed++;
+      }
+    }
+  }
+
+  if (removed === 0) {
+    console.log(`  ${dim('Nothing to remove — Spartan is not installed here.')}`);
+  }
+
+  console.log(`\n  ${bold(green('Uninstall done.'))} Removed ${removed} items.\n`);
 }
 
 // ── Readline helper ─────────────────────────────────────────────
@@ -646,6 +747,12 @@ async function main() {
   if (nodeVer < 18) {
     console.error(`\n  ${C.red}Node.js ${process.versions.node} is too old. Need >= 18.${C.reset}\n`);
     process.exit(1);
+  }
+
+  // Handle --uninstall
+  if (doUninstall) {
+    await uninstall();
+    return;
   }
 
   // Load community packs if --pack-dir is set
