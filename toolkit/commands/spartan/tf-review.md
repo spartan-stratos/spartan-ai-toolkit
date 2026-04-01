@@ -23,55 +23,10 @@ Perform a comprehensive review of Terraform changes.
 
 ## Review Checklist
 
-### Stage 1: Structure
-- [ ] Files follow standard layout (`main.tf`, `variables.tf`, `outputs.tf`, `versions.tf`)
-- [ ] Modules are in `modules/` directory, environments in `live/` or `envs/`
-- [ ] No monolithic files — resources grouped by logical concern
-- [ ] Backend config is separate per environment
+Run the full 8-category checklist from the `terraform-review` skill:
+1. Structure, 2. State Safety, 3. Security, 4. Naming, 5. Modules, 6. Variables, 7. Providers, 8. CI/CD
 
-### Stage 2: State Safety
-- [ ] No resources moved or renamed without `moved` blocks or import
-- [ ] State backend uses S3 + DynamoDB lock table
-- [ ] No `terraform state` commands in scripts without safeguards
-- [ ] Destructive changes (replace, destroy) are intentional and documented
-- [ ] `prevent_destroy` lifecycle on critical resources (databases, S3 buckets)
-
-### Stage 3: Security
-- [ ] No secrets in `.tf` files or `.tfvars` committed to repo
-- [ ] IAM policies follow least privilege — no `*` actions or resources
-- [ ] Security groups restrict ingress to required ports only
-- [ ] Encryption enabled: RDS `storage_encrypted`, S3 `server_side_encryption`, EBS volumes
-- [ ] No public access unless explicitly required (S3 ACLs, RDS `publicly_accessible`)
-- [ ] KMS keys used for sensitive resources
-
-### Stage 4: Naming
-- [ ] Resources use consistent naming: `{project}-{env}-{service}-{resource}`
-- [ ] Variables are descriptive with `_` separators (not camelCase)
-- [ ] All resources tagged: `project`, `environment`, `service`, `managed_by`
-
-### Stage 5: Modules
-- [ ] Modules have a single responsibility
-- [ ] No provider blocks inside modules
-- [ ] No backend blocks inside modules
-- [ ] Variables have `description` and explicit `type`
-- [ ] Outputs have `description`
-- [ ] `for_each` preferred over `count`
-
-### Stage 6: Variables
-- [ ] All variables have `description` and `type`
-- [ ] Sensitive variables marked `sensitive = true`
-- [ ] Validation blocks for constrained inputs (environment names, CIDR blocks)
-- [ ] Defaults are sensible — no default for required values
-
-### Stage 7: Providers
-- [ ] Provider versions pinned with `>=` lower bound
-- [ ] `required_version` set for Terraform itself
-- [ ] No deprecated provider features used
-
-### Stage 8: CI/CD
-- [ ] Pipeline runs `fmt -check`, `validate`, `plan` on PR
-- [ ] Apply requires approval for production
-- [ ] Plan output is posted to PR for review
+See the skill for detailed checks, code examples, and pass/fail criteria per category.
 
 ## Output Format
 

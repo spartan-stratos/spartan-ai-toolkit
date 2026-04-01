@@ -142,6 +142,8 @@ Auto mode is ideal for experienced users who trust the workflow and want maximum
 | `/spartan:daily` | Standup summary from git log |
 | `/spartan:init-project` | Auto-generate CLAUDE.md from codebase |
 | `/spartan:context-save` | Manage context: compact first, full save if needed |
+| `/spartan:magic-doc [file]` | Auto-update a single doc file to match current codebase state |
+| `/spartan:memory-consolidate` | Clean up `.memory/` — deduplicate, remove stale, rebuild index |
 | `/spartan:update` | Upgrade Spartan to latest version |
 
 
@@ -364,19 +366,35 @@ Complex requirements are broken into **work units (WUs)** before planning:
 - Wave 1 = no dependencies → can run in parallel Claude Code tabs
 - Wave N+1 = depends on Wave N outputs
 
-### Agent Memory (`.memory/`)
-Persistent project knowledge that survives all sessions:
+### Agent Memory (`.memory/`) — 3-Layer Architecture
+Persistent project knowledge that survives all sessions. Three layers with different context rules:
+
 ```
 .memory/
-  index.md            ← Quick reference to all knowledge
-  decisions/          ← ADRs (architectural decision records)
-  patterns/           ← Reusable code patterns discovered
-  knowledge/          ← Domain facts, API gotchas, business rules
-  blockers/           ← Known issues and workarounds
+  index.md            ← Layer 1: ALWAYS loaded (~150 chars per entry, pointers only)
+  decisions/          ← Layer 2: Loaded ON DEMAND when relevant
+  patterns/           ←   ADRs, reusable code patterns, domain facts
+  knowledge/          ←   API gotchas, business rules
+  blockers/           ←   Known issues and workarounds
+  transcripts/        ← Layer 3: NEVER loaded, grep-only archive
+    2026-04-01-magic-doc-feature.md
+    2026-03-28-auth-refactor.md
 ```
+
+**Layer rules:**
+| Layer | What | When loaded | Size limit |
+|-------|------|-------------|------------|
+| Index (`index.md`) | Pointers to topic files | Every turn (always in context) | ~150 chars per line, max 200 lines |
+| Topic files (`decisions/`, `patterns/`, etc.) | Actual knowledge | On demand, when relevant to current task | No hard limit, keep concise |
+| Transcripts (`transcripts/`) | Session logs, full context dumps | **Never loaded into context** — search with Grep only | No limit, append-only |
+
+**Why transcripts exist:** Past session context is valuable for "what did we try last week?" questions. But loading old session logs into context wastes tokens and adds noise. Transcripts are searchable via Grep but never read in full.
+
 - **Always** check `.memory/index.md` at session start
 - **Always** capture new decisions/patterns after significant work
-- `/spartan:context-save` now also updates `.memory/`
+- `/spartan:context-save` writes a transcript + updates `.memory/`
+- `/spartan:memory-consolidate` cleans up layers 1-2 (never deletes transcripts)
+- `/spartan:magic-doc` keeps documentation in sync with code changes
 
 ### Wave Execution
 ```

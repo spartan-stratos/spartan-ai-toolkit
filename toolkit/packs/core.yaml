@@ -12,6 +12,8 @@ commands:
   - onboard
   - daily
   - context-save
+  - magic-doc
+  - memory-consolidate
   - update
   - pr-ready
   - init-project

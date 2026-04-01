@@ -123,33 +123,9 @@ After all teammates report back, merge source lists, `TeamDelete()`, continue to
 **If Agent Teams is NOT enabled**, gather sequentially:
 
 ### Search strategy
-Use the `deep-research` skill. Run multiple search queries — not just one:
+Follow the `deep-research` skill process: scope, research, verify, synthesize. Run multiple search queries — direct, alternative framing, adjacent, and contrarian.
 
-1. **Direct query** — the obvious search
-2. **Alternative framing** — same question, different words
-3. **Adjacent query** — related topic that might have useful data
-4. **Contrarian query** — "why [topic] is wrong/failing/overhyped"
-
-### For each source found, track:
-
-```markdown
-**Source:** [title]
-**URL:** [link]
-**Credibility:** [1-5, where 5 = primary data/official, 1 = random blog]
-**Key data points:**
-- [fact 1]
-- [fact 2]
-**Notes:** [anything to flag — bias, outdated, contradicts other sources]
-```
-
-### Source credibility rules
-- **5 — Primary data:** Company filings, official announcements, published research with methodology
-- **4 — Expert source:** Industry analyst, domain expert blog, respected publication
-- **3 — Good secondary:** Tech publication, well-sourced article, community consensus
-- **2 — Weak secondary:** Random blog, social media opinion, anonymous source
-- **1 — Unreliable:** Unsourced claims, obvious bias, marketing material presented as research
-
-**Don't stop at 3 sources.** Aim for 8-15 depending on topic size. More sources = more signal.
+Aim for 8-15 sources. Track credibility (1-5) for each.
 
 **No gate here — continue to Analyze.** But if the data is thin, say so:
 > "I found limited data on this. Here's what exists: [X]. Want me to dig in a different direction?"
@@ -160,23 +136,7 @@ Use the `deep-research` skill. Run multiple search queries — not just one:
 
 **Goal:** Turn raw data into insight. Form a view.
 
-### Cross-reference
-- Do multiple sources agree? That's stronger signal.
-- Do sources contradict? Flag it — and say which you trust more and why.
-- Is there a pattern across sources that none of them call out directly?
-
-### Separate fact from opinion
-For every claim in your notes, tag it:
-- **FACT** — backed by data, multiple sources agree
-- **LIKELY** — strong signal but not confirmed
-- **OPINION** — one source's view, not proven
-- **CONTESTED** — sources disagree
-
-### Form a view
-Don't be neutral. After analyzing the data, take a position:
-- "The data says [X]."
-- "Most sources agree on [Y] but I think [Z] is more accurate because [evidence]."
-- "There's not enough data to be confident, but the best guess is [W]."
+Follow the `deep-research` skill's verify + synthesize steps: cross-reference sources, flag conflicts, separate fact from opinion, form a clear position.
 
 **GATE 2 — STOP and ask:**
 > "Here's what I found:
@@ -195,44 +155,7 @@ Don't be neutral. After analyzing the data, take a position:
 
 **Goal:** Structured, actionable document. No filler.
 
-### Report format
-
-```markdown
-# Research Report: [topic]
-Date: [YYYY-MM-DD]
-
-## Question
-[The specific, sharpened question from Stage 1]
-
-## Key Findings
-1. [Most important finding — one paragraph]
-2. [Second finding]
-3. [Third finding]
-
-## Analysis
-
-### [Section based on question type]
-[Deep analysis with data. Every claim linked to a source.]
-
-### What the data doesn't tell us
-[Gaps in the research. What you couldn't find or confirm.]
-
-### Surprises
-[Anything unexpected that changes the picture.]
-
-## Recommendation
-[Clear, actionable recommendation. Not "it depends."]
-[If the user needs to make a decision, pick a side and explain why.]
-
-## Sources
-| # | Source | Credibility | Key contribution |
-|---|--------|-------------|-----------------|
-| 1 | [name + URL] | [1-5] | [what it provided] |
-| 2 | ... | ... | ... |
-
-## Methodology
-[What you searched for, how many sources reviewed, what was excluded and why]
-```
+Use the report structure from the `deep-research` skill: TL;DR, Background, Key Findings (sourced), Analysis, Open Questions, Sources.
 
 ### Save the report
 If a project folder exists → save to `02-research/research-[topic-slug]-YYYY-MM-DD.md`
