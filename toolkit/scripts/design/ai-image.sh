@@ -36,6 +36,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 for env_file in ".spartan/ai.env" ".env" "$HOME/.spartan/ai.env"; do
   if [ -f "$env_file" ]; then
     set -a
+    # shellcheck source=/dev/null
     source "$env_file"
     set +a
     break
