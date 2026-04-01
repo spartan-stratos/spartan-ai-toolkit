@@ -118,7 +118,7 @@ if (showHelp) {
     --format=NAME   Output format: agents-md (exports AGENTS.md for cross-tool use)
     --all           Install all packs
     --global        Install to home dir (default for claude-code/codex)
-    --local         Install to current project dir
+    --local         Install to current project's .claude/ dir (won't touch root CLAUDE.md)
     --uninstall     Remove all Spartan files (use with --local or --global)
     --help          Show this help
 
@@ -162,11 +162,11 @@ async function uninstall() {
 
   if (agent === 'claude-code') {
     base = mode === 'global' ? join(home, '.claude') : join(cwd, '.claude');
-    claudeMdPath = mode === 'global' ? join(home, '.claude', 'CLAUDE.md') : join(cwd, 'CLAUDE.md');
+    claudeMdPath = join(base, 'CLAUDE.md');
     configDir = join(cwd, '.spartan');
   } else if (agent === 'codex') {
     base = mode === 'global' ? join(home, '.codex') : join(cwd, '.codex');
-    claudeMdPath = mode === 'global' ? join(home, '.codex', 'CLAUDE.md') : join(cwd, 'CLAUDE.md');
+    claudeMdPath = join(base, 'CLAUDE.md');
     configDir = join(cwd, '.spartan');
   } else {
     // cursor, windsurf, copilot
@@ -288,7 +288,7 @@ function getTargets() {
       rules:     join(base, 'rules'),
       skills:    join(base, 'skills'),
       agents:    join(base, 'agents'),
-      claudeMd:  mode === 'global' ? join(home, '.claude', 'CLAUDE.md') : join(cwd, 'CLAUDE.md'),
+      claudeMd:  join(base, 'CLAUDE.md'),
       packsFile: join(base, '.spartan-packs'),
       versionFile: join(base, '.spartan-version'),
     };
@@ -303,7 +303,7 @@ function getTargets() {
       rules:     join(base, 'rules'),
       skills:    join(base, 'skills'),
       agents:    join(base, 'agents'),
-      claudeMd:  mode === 'global' ? join(home, '.codex', 'CLAUDE.md') : join(cwd, 'CLAUDE.md'),
+      claudeMd:  join(base, 'CLAUDE.md'),
       packsFile: join(base, '.spartan-packs'),
       versionFile: join(base, '.spartan-version'),
     };
@@ -512,13 +512,22 @@ async function installFull() {
   }
   console.log('');
 
-  // 1) Assemble & install CLAUDE.md
+  // 1) Assemble & install CLAUDE.md (always into .claude/CLAUDE.md, never project root)
   console.log(`${blue('[1/6]')} ${bold('Assembling CLAUDE.md...')}`);
+
+  // Warn if project already has a root CLAUDE.md — we don't touch it
+  if (mode === 'local') {
+    const rootClaudeMd = join(process.cwd(), 'CLAUDE.md');
+    if (existsSync(rootClaudeMd)) {
+      console.log(`  ${yellow('!')} Project root CLAUDE.md found — leaving it untouched`);
+      console.log(`  ${dim('  Spartan writes to .claude/CLAUDE.md (both are loaded by Claude Code)')}`);
+    }
+  }
 
   if (existsSync(targets.claudeMd)) {
     const backupPath = `${targets.claudeMd}.${Date.now()}.bak`;
     copyFile(targets.claudeMd, backupPath);
-    console.log(`  ${dim('Backed up existing CLAUDE.md')}`);
+    console.log(`  ${dim('Backed up existing .claude/CLAUDE.md')}`);
   }
 
   const assembled = assembleCLAUDEmd(SRC.claudeMd, selectedPacks, PACKS);
@@ -526,7 +535,7 @@ async function installFull() {
   writeFileSync(targets.claudeMd, assembled, 'utf-8');
 
   const sectionCount = 2 + 1 + gatherItems(selectedPacks, 'claudeSections').length;
-  console.log(`  ${green('+')} CLAUDE.md assembled (${sectionCount} sections)\n`);
+  console.log(`  ${green('+')} .claude/CLAUDE.md assembled (${sectionCount} sections)\n`);
 
   // 2) Commands
   console.log(`${blue('[2/6]')} ${bold('Installing commands...')}`);
