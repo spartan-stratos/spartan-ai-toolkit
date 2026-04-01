@@ -27,6 +27,17 @@
 | **Standard** | research → define → prototype → test → handoff | 1-3 days | Real feature with users |
 | **Full** | All 7 phases | 1-3 weeks | New product, major redesign |
 
+### AI Asset Generation (Optional)
+
+When configured with a Gemini API key, the design workflow can:
+- Call Gemini CLI for layout/flow/component brainstorming
+- Generate real images (illustrations, icons, hero images) for prototypes
+- Build HTML prototypes with generated assets
+- Preview at mobile/tablet/desktop sizes
+
+**Setup:** Add `GEMINI_API_KEY=your-key` to `.spartan/ai.env`, then `pip install google-genai Pillow`.
+See `.planning/design-config.md` → "AI Asset Generation" section for full setup.
+
 ### Design Artifacts Location
 
 ```
@@ -36,6 +47,9 @@
 ├── ideation/          ← Ideas, user flows
 ├── system/            ← Design tokens, component inventory
 └── screens/           ← Per-feature screen designs
+    └── {feature}/
+        ├── assets/    ← AI-generated images (when configured)
+        └── prototype.html  ← HTML prototype with real assets
 ```
 
 ### Design Token Enforcement

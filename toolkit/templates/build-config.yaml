@@ -42,3 +42,11 @@ prompts:
   # ship: |
   #   PR title must start with the Jira ticket number.
   #   Add "Tested on staging" to the test plan if it touches payments.
+
+# AI-powered design asset generation (optional)
+# When configured, /spartan:build design stage generates real images for prototypes.
+# ai:
+#   enabled: true
+#   provider: gemini
+#   api-key-env: GEMINI_API_KEY        # env var name (never store the key directly)
+#   image-model: gemini-2.0-flash-preview-image-generation

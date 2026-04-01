@@ -155,13 +155,43 @@ If `.spartan/build.yaml` has `prompts.spec`, apply now.
 
 Skip for pure backend. Check:
 ```bash
-ls .planning/designs/*.md 2>/dev/null
+ls .planning/designs/*.md .planning/design/screens/*.md 2>/dev/null
+
+# Check if AI asset generation is available
+SCRIPTS_DIR=""
+for dir in "$HOME/.claude/scripts/design" ".claude/scripts/design"; do
+  [ -d "$dir" ] && SCRIPTS_DIR="$dir" && break
+done
+AI_KEY_FOUND=""
+for env_file in ".spartan/ai.env" ".env" "$HOME/.spartan/ai.env"; do
+  [ -f "$env_file" ] && grep -q "GEMINI_API_KEY" "$env_file" 2>/dev/null && AI_KEY_FOUND="yes" && break
+done
+echo "AI_DESIGN: scripts=${SCRIPTS_DIR:-none} key=${AI_KEY_FOUND:-none}"
 ```
 
 If no design and feature has UI work, ask:
+
+**If AI scripts + key are configured:**
+> - **A) AI Design** — run full design workflow with AI brainstorming + asset generation + design-critic review
+> - **B) Quick Design** — design as I build (no AI assets, just specs)
+> - **C) I have Figma** — point me to them
+
+**If AI is NOT configured:**
 > - **A) Yes** — run design workflow with design-critic agent
 > - **B) Skip** — design as I build (fine for simple UI)
 > - **C) I have Figma** — point me to them
+
+**If user picks AI Design (A with AI):**
+
+1. Spawn the `ai-designer` agent with the feature spec and design-config.md
+2. AI designer calls Gemini for layout/flow/components direction
+3. AI designer generates assets using `ai-image.sh`
+4. AI designer builds prototype HTML with real assets
+5. Spawn `design-critic` to review — loop until both accept
+6. Clean up preview screenshots
+7. Save design doc + prototype + assets to `.planning/design/screens/{feature}/`
+
+This gives you a complete visual prototype with real generated images before writing any code.
 
 **Always ask for frontend work.** Only skip silently for pure data changes (no new screens/components/modals).
 
