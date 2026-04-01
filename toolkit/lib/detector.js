@@ -5,7 +5,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 // Packs that are "coming soon" — detect but don't auto-select
-const COMING_SOON = new Set(['backend-nodejs', 'backend-python']);
+const COMING_SOON = new Set(['backend-nodejs']);
 
 // Skip these directories when scanning 1 level deep
 const SKIP_DIRS = new Set([
