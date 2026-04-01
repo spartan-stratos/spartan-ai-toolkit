@@ -2,7 +2,6 @@
 name: spartan:ops-oncall-log
 description: Create on-call log — pull alerts from monitoring, write structured summary to wiki
 argument-hint: "[date range, e.g. 'Mar 21 - Mar 28' or 'today']"
-preamble-tier: 3
 ---
 
 # On-call Log: {{ args[0] | default: "current period" }}

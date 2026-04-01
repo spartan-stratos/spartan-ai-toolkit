@@ -2,7 +2,6 @@
 name: spartan:tf-scaffold
 description: Scaffold service-level Terraform with live/, modules/, envs/ structure and CI/CD
 argument-hint: "[service-name]"
-preamble-tier: 3
 ---
 @rules/infrastructure/STRUCTURE.md
 @rules/infrastructure/NAMING.md

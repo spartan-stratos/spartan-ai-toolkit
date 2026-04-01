@@ -2,7 +2,6 @@
 name: spartan:init-rules
 description: Set up configurable rules — interactive wizard that generates .spartan/config.yaml
 argument-hint: "[optional: profile name like go-standard or python-fastapi]"
-preamble-tier: 3
 ---
 
 # Init Rules: {{ args[0] | default: "interactive setup" }}

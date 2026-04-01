@@ -2,7 +2,6 @@
 name: spartan:tf-module
 description: Create or extend a Terraform module with proper interface, docs, and examples
 argument-hint: "[module-name]"
-preamble-tier: 3
 ---
 @rules/infrastructure/MODULES.md
 @rules/infrastructure/NAMING.md

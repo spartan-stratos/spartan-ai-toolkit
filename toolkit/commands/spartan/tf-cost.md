@@ -2,7 +2,6 @@
 name: spartan:tf-cost
 description: Cost estimation guidance — sizing recommendations, common patterns, optimization tips
 argument-hint: "[optional: resource-type]"
-preamble-tier: 2
 ---
 @rules/infrastructure/STRUCTURE.md
 @rules/infrastructure/MODULES.md

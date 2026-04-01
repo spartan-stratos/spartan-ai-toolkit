@@ -2,7 +2,6 @@
 name: spartan:build
 description: "Build a new feature end-to-end — backend, frontend, or full-stack with auto-detection"
 argument-hint: "[backend|frontend] [feature description]"
-preamble-tier: 4
 ---
 
 # Build: {{ args[0] | default: "a new feature" }}

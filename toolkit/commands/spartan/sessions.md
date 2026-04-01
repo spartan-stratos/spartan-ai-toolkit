@@ -2,7 +2,6 @@
 name: spartan:sessions
 description: View and manage active Claude Code sessions. Shows which branches and tasks are running across terminal windows.
 argument-hint: "[list | clean | ground]"
-preamble-tier: 1
 ---
 
 # Sessions: {{ args[0] | default: "list" }}

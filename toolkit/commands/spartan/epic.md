@@ -2,7 +2,6 @@
 name: spartan:epic
 description: Define an epic — break big work into ordered features with specs and plans
 argument-hint: "[epic name]"
-preamble-tier: 3
 ---
 
 # Epic: {{ args[0] | default: "unnamed epic" }}

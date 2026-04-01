@@ -2,7 +2,6 @@
 name: spartan:scan-rules
 description: Scan your codebase and auto-generate rules from patterns it finds
 argument-hint: "[optional: directory to scan]"
-preamble-tier: 3
 ---
 
 # Scan Rules: {{ args[0] | default: "current project" }}

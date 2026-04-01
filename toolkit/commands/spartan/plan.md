@@ -2,7 +2,6 @@
 name: spartan:plan
 description: Write an implementation plan — reads spec, designs architecture, breaks into tasks, runs Gate 2
 argument-hint: "[feature name]"
-preamble-tier: 3
 ---
 
 # Plan: {{ args[0] | default: "unnamed feature" }}

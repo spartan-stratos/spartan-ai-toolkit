@@ -2,7 +2,6 @@
 name: spartan:tf-security
 description: Security audit across IAM, networking, encryption, secrets, access control, and compliance
 argument-hint: "[optional: focus-area]"
-preamble-tier: 3
 ---
 @rules/infrastructure/SECURITY.md
 

@@ -2,7 +2,6 @@
 name: spartan:spec
 description: Write a feature spec — interactive Q&A, saves to .planning/specs/, runs Gate 1
 argument-hint: "[feature name]"
-preamble-tier: 3
 ---
 
 # Spec: {{ args[0] | default: "unnamed feature" }}

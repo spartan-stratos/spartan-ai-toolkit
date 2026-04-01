@@ -2,7 +2,6 @@
 name: spartan:web-to-prd
 description: Scan a live web app, extract all features, generate PRD with epics/stories/tasks, export to Notion
 argument-hint: "[URL of the web app to scan]"
-preamble-tier: 3
 ---
 
 # Web-to-PRD: {{ args[0] | default: "https://example.com" }}

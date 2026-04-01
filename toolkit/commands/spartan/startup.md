@@ -2,7 +2,6 @@
 name: spartan:startup
 description: "Full startup pipeline: brainstorm, validate, research, pitch, outreach — pauses at every gate"
 argument-hint: "[theme or problem space]"
-preamble-tier: 4
 ---
 
 # Startup: {{ args[0] | default: "new idea" }}

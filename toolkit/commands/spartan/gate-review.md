@@ -2,7 +2,6 @@
 name: spartan:gate-review
 description: Dual-agent review — builder presents work, reviewer evaluates, both must accept
 argument-hint: "[phase number or 'current']"
-preamble-tier: 3
 ---
 
 # Gate Review: Phase {{ args[0] | default: "current" }}

@@ -2,7 +2,6 @@
 name: spartan:tf-review
 description: PR review for Terraform changes — 8-stage checklist covering structure, security, naming, and state safety
 argument-hint: "[optional: branch or PR]"
-preamble-tier: 3
 ---
 @rules/infrastructure/STRUCTURE.md
 @rules/infrastructure/MODULES.md

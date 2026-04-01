@@ -2,7 +2,6 @@
 name: spartan:onboard
 description: "Understand a new codebase — scan, map architecture, set up rules, and get ready to build"
 argument-hint: ""
-preamble-tier: 4
 ---
 
 # Onboard to This Codebase

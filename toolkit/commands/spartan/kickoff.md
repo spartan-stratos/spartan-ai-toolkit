@@ -2,7 +2,6 @@
 name: spartan:kickoff
 description: "Start a new idea: create project folder, brainstorm, then validate top picks (Stages 1-2)"
 argument-hint: "[theme or problem space]"
-preamble-tier: 3
 ---
 
 # Kickoff: {{ args[0] | default: "new idea" }}

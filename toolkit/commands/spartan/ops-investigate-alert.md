@@ -2,7 +2,6 @@
 name: spartan:ops-investigate-alert
 description: Investigate a monitoring alert end-to-end — metrics, logs, traces, code changes, root cause hypothesis
 argument-hint: "<alert name or monitoring URL>"
-preamble-tier: 3
 ---
 
 # Investigate Alert: {{ args[0] | default: "unknown alert" }}

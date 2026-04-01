@@ -2,7 +2,6 @@
 name: spartan:contribute
 description: Toggle contributor mode — Claude rates its own skill experience (0-10) after each command and files improvement reports to ~/.spartan/contributor-logs/. Opt-in only.
 argument-hint: "[on | off | reports]"
-preamble-tier: 2
 ---
 
 # Contributor Mode: {{ args[0] | default: "on" }}

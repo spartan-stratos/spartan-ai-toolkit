@@ -2,7 +2,6 @@
 name: spartan:tf-drift
 description: Detect and categorize infrastructure drift — benign vs concerning changes
 argument-hint: "[environment]"
-preamble-tier: 2
 ---
 @rules/infrastructure/STATE_AND_BACKEND.md
 

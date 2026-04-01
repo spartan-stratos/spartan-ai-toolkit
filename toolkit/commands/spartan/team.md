@@ -2,7 +2,6 @@
 name: spartan:team
 description: Manage Claude Code Agent Teams — coordinate multi-agent work with shared tasks, messaging, and parallel execution. Bridges wave-based planning with native agent teams.
 argument-hint: "[create | status | wave | review | research | build | clean]"
-preamble-tier: 3
 ---
 
 # Agent Teams: {{ args[0] | default: "create" }}

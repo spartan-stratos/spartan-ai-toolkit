@@ -2,7 +2,6 @@
 name: spartan:debug
 description: "Find and fix a bug end-to-end — structured investigation, root cause, test-first fix, and PR"
 argument-hint: "[describe the symptom or error]"
-preamble-tier: 3
 ---
 
 # Debug: {{ args[0] | default: "a bug" }}

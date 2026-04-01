@@ -2,7 +2,6 @@
 name: spartan:tf-deploy
 description: Deployment checklist — pre-deploy verification, apply, post-deploy health checks
 argument-hint: "[environment]"
-preamble-tier: 3
 ---
 @rules/infrastructure/STATE_AND_BACKEND.md
 

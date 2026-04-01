@@ -2,7 +2,6 @@
 name: spartan:lint-rules
 description: Validate your .spartan/config.yaml and rule files — check format, paths, and completeness
 argument-hint: ""
-preamble-tier: 2
 ---
 
 # Lint Rules

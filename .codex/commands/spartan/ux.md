@@ -2,7 +2,6 @@
 name: spartan:ux
 description: "UX design workflow — research, define, ideate, design system, prototype, test, handoff, QA"
 argument-hint: "[research|define|ideate|system|prototype|test|handoff|qa|audit]"
-preamble-tier: 4
 ---
 
 # UX: {{ args[0] | default: "smart router" }}

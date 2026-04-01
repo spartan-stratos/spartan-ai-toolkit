@@ -2,7 +2,6 @@
 name: spartan:tf-plan
 description: Guided terraform plan workflow — init, plan, review output, flag destructive changes
 argument-hint: "[environment]"
-preamble-tier: 2
 ---
 @rules/infrastructure/STATE_AND_BACKEND.md
 
