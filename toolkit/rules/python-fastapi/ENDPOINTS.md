@@ -2,7 +2,7 @@
 
 ## Layered Architecture
 
-```
+```text
 Router (APIRouter)  →  Service  →  Repository  →  Database
       ↓                  ↓            ↓
   Depends()        Business logic  SQLAlchemy
@@ -19,7 +19,7 @@ Router (APIRouter)  →  Service  →  Repository  →  Database
 
 ```python
 from fastapi import APIRouter, Depends, Query, status
-from src.items.schemas import ItemCreate, ItemResponse, ItemListResponse
+from src.items.schemas import ItemCreate, ItemUpdate, ItemResponse, ItemListResponse
 from src.items.service import ItemService, get_item_service
 
 router = APIRouter(prefix="/items", tags=["items"])

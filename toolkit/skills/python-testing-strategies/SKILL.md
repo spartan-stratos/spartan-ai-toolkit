@@ -14,7 +14,7 @@ allowed_tools:
 
 ## Setup (CRITICAL)
 
-`asyncio_mode = "auto"` in `pyproject.toml` is required. Without it, async tests silently fail.
+Set `asyncio_mode = "auto"` in `pyproject.toml` to auto-detect async tests without markers. (The default "strict" mode also works if you mark tests with `@pytest.mark.asyncio`.)
 
 > See examples.md for the complete conftest.py and pyproject.toml setup.
 

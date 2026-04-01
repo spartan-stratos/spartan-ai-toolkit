@@ -4,7 +4,7 @@
 
 Pydantic schemas (validation/serialization) and SQLAlchemy models (database) are different files, different responsibilities.
 
-```
+```text
 src/items/
 ├── schemas.py    # Pydantic — request/response shapes
 ├── models.py     # SQLAlchemy — database tables

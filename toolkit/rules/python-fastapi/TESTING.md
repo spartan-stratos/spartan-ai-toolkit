@@ -72,6 +72,7 @@ async def test_get_item(client: AsyncClient):
     assert response.json()["name"] == "Test"
 
 async def test_get_item_not_found(client: AsyncClient):
+    from uuid import uuid4
     response = await client.get(f"/api/v1/items/item?id={uuid4()}")
     assert response.status_code == 404
 

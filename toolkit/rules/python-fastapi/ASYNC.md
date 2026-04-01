@@ -113,7 +113,7 @@ async def fetch_all(ids: list[UUID]) -> list[dict]:
 ```python
 from datetime import datetime, UTC
 
-# CORRECT — Python 3.12+
+# CORRECT — Python 3.11+
 now = datetime.now(UTC)
 
 # WRONG — deprecated

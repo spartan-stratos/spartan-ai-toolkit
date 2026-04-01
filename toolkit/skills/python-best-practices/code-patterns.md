@@ -56,6 +56,7 @@ settings = Settings()
 
 ```python
 # src/database.py
+from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from src.config import settings
