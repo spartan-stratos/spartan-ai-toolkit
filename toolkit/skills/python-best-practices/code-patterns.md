@@ -2,7 +2,7 @@
 
 ## Project Structure
 
-```
+```text
 my-api/
 ├── pyproject.toml
 ├── alembic/                    # Database migrations
@@ -242,6 +242,7 @@ from src.items.router import router as items_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # DEV ONLY — use Alembic migrations in production: `alembic upgrade head`
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
