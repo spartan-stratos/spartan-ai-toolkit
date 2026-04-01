@@ -46,6 +46,7 @@ for (const name of PACK_ORDER) {
   lines.push(`PACK_RULES_${v}="${(p.rules || []).join(' ')}"`);
   lines.push(`PACK_SKILLS_${v}="${(p.skills || []).join(' ')}"`);
   lines.push(`PACK_AGENTS_${v}="${(p.agents || []).join(' ')}"`);
+  lines.push(`PACK_SCRIPTS_${v}="${(p.scripts || []).join(' ')}"`);
   lines.push(`PACK_CLAUDE_SECTIONS_${v}="${(p.claudeSections || []).join(' ')}"`);
   lines.push('');
 }

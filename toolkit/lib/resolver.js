@@ -135,6 +135,7 @@ export function toPacks(manifests) {
       rules: m.rules || [],
       skills: m.skills || [],
       agents: m.agents || [],
+      scripts: m.scripts || [],
       claudeSections: m['claude-sections'] || [],
     };
   }
@@ -219,6 +220,14 @@ export function validatePack(manifest, packDir, builtinNames) {
       const agentFile = join(packDir, 'agents', agent);
       if (!existsSync(agentFile)) {
         warnings.push(`Agent file not found: agents/${agent}`);
+      }
+    }
+  }
+  if (manifest.scripts) {
+    for (const script of manifest.scripts) {
+      const scriptFile = join(packDir, 'scripts', script);
+      if (!existsSync(scriptFile)) {
+        warnings.push(`Script file not found: scripts/${script}`);
       }
     }
   }

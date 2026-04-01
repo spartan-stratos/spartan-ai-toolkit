@@ -1,5 +1,5 @@
 name: ux-design
-description: "UX design workflow — research, define, ideate, design system, prototype, test"
+description: "UX design workflow — research, define, ideate, design system, prototype, test, AI asset generation"
 category: Design
 priority: 25
 hidden: false
@@ -13,9 +13,17 @@ skills:
 
 agents:
   - design-critic.md
+  - ai-designer.md
 
 rules:
   - ux-design/DESIGN_PROCESS.md
+
+scripts:
+  - design/ai-design.sh
+  - design/ai-image.sh
+  - design/ai-image.py
+  - design/design-preview.mjs
+  - design/design-cleanup.sh
 
 claude-sections:
   - 25-ux-design.md

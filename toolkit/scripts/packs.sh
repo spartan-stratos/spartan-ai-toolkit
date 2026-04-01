@@ -12,6 +12,7 @@ PACK_COMMANDS_core="spec plan build debug onboard daily context-save update pr-r
 PACK_RULES_core="core/NAMING_CONVENTIONS.md core/TIMEZONE.md core/SKILL_AUTHORING.md"
 PACK_SKILLS_core=""
 PACK_AGENTS_core="phase-reviewer.md"
+PACK_SCRIPTS_core=""
 PACK_CLAUDE_SECTIONS_core=""
 
 PACK_DESC_database="Database patterns, migrations, Exposed ORM"
@@ -22,6 +23,7 @@ PACK_COMMANDS_database="migration"
 PACK_RULES_database="database/SCHEMA.md database/ORM_AND_REPO.md database/TRANSACTIONS.md"
 PACK_SKILLS_database="database-patterns database-table-creator"
 PACK_AGENTS_database=""
+PACK_SCRIPTS_database=""
 PACK_CLAUDE_SECTIONS_database="05-database.md"
 
 PACK_DESC_shared_backend="Shared backend architecture concepts"
@@ -32,6 +34,7 @@ PACK_COMMANDS_shared_backend=""
 PACK_RULES_shared_backend="shared-backend/ARCHITECTURE.md"
 PACK_SKILLS_shared_backend=""
 PACK_AGENTS_shared_backend=""
+PACK_SCRIPTS_shared_backend=""
 PACK_CLAUDE_SECTIONS_shared_backend=""
 
 PACK_DESC_backend_micronaut="Kotlin + Micronaut backend"
@@ -42,6 +45,7 @@ PACK_COMMANDS_backend_micronaut="kotlin-service review testcontainer"
 PACK_RULES_backend_micronaut="backend-micronaut/KOTLIN.md backend-micronaut/CONTROLLERS.md backend-micronaut/SERVICES_AND_BEANS.md backend-micronaut/API_DESIGN.md backend-micronaut/RETROFIT_PLACEMENT.md backend-micronaut/BATCH_PROCESSING.md"
 PACK_SKILLS_backend_micronaut="api-endpoint-creator backend-api-design kotlin-best-practices testing-strategies security-checklist"
 PACK_AGENTS_backend_micronaut="micronaut-backend-expert.md solution-architect-cto.md"
+PACK_SCRIPTS_backend_micronaut=""
 PACK_CLAUDE_SECTIONS_backend_micronaut="11-backend-micronaut.md"
 
 PACK_DESC_backend_nodejs="Node.js backend (coming soon)"
@@ -52,6 +56,7 @@ PACK_COMMANDS_backend_nodejs=""
 PACK_RULES_backend_nodejs=""
 PACK_SKILLS_backend_nodejs=""
 PACK_AGENTS_backend_nodejs=""
+PACK_SCRIPTS_backend_nodejs=""
 PACK_CLAUDE_SECTIONS_backend_nodejs=""
 
 PACK_DESC_backend_python="Python backend (coming soon)"
@@ -62,6 +67,7 @@ PACK_COMMANDS_backend_python=""
 PACK_RULES_backend_python=""
 PACK_SKILLS_backend_python=""
 PACK_AGENTS_backend_python=""
+PACK_SCRIPTS_backend_python=""
 PACK_CLAUDE_SECTIONS_backend_python=""
 
 PACK_DESC_frontend_react="React + Next.js frontend"
@@ -72,16 +78,18 @@ PACK_COMMANDS_frontend_react="next-app next-feature fe-review figma-to-code e2e 
 PACK_RULES_frontend_react="frontend-react/FRONTEND.md"
 PACK_SKILLS_frontend_react="browser-qa"
 PACK_AGENTS_frontend_react=""
+PACK_SCRIPTS_frontend_react=""
 PACK_CLAUDE_SECTIONS_frontend_react="20-frontend-react.md"
 
-PACK_DESC_ux_design="UX design workflow — research, define, ideate, design system, prototype, test"
+PACK_DESC_ux_design="UX design workflow — research, define, ideate, design system, prototype, test, AI asset generation"
 PACK_HIDDEN_ux_design=false
 PACK_COMING_SOON_ux_design=false
 PACK_DEPENDS_ux_design=""
 PACK_COMMANDS_ux_design="ux"
 PACK_RULES_ux_design="ux-design/DESIGN_PROCESS.md"
 PACK_SKILLS_ux_design="design-intelligence design-workflow"
-PACK_AGENTS_ux_design="design-critic.md"
+PACK_AGENTS_ux_design="design-critic.md ai-designer.md"
+PACK_SCRIPTS_ux_design="design/ai-design.sh design/ai-image.sh design/ai-image.py design/design-preview.mjs design/design-cleanup.sh"
 PACK_CLAUDE_SECTIONS_ux_design="25-ux-design.md"
 
 PACK_DESC_infrastructure="Terraform + AWS infrastructure"
@@ -92,6 +100,7 @@ PACK_COMMANDS_infrastructure="tf-scaffold tf-module tf-review tf-plan tf-deploy 
 PACK_RULES_infrastructure="infrastructure/STRUCTURE.md infrastructure/MODULES.md infrastructure/STATE_AND_BACKEND.md infrastructure/NAMING.md infrastructure/SECURITY.md infrastructure/VARIABLES.md infrastructure/PROVIDERS.md"
 PACK_SKILLS_infrastructure="terraform-service-scaffold terraform-module-creator terraform-review terraform-security-audit terraform-best-practices"
 PACK_AGENTS_infrastructure="infrastructure-expert.md sre-architect.md"
+PACK_SCRIPTS_infrastructure=""
 PACK_CLAUDE_SECTIONS_infrastructure="30-infrastructure.md"
 
 PACK_DESC_project_mgmt="Large multi-day projects (GSD)"
@@ -102,6 +111,7 @@ PACK_COMMANDS_project_mgmt="epic project phase workstreams gsd-upgrade forensics
 PACK_RULES_project_mgmt=""
 PACK_SKILLS_project_mgmt=""
 PACK_AGENTS_project_mgmt="team-coordinator.md"
+PACK_SCRIPTS_project_mgmt=""
 PACK_CLAUDE_SECTIONS_project_mgmt="30-project-mgmt.md"
 
 PACK_DESC_product="Product thinking before building"
@@ -112,6 +122,7 @@ PACK_COMMANDS_product="think validate teardown interview lean-canvas brainstorm 
 PACK_RULES_product=""
 PACK_SKILLS_product="web-to-prd"
 PACK_AGENTS_product=""
+PACK_SCRIPTS_product=""
 PACK_CLAUDE_SECTIONS_product="40-product.md"
 
 PACK_DESC_ops="Deploy & infrastructure"
@@ -122,6 +133,7 @@ PACK_COMMANDS_ops="deploy env-setup ops-investigate-alert ops-oncall-log"
 PACK_RULES_ops=""
 PACK_SKILLS_ops="ops-investigate-alert ops-oncall-log"
 PACK_AGENTS_ops=""
+PACK_SCRIPTS_ops=""
 PACK_CLAUDE_SECTIONS_ops="50-ops.md"
 
 PACK_DESC_research="Startup research pipeline — from idea to investor-ready"
@@ -132,6 +144,7 @@ PACK_COMMANDS_research="startup kickoff deep-dive fundraise research pitch outre
 PACK_RULES_research=""
 PACK_SKILLS_research="brainstorm idea-validation market-research competitive-teardown deep-research investor-materials investor-outreach article-writing content-engine startup-pipeline"
 PACK_AGENTS_research="idea-killer.md research-planner.md"
+PACK_SCRIPTS_research=""
 PACK_CLAUDE_SECTIONS_research="60-research.md"
 
 # Helper: get pack variable by name

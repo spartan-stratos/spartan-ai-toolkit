@@ -95,6 +95,37 @@ Things that would make our app look wrong:
 
 ---
 
+## AI Asset Generation (Optional)
+
+Enable AI-powered image/illustration generation for prototypes and design docs.
+When configured, `/spartan:ux prototype` and `/spartan:build` design stage will generate real assets instead of using placeholders.
+
+- **Provider**: gemini
+- **API key env var**: `GEMINI_API_KEY` (set in `.spartan/ai.env` or as environment variable)
+- **Image model**: gemini-2.0-flash-preview-image-generation
+- **Asset output**: `.planning/design/screens/{feature}/assets/`
+
+### Setup
+
+1. Get a Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
+2. Create `.spartan/ai.env`:
+   ```
+   GEMINI_API_KEY=your-key-here
+   GEMINI_IMAGE_MODEL=gemini-2.0-flash-preview-image-generation
+   ```
+3. Install Python dependency: `pip install google-genai Pillow`
+4. (Optional) Install Gemini CLI for design brainstorming: [gemini-cli](https://github.com/google-gemini/gemini-cli)
+5. (Optional) For transparent backgrounds: `pip install rembg`
+
+### Asset Rules
+
+- ALL images in prototypes MUST be generated via `ai-image.sh` — no stock photos, no icon libraries
+- Every asset needs a brief (purpose, subject, colors, style, mood) before generation
+- Max 3 attempts per asset — if still bad, mark SKIP for manual replacement
+- Generated assets go in `assets/` subfolder next to the prototype HTML
+
+---
+
 ## Quick Reference
 
 | Question | Answer |
@@ -103,3 +134,4 @@ Things that would make our app look wrong:
 | Primary color? | [hex] |
 | Font? | [name] |
 | Token file? | [path] |
+| AI image gen? | [Yes / No — needs GEMINI_API_KEY] |

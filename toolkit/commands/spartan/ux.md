@@ -607,6 +607,57 @@ Use whatever exists. If nothing exists, ask the user to describe what screens th
 Load the `design-workflow` skill for anti-AI-generic rules. Apply these throughout.
 If the `design-intelligence` skill is available, load it for palette and typography reference.
 
+### Step 1.5: Check for AI asset generation (silent)
+
+```bash
+# Check if AI design scripts are available
+SCRIPTS_DIR=""
+for dir in "$HOME/.claude/scripts/design" ".claude/scripts/design"; do
+  [ -d "$dir" ] && SCRIPTS_DIR="$dir" && break
+done
+echo "AI_SCRIPTS: ${SCRIPTS_DIR:-NOT_FOUND}"
+
+# Check if API key is configured
+for env_file in ".spartan/ai.env" ".env" "$HOME/.spartan/ai.env"; do
+  [ -f "$env_file" ] && grep -q "GEMINI_API_KEY" "$env_file" 2>/dev/null && echo "AI_KEY: configured" && break
+done
+
+# Check if design-config has AI section
+grep -q "AI Asset Generation" .planning/design-config.md 2>/dev/null && echo "AI_CONFIG: yes"
+```
+
+**If AI scripts + API key are available**, this phase uses two extra capabilities:
+- **AI design brainstorming** — calls Gemini CLI for layout/flow/component ideas before you design screens
+- **AI asset generation** — generates real images (illustrations, icons, hero images) for prototypes instead of placeholders
+
+**If NOT available**, the phase works the same as before — just without AI-generated assets. This is fine for most projects.
+
+### Step 1.6: AI Design Direction (only if AI scripts available)
+
+If `AI_SCRIPTS` was found, get AI input before designing screens:
+
+```bash
+# Layout direction
+$SCRIPTS_DIR/ai-design.sh "layout" "Feature: {feature description from spec}. Users: {who}."
+
+# User flows
+$SCRIPTS_DIR/ai-design.sh "flow" "Feature: {feature description}. Include: happy path, error, empty, loading."
+
+# Component specs
+$SCRIPTS_DIR/ai-design.sh "components" "Feature: {feature description}. Layout context: {summary from layout call}."
+
+# Motion design
+$SCRIPTS_DIR/ai-design.sh "motion" "Feature: {feature description}. Key elements: {list from layout}."
+```
+
+**Take AI output and OVERRIDE visual choices with design-config.md values:**
+- Colors → Use the Color Palette from design-config.md
+- Fonts → Use the Fonts from design-config.md
+- Style → Use the Design Personality from design-config.md
+- Spacing/Radius → Use the Spacing & Radius from design-config.md
+
+AI is good at layout ideas and flow design. It's bad at picking colors and fonts — always use your project values.
+
 ### Step 2: Screen inventory
 
 List all screens needed. For each screen, note its states:
@@ -732,7 +783,56 @@ Run through these yourself:
 
 Fix anything that fails before calling the critic.
 
-### Step 7: Spawn design critic (Design Gate)
+### Step 7: Generate Assets (only if AI scripts available)
+
+If AI asset generation is configured, generate real images for the prototype. This runs in **two phases** — assets get approved before the prototype uses them.
+
+**Skip this step** if AI scripts are not available. In that case, use descriptive placeholders in designs and note them for manual creation.
+
+#### Phase A: Generate & Review Assets
+
+1. **List needed assets** from the wireframes: hero images, illustrations, icons, empty state graphics
+2. **Write an Asset Brief** for each image:
+   ```
+   Asset: {filename}
+   Purpose: {hero section? card illustration? empty state?}
+   Subject: {exactly what's in the image}
+   Color palette: {2-3 hex colors from project palette}
+   Style: {flat vector / minimal / isometric}
+   Mood: {match design-config personality}
+   Must NOT have: {things to avoid}
+   ```
+3. **Generate each asset:**
+   ```bash
+   $SCRIPTS_DIR/ai-image.sh "prompt from brief" .planning/design/screens/{feature}/assets/filename.png
+   # With style hint:
+   $SCRIPTS_DIR/ai-image.sh "prompt" ./path.png --style "flat, minimal"
+   # Match existing style:
+   $SCRIPTS_DIR/ai-image.sh "prompt" ./v2.png --reference ./v1.png
+   ```
+4. **Read each generated image** to self-check quality
+5. **Re-generate** any that look wrong (up to 3 attempts each, then mark SKIP)
+6. **Show asset list to user** (or critic) for review
+
+**FORBIDDEN:** Stock icons, placeholder URLs, Unsplash, external image URLs. All assets come from the script.
+
+#### Phase B: Build Prototype HTML (only if assets exist)
+
+If assets were generated, build an HTML prototype:
+- Use Tailwind CSS (CDN) with **exact project colors**
+- Reference assets with relative paths: `<img src="assets/hero.png" />`
+- Add all states (loading, empty, error)
+- Make it responsive (375px, 768px, 1440px)
+- Add hover/focus transitions and scroll reveal animations
+
+Save to: `.planning/design/screens/{feature-name}/prototype.html`
+
+Generate preview screenshots:
+```bash
+node $SCRIPTS_DIR/design-preview.mjs .planning/design/screens/{feature-name}/prototype.html
+```
+
+### Step 8: Spawn design critic (Design Gate)
 
 Spawn the `design-critic` agent as a subagent. Give it:
 
@@ -740,19 +840,21 @@ Spawn the `design-critic` agent as a subagent. Give it:
 2. **The design tokens** (if they exist)
 3. **The design-config** (if it exists)
 4. **The spec** (if it exists)
-5. **Your self-check results** from Step 6
+5. **Generated assets** (if any — critic should read each image)
+6. **Prototype screenshots** (if generated)
+7. **Your self-check results** from Step 6
 
 **Prompt for the critic:**
-> "Review these screen designs for the Design Gate. Screens: [content]. Tokens: [path or 'none']. Design-config: [path or 'none']. Spec: [path or 'none']. Check for: AI-generic patterns, brand compliance, missing states, responsive gaps, accessibility, visual hierarchy. Give your verdict: ACCEPT or NEEDS CHANGES."
+> "Review these screen designs for the Design Gate. Screens: [content]. Tokens: [path or 'none']. Design-config: [path or 'none']. Spec: [path or 'none']. {If assets: 'Generated assets at [paths] — read each image and check brand fit.'} Check for: AI-generic patterns, brand compliance, missing states, responsive gaps, accessibility, visual hierarchy. Give your verdict: ACCEPT or NEEDS CHANGES."
 
 ### Discussion
 
 - If critic says **ACCEPT** -> Design Gate passed
-- If critic says **NEEDS CHANGES** -> fix issues, re-submit
+- If critic says **NEEDS CHANGES** -> fix issues (including re-generating assets if flagged), re-submit
 - Max 3 rounds of back-and-forth
 - If still stuck after 3 rounds, ask the user to decide
 
-### Step 8: Save
+### Step 9: Save & Clean Up
 
 Save each screen to `.planning/design/screens/{{ args[1] | default: "feature-name" }}.md`.
 
@@ -764,9 +866,21 @@ Add metadata at the top:
 **Designer**: Claude (main agent)
 **Critic**: design-critic agent
 **Verdict**: PASSED
+**AI Assets**: [yes/no — list generated assets if any]
+```
+
+If screenshots were generated, clean them up:
+```bash
+$SCRIPTS_DIR/design-cleanup.sh .planning/design/screens/{{ args[1] | default: "feature-name" }}/
 ```
 
 > "Screens saved to `.planning/design/screens/` — Design Gate passed."
+>
+> {If AI assets were generated:}
+> "Generated assets at `.planning/design/screens/{feature}/assets/` — [N] images, [M] skipped."
+>
+> {If prototype HTML was built:}
+> "Prototype at `.planning/design/screens/{feature}/prototype.html`"
 >
 > **Next steps:**
 > - Ready to build? -> `/spartan:plan {{ args[1] | default: "" }}` then `/spartan:build frontend {{ args[1] | default: "" }}`

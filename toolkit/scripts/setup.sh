@@ -625,6 +625,44 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────
+# Step 9.5: Design Scripts (pack-filtered)
+# ─────────────────────────────────────────────────────────────
+SELECTED_SCRIPTS=$(get_selected_items "SCRIPTS")
+SCRIPTS_SRC_DIR="$TOOLKIT_ROOT/scripts"
+
+if [[ -n "$SELECTED_SCRIPTS" ]]; then
+  echo -e "${BLUE}[9.5/11]${NC} ${BOLD}Installing design scripts...${NC}"
+
+  if [[ "$MODE" == "global" ]]; then
+    SCRIPTS_DEST_DIR="$HOME/.claude/scripts"
+  else
+    SCRIPTS_DEST_DIR="$(pwd)/.claude/scripts"
+  fi
+
+  SCCOUNT=0
+
+  for script_file in $SELECTED_SCRIPTS; do
+    src_file="$SCRIPTS_SRC_DIR/$script_file"
+    dest_file="$SCRIPTS_DEST_DIR/$script_file"
+    [[ -f "$src_file" ]] || continue
+
+    mkdir -p "$(dirname "$dest_file")"
+    cp "$src_file" "$dest_file"
+    # Make shell scripts executable
+    case "$script_file" in *.sh) chmod +x "$dest_file" ;; esac
+    echo -e "  ${GREEN}✓${NC} ${script_file}"
+    SCCOUNT=$((SCCOUNT+1))
+  done
+
+  echo ""
+  echo -e "  Installed ${BOLD}${SCCOUNT} scripts${NC}"
+  echo ""
+else
+  echo -e "${BLUE}[9.5/11]${NC} ${BOLD}Scripts${NC} — ${DIM}no script packs selected, skipping${NC}"
+  echo ""
+fi
+
+# ─────────────────────────────────────────────────────────────
 # Step 10: Auto-save context hook
 # ─────────────────────────────────────────────────────────────
 echo -e "${BLUE}[10/11]${NC} ${BOLD}Installing auto-save context hook...${NC}"
