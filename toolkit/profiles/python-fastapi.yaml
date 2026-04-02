@@ -64,7 +64,8 @@ commands:
     frontend: ""
 
 skill-routing:
-  database-migration: database-patterns
-  backend-code: software-architecture
-  writing-tests: testing-strategies
+  # database-migration: python-database-patterns  # TODO: create Alembic + SQLAlchemy migration skill
+  backend-code: python-best-practices
+  writing-tests: python-testing-strategies
+  new-endpoint: python-api-endpoint-creator
   security: security-checklist
