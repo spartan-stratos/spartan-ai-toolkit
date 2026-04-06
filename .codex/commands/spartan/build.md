@@ -22,14 +22,14 @@ PARALLEL (multiple terminals — each gets its own worktree):
 
 ### Mandatory Stages
 
-| Stage | Can skip? |
-|-------|-----------|
-| 1 Spec | NO |
-| 2 Design | Only if pure data change (no UI) |
-| 3 Workspace + Plan | NO |
-| 4 Implement | NO |
-| 5 Review | **NEVER** — spawn review agent, never self-review |
-| 6 Ship | NO |
+| Stage | Can skip? | Agent Teams behavior |
+|-------|-----------|----------------------|
+| 1 Spec | NO | single session |
+| 2 Design | Only if pure data change (no UI) | single session |
+| 3 Workspace + Plan | NO | single session |
+| 4 Implement | NO | **MUST use `TeamCreate`** when `AGENT_TEAMS=on` |
+| 5 Review | **NEVER** — spawn review agent, never self-review | **MUST use parallel reviewer team** when `AGENT_TEAMS=on` |
+| 6 Ship | NO | single session + `TeamDelete` cleanup |
 
 **Auto mode:** Show output at each stage but don't pause for confirmation. Still stop for destructive actions and the 3 forcing questions.
 
@@ -53,11 +53,40 @@ echo "BRANCH: $_BRANCH"
 echo "PROJECT: $_PROJECT"
 cat .spartan/build.yaml 2>/dev/null || true
 cat .spartan/commands.yaml 2>/dev/null || true
+
+# Agent Teams mode detection (MUST run here, not later)
+_AT_ENV="${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
+_AT_CFG=$(grep -E "^agent-teams:" .spartan/build.yaml 2>/dev/null | awk '{print $2}' | tr -d '"' | tr -d "'")
+if [ "$_AT_CFG" = "force" ]; then
+  AGENT_TEAMS="on"; AGENT_TEAMS_SOURCE="build.yaml:force"
+elif [ "$_AT_CFG" = "off" ]; then
+  AGENT_TEAMS="off"; AGENT_TEAMS_SOURCE="build.yaml:off"
+elif [ "$_AT_ENV" = "1" ]; then
+  AGENT_TEAMS="on"; AGENT_TEAMS_SOURCE="env:CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1"
+else
+  AGENT_TEAMS="off"; AGENT_TEAMS_SOURCE="default"
+fi
+echo "AGENT_TEAMS: $AGENT_TEAMS ($AGENT_TEAMS_SOURCE)"
 ```
 
 If `SESSIONS` >= 3, start every response with: **[PROJECT / BRANCH]** Currently working on: [task]
 
 If `.spartan/commands.yaml` has `prompts.build`, apply those instructions alongside built-in ones.
+
+### Agent Teams Mode Gate (HARD GATE — do not skip)
+
+**Read `AGENT_TEAMS` from the preamble output above. This value is BINDING for the rest of this build.**
+
+| `AGENT_TEAMS` value | What you MUST do |
+|---------------------|------------------|
+| `on` | Stage 4 Implement MUST use `TeamCreate` + parallel teammates. Stage 5 Review MUST use a parallel reviewer team (quality + tests + security). `TeamDelete` in Stage 6. **No sequential fallback**, even for single-task builds — spawn a 1-teammate team if needed so the workflow stays uniform. |
+| `off` | Sequential execution. Stage 5 still spawns a single review agent (never skip). |
+
+**If `AGENT_TEAMS=on`, announce it to the user at the top of your first response:**
+
+> Agent Teams mode is **ON** (`$AGENT_TEAMS_SOURCE`). Implement and review stages will run as coordinated teams with `TeamCreate` / `TaskCreate` / `Agent(team_name=...)`. I will NOT fall back to sequential work.
+
+**Do NOT** ask the user whether to use teams. The flag is the decision. The only override is `.spartan/build.yaml` → `agent-teams: off`.
 
 ### Build Config (`.spartan/build.yaml`)
 
@@ -68,6 +97,7 @@ All fields optional:
 | `branch-prefix` | `"feature"` | Branch name: `[prefix]/[slug]` |
 | `max-review-rounds` | `3` | Max review-fix cycles before asking user |
 | `skip-stages` | `[]` | Stages to skip. Never `review`. |
+| `agent-teams` | `auto` | `auto` = follow `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` env. `force` = always use teams. `off` = never use teams (sequential only). |
 | `prompts.*` | — | Custom instructions per stage: `spec`, `plan`, `implement`, `review`, `ship` |
 
 ---
@@ -243,22 +273,43 @@ if [ "$MAIN_REPO" = "$CURRENT" ]; then echo "ERROR: In main repo, not a worktree
 
 **If ERROR → STOP. Go back to 3.1 and create workspace.**
 
-### Route: parallel or sequential
+### Route: team or sequential (decided by `AGENT_TEAMS` from preamble)
 
-```bash
-echo "${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-not_set}"
-```
+**Re-read `AGENT_TEAMS` from the preamble output. Do NOT re-check the env var here — trust the preamble value.**
 
-**Agent Teams enabled AND 2+ parallel tasks?** → Create team with `TeamCreate`. One teammate per parallel track:
-- Full-stack: backend-dev + frontend-dev
-- Backend: data-layer + api-layer
-- Frontend: components + pages
+#### If `AGENT_TEAMS=on` → MANDATORY team execution
 
-Frontend/UI teammates MUST get design doc path in their prompt.
+This is a hard rule. You MUST:
 
-After team completes → continue to Stage 5.
+1. **Call `TeamCreate`** with a descriptive team name:
+   ```
+   TeamCreate:
+     team_name: "build-{feature-slug}"
+     description: "Implementing: {feature name}"
+   ```
+2. **Create tasks via `TaskCreate`** — one per implementation unit from the plan. Set `addBlockedBy` for real dependencies (e.g., frontend task blocked by backend API task).
+3. **Spawn teammates via `Agent(team_name=..., name=...)`** — one per parallel track:
+   - Full-stack → `backend-dev` + `frontend-dev`
+   - Backend-only → `data-layer` + `api-layer` (split by layer when 3+ tasks; single teammate if 1-2 tasks)
+   - Frontend-only → `components` + `pages` (split when 3+ tasks; single teammate if 1-2 tasks)
+4. **Each teammate prompt MUST include:**
+   - The feature slug and WORKSPACE path
+   - File paths it owns (from the plan)
+   - Rules to load (e.g., `~/.claude/rules/backend-micronaut/`, `~/.claude/rules/frontend-react/`)
+   - "Follow TDD. Check `TaskList`, claim tasks, commit per task."
+   - **Frontend/UI teammates MUST receive the design doc path** (`.planning/designs/*.md`) and be told to read it before coding.
+5. **Use `isolation: "worktree"`** when two teammates could touch overlapping files.
+6. **Monitor via messages** — no polling. When all tasks reach `completed`, move to Stage 5.
+7. **Even for 1-task builds**: still use `TeamCreate` with a single teammate. Do NOT fall back to sequential — that defeats the whole point of team mode.
 
-**Otherwise → sequential execution:**
+If `TeamCreate` fails (flag not actually wired up, tool unavailable), **stop and tell the user**:
+> Agent Teams mode was requested but `TeamCreate` failed. Is the experimental flag actually enabled in your Claude Code runtime? Run `/spartan:team` to verify.
+
+Do NOT silently fall back to sequential.
+
+#### If `AGENT_TEAMS=off` → sequential execution
+
+No team tools. Proceed to TDD per task below.
 
 ### TDD per task
 
@@ -323,7 +374,59 @@ ls .planning/specs/*.md .planning/plans/*.md .planning/designs/*.md 2>/dev/null
 
 Classify changed files: `.kt/.java/.go/.py` = backend, `.tsx/.ts/.vue` = frontend, `.sql` = migration.
 
-### Spawn reviewer
+### Spawn reviewer — routed by `AGENT_TEAMS`
+
+**Re-read `AGENT_TEAMS` from the preamble. This decides single vs parallel review. It does NOT decide whether to review — review ALWAYS happens.**
+
+#### If `AGENT_TEAMS=on` → MANDATORY parallel reviewer team
+
+You MUST create a reviewer team. This is not a suggestion.
+
+```
+TeamCreate:
+  team_name: "review-{feature-slug}"
+  description: "Parallel review for {feature name}"
+```
+
+Then create 3 tasks (`TaskCreate`) and spawn 3 reviewer teammates in parallel:
+
+```
+Agent(
+  team_name: "review-{feature-slug}",
+  name: "quality-reviewer",
+  subagent_type: "phase-reviewer",
+  prompt: "Review correctness, stack conventions, architecture (stages 1, 2, 4).
+    Feature: {name}. Changed files: {list}.
+    Spec: {path}. Plan: {path}. Design: {path or 'none'}.
+    Rules: {config.rules.backend + config.rules.frontend + config.rules.shared}.
+    Per issue: file:line, what's wrong, rule, severity, fix.
+    End with: ACCEPT or NEEDS CHANGES."
+)
+
+Agent(
+  team_name: "review-{feature-slug}",
+  name: "test-reviewer",
+  subagent_type: "general-purpose",
+  prompt: "Review test coverage (stage 3). Feature: {name}. Changed files: {list}.
+    Check: tests exist, independent, edge cases, error paths, test quality.
+    End with: ACCEPT or NEEDS CHANGES."
+)
+
+Agent(
+  team_name: "review-{feature-slug}",
+  name: "security-reviewer",
+  subagent_type: "general-purpose",
+  prompt: "Review security (stage 6). Feature: {name}. Changed files: {list}.
+    Check: auth, input validation, data exposure, injection, secrets.
+    End with: ACCEPT or NEEDS CHANGES."
+)
+```
+
+**Verdict rule:** ALL THREE must return ACCEPT. If any returns NEEDS CHANGES → enter fix loop, re-run the whole team on the new diff.
+
+After final PASS → `TeamDelete` the review team (before Ship stage).
+
+#### If `AGENT_TEAMS=off` → single reviewer (still mandatory)
 
 ```
 Agent:
@@ -353,9 +456,7 @@ Agent:
     End with: PASS or NEEDS CHANGES + what's clean (always praise good code).
 ```
 
-**Agent Teams enabled?** → Split into 3 parallel reviewers: quality (stages 1-2,4), tests (stage 3), security (stage 6). All must PASS. `TeamDelete` after.
-
-If `.spartan/build.yaml` has `prompts.review`, inject into reviewer prompt.
+If `.spartan/build.yaml` has `prompts.review`, inject into reviewer prompt (single or team).
 
 ### Fix loop
 
@@ -368,6 +469,8 @@ If `.spartan/build.yaml` has `prompts.review`, inject into reviewer prompt.
 ## Stage 6: Ship
 
 If `.spartan/build.yaml` has `prompts.ship`, apply now.
+
+**If `AGENT_TEAMS=on`:** confirm you've run `TeamDelete` for both the build team (end of Stage 4) and the review team (end of Stage 5) before creating the PR. Orphan teams clutter `~/.claude/teams/`.
 
 Run `/spartan:pr-ready` approach: rebase onto main, final checks, create PR.
 
@@ -399,7 +502,7 @@ For each feature in epic with status `spec`/`planned`/`building`:
 - Missing design (with UI) → ask user: create now or skip?
 - Missing plan → generate inline
 
-Agent Teams enabled + 2+ features need plans → parallelize with one teammate per feature (`isolation: "worktree"`).
+**If `AGENT_TEAMS=on`** and 2+ features need plans → MUST parallelize with `TeamCreate` + one teammate per feature (`isolation: "worktree"`). Not optional.
 
 ### E.2: Create workspace + sort
 
@@ -409,9 +512,9 @@ Sort features by dependency: no-deps first (can run in parallel), then dependent
 
 ### E.3: Implement
 
-**Agent Teams enabled + 2+ independent features** → one teammate per feature. Frontend teammates MUST get design doc path. Wait for all, merge worktrees, run tests.
+**If `AGENT_TEAMS=on`** → MANDATORY team execution. Use `TeamCreate` with `team_name: "epic-{epic-slug}"`. Create one teammate per independent feature. Frontend teammates MUST get design doc path. Dependent features get `addBlockedBy` on the features they wait on. Wait for all tasks complete, merge worktrees, run tests. Do NOT fall back to sequential.
 
-**Sequential** → build each feature with TDD, update epic status → `done` after each.
+**If `AGENT_TEAMS=off`** → build each feature with TDD sequentially, update epic status → `done` after each.
 
 ### E.4: Verify
 
@@ -426,9 +529,10 @@ Run full test suite. Then continue to Stage 5 (Review) — one review for all fe
 - **Orchestrate everything.** Don't tell user to run separate commands — run them yourself.
 - **Fast path for small work** (1-4 tasks). Full path for big (5+).
 - **TDD by default.** One commit per task. Override only when test-first doesn't fit.
-- **Review is ALWAYS an agent. NEVER skip.** Fix until reviewer says PASS.
+- **Review is ALWAYS an agent. NEVER skip.** Fix until reviewer says PASS (or all team reviewers say ACCEPT).
 - **Design gate for frontend.** Any new component/screen/modal → ask. Pure data → skip.
 - **Full-stack = both layers.** Don't create PR with only backend done.
 - **Every build uses a worktree. NEVER `git checkout -b`.** Multiple terminals get separate worktrees.
 - **Epic = one branch, one PR.** Auto-detect from `.planning/epics/`.
 - **Don't over-plan.** If 1-2 files and 30 min of work, just do it. This workflow is for features that need structure.
+- **Agent Teams mode is BINDING.** When `AGENT_TEAMS=on` (from env var or `build.yaml`), Stages 4, 5, and Stage E.3 MUST use `TeamCreate` + parallel teammates. No sequential fallback, no "just this once", no asking the user. The only way to turn it off is `.spartan/build.yaml` → `agent-teams: off`. If `TeamCreate` tool is unavailable, stop and tell the user — do not silently downgrade.

@@ -31,6 +31,18 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Core principles renumbered — language rule is #1
 - Commands now respond in the user's language
 
+## [1.21.1] - 2026-04-06
+
+### Fixed
+- `/spartan:build` now **hard-enforces** Agent Teams when `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set. Previously the check was a soft conditional buried in Stage 4 that Claude often skipped, causing the command to ignore the global flag, run sequentially, and skip the review stage.
+- Agent Teams detection moved to the Preamble — one `AGENT_TEAMS` variable is computed at the start and treated as binding for the rest of the build (Stage 4 Implement, Stage 5 Review, Stage E.3 Epic Implement).
+- Stage 5 Review now always runs — either as a single reviewer (`AGENT_TEAMS=off`) or as a 3-agent parallel team (quality + tests + security, `AGENT_TEAMS=on`). No silent skip path.
+- Stage 6 Ship now verifies `TeamDelete` cleanup before creating the PR to avoid orphan team state in `~/.claude/teams/`.
+
+### Added
+- `.spartan/build.yaml` → `agent-teams` field (`auto` / `force` / `off`) to override the env var per project. Default `auto` preserves existing behavior.
+- New "Agent Teams Mode Gate" section in `/spartan:build` that announces team mode to the user and forbids falling back to sequential execution without explicit `agent-teams: off`.
+
 ## [1.2.0] - 2026-03-25
 
 ### Added
