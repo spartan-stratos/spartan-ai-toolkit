@@ -263,6 +263,88 @@ class Default{TableName}Repository(
 
 ---
 
+## Sorting Pattern for List Endpoints
+
+Use a Sort DTO with `SortOrder?` properties and the `Query.sorting()` extension from `core/module-database`:
+
+### 1. Define a Sort DTO in `module-client`
+
+```kotlin
+@Serdeable
+data class MyEntitySort(
+  val name: SortOrder? = null,
+  val status: SortOrder? = null,
+  val createdAt: SortOrder? = null
+)
+```
+
+### 2. Use `Query.sorting()` in the repository
+
+```kotlin
+import com.c0x12c.database.extension.sorting
+
+fun listAll(sort: MyEntitySort?, offset: Long, limit: Int): Pair<List<Entity>, Long> {
+  return transaction(db.replica) {
+    val query = MyTable.selectAll()
+      .andWhere { MyTable.deletedAt.isNull() }
+
+    val sortingCriteriaMap = sort?.let {
+      mapOf(
+        it.name to MyTable.name,
+        it.status to MyTable.status,
+        it.createdAt to MyTable.createdAt
+      )
+    }
+
+    val total = query.count()
+    val items = query
+      .apply { sorting(sortingCriteriaMap, MyTable.createdAt, SortOrder.DESC) }
+      .limit(limit, offset)
+      .map { row -> row.toEntity() }
+    Pair(items, total)
+  }
+}
+```
+
+### 3. Nest the Sort DTO in the list request body
+
+```kotlin
+@Serdeable
+@Introspected
+data class MyEntityListRequest(
+  val status: String? = null,
+  val search: String? = null,
+  val sort: MyEntitySort? = null,
+  @field:Min(0)
+  override val offset: Long = 0,
+  @field:Min(1)
+  override val limit: Int = 20
+) : PageableRequest
+```
+
+The controller uses `@Post("/list")` with `@Body`:
+```kotlin
+@Post("/list")
+suspend fun list(@Valid @Body request: MyEntityListRequest): PaginatedResponse<MyResponse> {
+  return manager.listAll(
+    status = request.status,
+    sort = request.sort,
+    offset = request.offset,
+    limit = request.limit
+  ).throwOrValue()
+}
+```
+
+**Never use `sortBy: String` / `sortDir: String` query params.** Always use a Sort DTO nested in the request body.
+
+**Rules:**
+- Sort DTOs live in `module-repository/constant/` (not `module-client`, since repositories need to import them)
+- Each sortable column is a `SortOrder?` property (null = not sorted)
+- Always use `Query.sorting()` — never manual `when` + `orderBy`
+- Default sort column and direction are passed to `sorting()` as fallbacks
+
+---
+
 ## Testing
 
 > Full guide: use `/testing-strategies` skill

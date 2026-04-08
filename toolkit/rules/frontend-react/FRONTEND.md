@@ -255,6 +255,59 @@ const fetchTeams = useCallback(async () => {
 
 ---
 
+## API Error Messages (CRITICAL)
+
+### NEVER Show Raw Axios Error Messages to Users
+
+Axios errors have a generic `.message` like `"Request failed with status code 400"`. The backend returns a structured `ErrorResponse` with a human-readable message in `response.data.error.message`. **Always extract the backend message.**
+
+```typescript
+// ✅ CORRECT — extract the backend error message
+try {
+  await apiClient.post('/api/v1/some-endpoint', data)
+} catch (err: unknown) {
+  const axiosErr = err as { response?: { data?: { error?: { message?: string } } } }
+  const message = axiosErr?.response?.data?.error?.message || 'Fallback message.'
+  throw new Error(message)
+}
+
+// ❌ WRONG — shows "Request failed with status code 400"
+try {
+  await apiClient.post('/api/v1/some-endpoint', data)
+} catch (err) {
+  throw err  // AxiosError.message is generic, not user-friendly
+}
+
+// ❌ WRONG — err.message is the Axios-generated string, not the backend's
+catch (err) {
+  const message = err instanceof Error ? err.message : 'Something went wrong.'
+  setError(message)  // Shows "Request failed with status code 422"
+}
+```
+
+### Backend Error Response Shape
+
+All backend errors follow this structure:
+```json
+{
+  "error": {
+    "code": "SOME_ERROR_CODE",
+    "message": "Human-readable description",
+    "status": 400,
+    "details": [{ "field": "email", "message": "is required" }]
+  }
+}
+```
+
+### Rules
+
+1. **Every `apiClient` call that shows errors to users** MUST extract `response.data.error.message`
+2. **Always provide a fallback message** — don't show `undefined` if the shape is unexpected
+3. **For field-level validation errors**, check `response.data.error.details` and show per-field messages when available
+4. **Functions using raw `fetch`** (like `authFetch`) already handle this with `err?.error?.message` — keep that pattern
+
+---
+
 ## Optimistic Updates Pattern
 
 ### Avoid UI Flash/Reload After Mutations
