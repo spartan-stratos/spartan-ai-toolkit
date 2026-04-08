@@ -70,6 +70,34 @@ while (chunksProcessed < MAX_CHUNKS) {
 
 ---
 
+## Chunked Collection Pattern
+
+When you already have a full list in memory (e.g., parsed URLs, IDs from a request), use Kotlin's `chunked` + `forEach` + `runCatching`:
+
+```kotlin
+companion object {
+  const val CHUNK_SIZE = 100
+}
+
+// CORRECT — chunked + forEach + runCatching
+var totalProcessed = 0
+items.chunked(CHUNK_SIZE).forEach { chunk ->
+  runCatching {
+    repository.batchUpdate(chunk)
+  }.onSuccess { count ->
+    totalProcessed += count
+  }.onFailure { e ->
+    logger.warn("Failed to process chunk of ${chunk.size} items", e)
+  }
+}
+```
+
+**When to use which:**
+- **Paginated while-loop** (main pattern above): Data comes from DB, you don't know the total size upfront
+- **`chunked` + `forEach`**: Data already in memory (request body, parsed list), you just need to split it for DB safety
+
+---
+
 ## Bad Patterns
 
 ```kotlin
