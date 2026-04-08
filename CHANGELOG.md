@@ -31,6 +31,16 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Core principles renumbered — language rule is #1
 - Commands now respond in the user's language
 
+## [1.22.0] - 2026-04-08
+
+### Added
+- `rules/backend-micronaut/PERFORMANCE.md` — new rule covering N+1 query prevention, redundant DB calls, unbounded queries, fire-and-forget async, and magic numbers, with a pre-commit checklist
+- `rules/backend-micronaut/BATCH_PROCESSING.md` — "Chunked Collection Pattern" section for in-memory lists using `chunked` + `forEach` + `runCatching` (complements the existing paginated while-loop pattern)
+- `rules/database/ORM_AND_REPO.md` — "Sorting Pattern for List Endpoints" section requiring a Sort DTO with `SortOrder?` properties and the `Query.sorting()` extension, replacing string-based `sortBy`/`sortDir` query params
+- `rules/frontend-react/FRONTEND.md` — "API Error Messages (CRITICAL)" section requiring extraction of `response.data.error.message` instead of surfacing the generic Axios `"Request failed with status code N"` string
+
+All four rule changes synced to both `toolkit/rules/` (published templates) and `.codex/rules/` (toolkit's own rules) so they stay in lockstep.
+
 ## [1.21.1] - 2026-04-06
 
 ### Fixed
