@@ -365,7 +365,7 @@ Type `/spartan` for the smart router. Or go direct:
 | `context-save` | Save session state to resume later |
 | `magic-doc [file]` | Auto-update a doc file to match current codebase |
 | `memory-consolidate` | Clean up agent memory &mdash; deduplicate, remove stale entries |
-| `update` | Check for toolkit updates |
+| `update` | Check for toolkit + GSD engine updates |
 | `careful` | Warn before destructive ops |
 | `freeze <dir>` | Lock edits to one directory |
 | `guard <dir>` | careful + freeze combined |
