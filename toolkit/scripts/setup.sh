@@ -267,6 +267,56 @@ fi
 echo ""
 
 # ─────────────────────────────────────────────────────────────
+# Step 4.5: Install Spartan hooks (override GSD statusline/update-check)
+# ─────────────────────────────────────────────────────────────
+echo -e "${BLUE}[4.5/11]${NC} ${BOLD}Installing Spartan hooks...${NC}"
+
+HOOKS_SRC="$TOOLKIT_ROOT/hooks"
+HOOKS_DEST="$TARGET_BASE/hooks"
+mkdir -p "$HOOKS_DEST"
+
+# Copy Spartan hooks
+cp "$HOOKS_SRC/spartan-statusline.js" "$HOOKS_DEST/spartan-statusline.js"
+cp "$HOOKS_SRC/spartan-check-update.js" "$HOOKS_DEST/spartan-check-update.js"
+echo -e "  ${GREEN}✓${NC} Spartan hooks copied"
+
+# Patch settings.json: replace GSD hooks with Spartan hooks
+SETTINGS_FILE_HOOK="$TARGET_BASE/settings.json"
+if [[ -f "$SETTINGS_FILE_HOOK" ]]; then
+  if node -e '
+    const fs = require("fs");
+    const settingsPath = process.argv[1];
+    const settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
+
+    // Replace statusLine command
+    if (settings.statusLine && settings.statusLine.command && settings.statusLine.command.includes("gsd-statusline")) {
+      settings.statusLine.command = settings.statusLine.command.replace("gsd-statusline.js", "spartan-statusline.js");
+    }
+
+    // Replace SessionStart hook (check-update)
+    if (settings.hooks && settings.hooks.SessionStart) {
+      for (const entry of settings.hooks.SessionStart) {
+        for (const hook of (entry.hooks || [])) {
+          if (hook.command && hook.command.includes("gsd-check-update")) {
+            hook.command = hook.command.replace("gsd-check-update.js", "spartan-check-update.js");
+          }
+        }
+      }
+    }
+
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n", "utf-8");
+  ' "$SETTINGS_FILE_HOOK" 2>/dev/null; then
+    echo -e "  ${GREEN}✓${NC} settings.json patched (statusline + update-check → Spartan)"
+  else
+    echo -e "  ${YELLOW}⚠${NC} Could not patch settings.json — hooks may still reference GSD"
+  fi
+else
+  echo -e "  ${DIM}No settings.json yet — will be created in Step 10${NC}"
+fi
+
+echo ""
+
+# ─────────────────────────────────────────────────────────────
 # Step 5: Assemble & Install CLAUDE.md
 # ─────────────────────────────────────────────────────────────
 echo -e "${BLUE}[5/11]${NC} ${BOLD}Assembling CLAUDE.md from selected packs...${NC}"
