@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// spartan-hook-version: 1.22.0
+// spartan-hook-version: 1.22.1
 // Claude Code Statusline - Spartan Edition
 // Shows: model | current task | directory | context usage
 // Forked from gsd-statusline.js — reads spartan-update-check.json instead

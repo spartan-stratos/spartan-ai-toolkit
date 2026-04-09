@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// spartan-hook-version: 1.22.0
+// spartan-hook-version: 1.22.1
 // Check for Spartan + GSD updates in background, write result to cache
 // Called by SessionStart hook - runs once per session
 // Forked from gsd-check-update.js — checks both Spartan (git) and GSD (npm)
@@ -166,9 +166,12 @@ const child = spawn(process.execPath, ['-e', `
           }
         }
 
+        // Sanitize branch name to prevent shell injection
+        branch = branch.replace(/[^a-zA-Z0-9._/-]/g, '');
+
         // Fetch quietly
         try {
-          execSync('git fetch origin ' + branch + ' --quiet', {
+          execSync('git fetch origin -- ' + branch + ' --quiet', {
             cwd: repoPath, timeout: 15000, windowsHide: true
           });
         } catch (e) {}
