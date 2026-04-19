@@ -171,7 +171,7 @@ const child = spawn(process.execPath, ['-e', `
 
         // Fetch quietly
         try {
-          execSync('git fetch origin -- ' + branch + ' --quiet', {
+          execSync('git fetch --quiet origin ' + branch, {
             cwd: repoPath, timeout: 15000, windowsHide: true
           });
         } catch (e) {}

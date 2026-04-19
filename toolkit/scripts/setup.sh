@@ -289,7 +289,11 @@ SETTINGS_FILE_HOOK="$TARGET_BASE/settings.json"
 if [[ -f "$SETTINGS_FILE_HOOK" ]]; then
   if node -e '
     const fs = require("fs");
+    const path = require("path");
     const settingsPath = process.argv[1];
+    const hooksDest = process.argv[2];
+    const spartanStatusline = path.join(hooksDest, "spartan-statusline.js");
+    const spartanCheckUpdate = path.join(hooksDest, "spartan-check-update.js");
     let settings;
     try {
       settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
@@ -298,17 +302,17 @@ if [[ -f "$SETTINGS_FILE_HOOK" ]]; then
       process.exit(1);
     }
 
-    // Replace statusLine command
+    // Replace statusLine command (match any path ending in gsd-statusline.js)
     if (settings.statusLine && settings.statusLine.command && settings.statusLine.command.includes("gsd-statusline")) {
-      settings.statusLine.command = settings.statusLine.command.replace("gsd-statusline.js", "spartan-statusline.js");
+      settings.statusLine.command = settings.statusLine.command.replace(/\S*gsd-statusline\.js/g, spartanStatusline);
     }
 
-    // Replace SessionStart hook (check-update)
+    // Replace SessionStart hook (check-update, match any path ending in gsd-check-update.js)
     if (settings.hooks && settings.hooks.SessionStart) {
       for (const entry of settings.hooks.SessionStart) {
         for (const hook of (entry.hooks || [])) {
           if (hook.command && hook.command.includes("gsd-check-update")) {
-            hook.command = hook.command.replace("gsd-check-update.js", "spartan-check-update.js");
+            hook.command = hook.command.replace(/\S*gsd-check-update\.js/g, spartanCheckUpdate);
           }
         }
       }
@@ -320,10 +324,11 @@ if [[ -f "$SETTINGS_FILE_HOOK" ]]; then
       process.stderr.write("Failed to write settings.json: " + e.message + "\n");
       process.exit(1);
     }
-  ' "$SETTINGS_FILE_HOOK"; then
+  ' "$SETTINGS_FILE_HOOK" "$HOOKS_DEST"; then
     echo -e "  ${GREEN}✓${NC} settings.json patched (statusline + update-check → Spartan)"
   else
-    echo -e "  ${YELLOW}⚠${NC} Could not patch settings.json — hooks may still reference GSD"
+    echo -e "  ${RED}✗${NC} Could not patch settings.json — hooks may still reference GSD"
+    exit 1
   fi
 else
   echo -e "  ${DIM}No settings.json yet — will be created in Step 10${NC}"

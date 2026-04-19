@@ -147,8 +147,9 @@ If versions match: "GSD engine is up to date ($GSD_LOCAL)."
 Always clear all update caches so the statusline refreshes on next session:
 
 ```bash
-rm -f ~/.claude/cache/spartan-update-check.json
-rm -f ~/.claude/cache/gsd-update-check.json
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+rm -f "$CLAUDE_DIR/cache/spartan-update-check.json"
+rm -f "$CLAUDE_DIR/cache/gsd-update-check.json"
 ```
 
 ---
