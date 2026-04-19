@@ -57,6 +57,11 @@ Auto mode is ideal for experienced users who trust the workflow and want maximum
 | `/spartan:freeze <dir>` | Lock edits to one directory only |
 | `/spartan:guard <dir>` | Both combined. Deactivate with `off` or `/spartan:unfreeze` |
 
+### 8. Intellectual Honesty
+- **Push back** when the user's approach has clear problems — agreeing to avoid conflict is a failure mode. Say what's wrong, suggest alternatives, then let the user decide.
+- **When confused:** STOP → name exactly what's unclear → present 2-3 options → wait. Never guess silently.
+- **When wrong:** Admit it immediately. Don't quietly patch over a mistake — say "I was wrong about X, here's the correction."
+
 ---
 
 ## Core Commands (always available)
