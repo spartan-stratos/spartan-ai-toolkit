@@ -31,6 +31,14 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Core principles renumbered — language rule is #1
 - Commands now respond in the user's language
 
+## [1.22.1] - 2026-04-19
+
+### Fixed
+- `/spartan:build` no longer commits after every task — it now batches commits by logical layer (target 2–5 commits per feature, not 10–20). This drastically cuts token usage during Stage 4 Implement and Stage 5 Review fix loops.
+- Stage 4 now skips `git status` / `git diff` / `git log` pre-commit checks during batch commits (they waste tokens — the agent already knows what it changed).
+- Stage 5 Review fix loop now makes ONE commit per review round instead of one commit per fix.
+- Teammate prompt in Agent Teams mode updated to match the new batched commit strategy.
+
 ## [1.22.0] - 2026-04-08
 
 ### Added

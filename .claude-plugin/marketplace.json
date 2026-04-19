@@ -10,7 +10,7 @@
       "name": "ai-toolkit",
       "description": "51 commands, 11 rules, 19 skills, 4 agents — organized in 11 packs with dependencies",
       "source": "./toolkit",
-      "version": "1.22.0"
+      "version": "1.22.1"
     }
   ]
 }

@@ -296,7 +296,7 @@ This is a hard rule. You MUST:
    - The feature slug and WORKSPACE path
    - File paths it owns (from the plan)
    - Rules to load (e.g., `~/.claude/rules/backend-micronaut/`, `~/.claude/rules/frontend-react/`)
-   - "Follow TDD. Check `TaskList`, claim tasks, commit per task."
+   - "Follow TDD. Check `TaskList`, claim tasks. Commit ONLY at end of a logical layer (2–5 commits total), skip `git status/diff/log` pre-checks."
    - **Frontend/UI teammates MUST receive the design doc path** (`.planning/designs/*.md`) and be told to read it before coding.
 5. **Use `isolation: "worktree"`** when two teammates could touch overlapping files.
 6. **Monitor via messages** — no polling. When all tasks reach `completed`, move to Stage 5.
@@ -317,12 +317,43 @@ For each task:
 1. **Write test** → run → confirm fail (red)
 2. **Write code** → run → confirm pass (green)
 3. **Refactor** if needed (tests still green)
-4. **Commit:** `feat([scope]): [what this task does]`
-5. Brief status: "Task [N]/[total] done."
+4. Brief status: "Task [N]/[total] done."
 
 If a task is hard to test-first (UI, config) → implement-then-test. Always have a test when done.
 
 If `.spartan/build.yaml` has `prompts.implement`, apply now.
+
+### Commit strategy (TOKEN-SAVING — read this)
+
+**DO NOT commit after every task.** Batch commits by logical group to save tokens.
+
+Commit only at these break points:
+- End of a layer (e.g., all DB work: migration + entity + table + repo + tests → 1 commit)
+- End of a feature slice (e.g., all service/manager work → 1 commit)
+- End of implementation (all controller/API work → 1 commit)
+- End of frontend slice (types + API client + components → 1 commit, page + tests → 1 commit)
+
+**Target:** 2–5 commits per feature, not 10–20.
+
+**Commit format (streamlined — skip the default pre-commit checks):**
+```bash
+cd $WORKSPACE
+git add <specific-files-you-just-changed>
+git commit -m "feat([scope]): [what this layer does]"
+```
+
+**SKIP these pre-commit checks during batch commits** — they waste tokens:
+- `git status` (you already know what you changed)
+- `git diff` (you just wrote the code)
+- `git log` (you already know the style from this file)
+
+Only run `git status` ONCE at the very end of Stage 4 to confirm nothing is untracked.
+
+**Commit message format:**
+- Use `type(scope): short description` (no body, no Co-Authored-By)
+- Types: `feat` · `fix` · `test` · `refactor` · `chore` · `docs`
+
+**Never ask the user "should I commit?"** during build — the plan was already approved at Gate 2.
 
 ### Verify all layers
 
@@ -461,7 +492,9 @@ If `.spartan/build.yaml` has `prompts.review`, inject into reviewer prompt (sing
 ### Fix loop
 
 - **PASS** → save any flagged docs to `.memory/`, continue to Ship
-- **NEEDS CHANGES** → fix HIGH + reasonable MEDIUM, commit `fix([scope]): [what review caught]`, re-run tests, spawn reviewer again with updated diff
+- **NEEDS CHANGES** → fix ALL HIGH + reasonable MEDIUM issues first, then make ONE commit per review round (not per fix), re-run tests, spawn reviewer again with updated diff
+  - Commit format: `fix([scope]): address review round N`
+  - Skip `git status` / `git diff` / `git log` pre-checks — you know what you changed
 - Max rounds: 3 (configurable via `max-review-rounds`). After max → ask user what to do
 
 ---
@@ -528,7 +561,7 @@ Run full test suite. Then continue to Stage 5 (Review) — one review for all fe
 
 - **Orchestrate everything.** Don't tell user to run separate commands — run them yourself.
 - **Fast path for small work** (1-4 tasks). Full path for big (5+).
-- **TDD by default.** One commit per task. Override only when test-first doesn't fit.
+- **TDD by default.** Commit per logical layer (2–5 commits total), NOT per task. Skip pre-commit `git status/diff/log` checks — they waste tokens.
 - **Review is ALWAYS an agent. NEVER skip.** Fix until reviewer says PASS (or all team reviewers say ACCEPT).
 - **Design gate for frontend.** Any new component/screen/modal → ask. Pure data → skip.
 - **Full-stack = both layers.** Don't create PR with only backend done.
