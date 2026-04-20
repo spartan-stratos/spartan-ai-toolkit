@@ -267,6 +267,76 @@ fi
 echo ""
 
 # ─────────────────────────────────────────────────────────────
+# Step 4.5: Install Spartan hooks (override GSD statusline/update-check)
+# ─────────────────────────────────────────────────────────────
+echo -e "${BLUE}[4.5/11]${NC} ${BOLD}Installing Spartan hooks...${NC}"
+
+HOOKS_SRC="$TOOLKIT_ROOT/hooks"
+HOOKS_DEST="$TARGET_BASE/hooks"
+mkdir -p "$HOOKS_DEST"
+
+# Copy Spartan hooks
+if cp "$HOOKS_SRC/spartan-statusline.js" "$HOOKS_DEST/spartan-statusline.js" && \
+   cp "$HOOKS_SRC/spartan-check-update.js" "$HOOKS_DEST/spartan-check-update.js"; then
+  echo -e "  ${GREEN}✓${NC} Spartan hooks copied"
+else
+  echo -e "  ${RED}✗${NC} Failed to copy Spartan hooks — check that toolkit/hooks/ exists"
+  exit 1
+fi
+
+# Patch settings.json: replace GSD hooks with Spartan hooks
+SETTINGS_FILE_HOOK="$TARGET_BASE/settings.json"
+if [[ -f "$SETTINGS_FILE_HOOK" ]]; then
+  if node -e '
+    const fs = require("fs");
+    const path = require("path");
+    const settingsPath = process.argv[1];
+    const hooksDest = process.argv[2];
+    const spartanStatusline = path.join(hooksDest, "spartan-statusline.js");
+    const spartanCheckUpdate = path.join(hooksDest, "spartan-check-update.js");
+    let settings;
+    try {
+      settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
+    } catch (e) {
+      process.stderr.write("Failed to parse settings.json: " + e.message + "\n");
+      process.exit(1);
+    }
+
+    // Replace statusLine command (match any path ending in gsd-statusline.js)
+    if (settings.statusLine && settings.statusLine.command && settings.statusLine.command.includes("gsd-statusline")) {
+      settings.statusLine.command = settings.statusLine.command.replace(/\S*gsd-statusline\.js/g, spartanStatusline);
+    }
+
+    // Replace SessionStart hook (check-update, match any path ending in gsd-check-update.js)
+    if (settings.hooks && settings.hooks.SessionStart) {
+      for (const entry of settings.hooks.SessionStart) {
+        for (const hook of (entry.hooks || [])) {
+          if (hook.command && hook.command.includes("gsd-check-update")) {
+            hook.command = hook.command.replace(/\S*gsd-check-update\.js/g, spartanCheckUpdate);
+          }
+        }
+      }
+    }
+
+    try {
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n", "utf-8");
+    } catch (e) {
+      process.stderr.write("Failed to write settings.json: " + e.message + "\n");
+      process.exit(1);
+    }
+  ' "$SETTINGS_FILE_HOOK" "$HOOKS_DEST"; then
+    echo -e "  ${GREEN}✓${NC} settings.json patched (statusline + update-check → Spartan)"
+  else
+    echo -e "  ${RED}✗${NC} Could not patch settings.json — hooks may still reference GSD"
+    exit 1
+  fi
+else
+  echo -e "  ${DIM}No settings.json yet — will be created in Step 10${NC}"
+fi
+
+echo ""
+
+# ─────────────────────────────────────────────────────────────
 # Step 5: Assemble & Install CLAUDE.md
 # ─────────────────────────────────────────────────────────────
 echo -e "${BLUE}[5/11]${NC} ${BOLD}Assembling CLAUDE.md from selected packs...${NC}"
@@ -663,9 +733,9 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────
-# Step 10: Auto-save context hook
+# Step 10: Auto-save context hook (script only, no settings.json hook)
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[10/11]${NC} ${BOLD}Installing auto-save context hook...${NC}"
+echo -e "${BLUE}[10/11]${NC} ${BOLD}Installing auto-save context script...${NC}"
 
 HOOK_SCRIPT_SRC="$TOOLKIT_ROOT/scripts/auto-save-context.js"
 
@@ -677,54 +747,24 @@ else
   SETTINGS_FILE="$(pwd)/.claude/settings.json"
 fi
 
-# Copy hook script
+# Copy hook script (available for manual use via /spartan:context-save)
 mkdir -p "$(dirname "$HOOK_SCRIPT_DEST")"
 cp "$HOOK_SCRIPT_SRC" "$HOOK_SCRIPT_DEST"
 echo -e "  ${GREEN}✓${NC} auto-save-context.js copied"
 
-# Configure hook in settings.json
-HOOK_CMD="node $HOOK_SCRIPT_DEST"
-
-if [[ -f "$SETTINGS_FILE" ]]; then
-  if grep -q "auto-save-context" "$SETTINGS_FILE" 2>/dev/null; then
-    echo -e "  ${GREEN}✓${NC} PostCompact hook already configured"
-  else
-    if node -e "
-      const fs = require('fs');
-      const settings = JSON.parse(fs.readFileSync('$SETTINGS_FILE', 'utf-8'));
-      if (!settings.hooks) settings.hooks = {};
-      if (!settings.hooks.PostCompact) settings.hooks.PostCompact = [];
-      settings.hooks.PostCompact.push({
-        hooks: [{
-          type: 'command',
-          command: '$HOOK_CMD'
-        }]
-      });
+# Remove stale PostCompact hook from settings.json if present
+# PostCompact is not a valid Claude Code hook event and causes Settings Error on startup
+if [[ -f "$SETTINGS_FILE" ]] && grep -q "PostCompact" "$SETTINGS_FILE" 2>/dev/null; then
+  if node -e "
+    const fs = require('fs');
+    const settings = JSON.parse(fs.readFileSync('$SETTINGS_FILE', 'utf-8'));
+    if (settings.hooks && settings.hooks.PostCompact) {
+      delete settings.hooks.PostCompact;
       fs.writeFileSync('$SETTINGS_FILE', JSON.stringify(settings, null, 2) + '\n', 'utf-8');
-    " 2>/dev/null; then
-      echo -e "  ${GREEN}✓${NC} PostCompact hook added to settings.json"
-    else
-      echo -e "  ${YELLOW}⚠${NC} Could not update settings.json — add hook manually"
-    fi
+    }
+  " 2>/dev/null; then
+    echo -e "  ${GREEN}✓${NC} Removed stale PostCompact hook from settings.json"
   fi
-else
-  cat > "$SETTINGS_FILE" <<HOOK_EOF
-{
-  "hooks": {
-    "PostCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOOK_CMD"
-          }
-        ]
-      }
-    ]
-  }
-}
-HOOK_EOF
-  echo -e "  ${GREEN}✓${NC} settings.json created with PostCompact hook"
 fi
 
 echo ""
