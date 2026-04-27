@@ -1,4 +1,5 @@
 ---
+name: spartan:ship-pr
 description: Push branch, request Copilot review, wait for it, and address comments interactively
 argument-hint: "[pr-number-or-url] [--yolo] [--no-request]"
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, Monitor
