@@ -389,6 +389,7 @@ Type `/spartan` for the smart router. Or go direct:
 | `fe-review` | PR review for frontend code |
 | `figma-to-code "url"` | Figma design to production React |
 | `e2e "feature"` | Setup Playwright E2E testing |
+| `js-security` | NPM security audit — setup, deps, CI, Dependabot, incident response |
 
 ### Planning (project-mgmt pack)
 

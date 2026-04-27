@@ -7,7 +7,13 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.23.0] - 2026-04-27
+
 ### Added
+- `/spartan:js-security` command — NPM security audit covering setup, dependency hygiene, CI/CD, Dependabot, and incident response
+- `js-security-audit` skill — sourced from c0x12c NPM Security Guidelines, with supporting files: `audit-checklist.md`, `eslint-security.md`, `incident-playbook.md`, `package-manager.md`
+- Recommended permission allowlist (`npm/yarn/pnpm audit`, `outdated`, `explain`, `lockfile-lint`, `npq`) so audits run without prompting
+- Registered in `frontend-react` pack
 - `/spartan:team` command — manage Claude Code Agent Teams (create, status, wave, review, research, build, clean)
 - `team-coordinator` agent for multi-agent parallel work coordination
 - Agent Teams integration in 6 workflows: build, phase execute, gate-review, map-codebase, startup, onboard, research
