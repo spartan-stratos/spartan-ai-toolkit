@@ -16,6 +16,8 @@ commands:
   - memory-consolidate
   - update
   - pr-ready
+  - ship-pr
+  - commit-message
   - init-project
   - init-rules
   - scan-rules
