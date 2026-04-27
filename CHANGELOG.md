@@ -111,7 +111,8 @@ All four rule changes synced to both `toolkit/rules/` (published templates) and 
 - Setup script with global/local install modes
 - CI/CD pipeline with structure validation, content checks, and auto-release
 
-[Unreleased]: https://github.com/c0x12c/ai-toolkit/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/c0x12c/ai-toolkit/compare/v1.23.0...HEAD
+[1.23.0]: https://github.com/c0x12c/ai-toolkit/compare/v1.22.1...v1.23.0
 [1.2.0]: https://github.com/c0x12c/ai-toolkit/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/c0x12c/ai-toolkit/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/c0x12c/ai-toolkit/compare/v1.0.0...v1.0.1

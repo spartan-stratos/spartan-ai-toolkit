@@ -110,7 +110,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
+          node-version-file: '.nvmrc'   # or pin: e.g. node-version: '22'
           cache: 'yarn'
 
       - name: Install dependencies
