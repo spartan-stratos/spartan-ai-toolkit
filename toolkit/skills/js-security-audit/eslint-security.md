@@ -31,6 +31,10 @@ npm install -D eslint eslint-plugin-security eslint-plugin-no-unsanitized \
 
 ## `eslint.security.js` Template (Flat Config)
 
+> If your `package.json` has `"type": "module"`, save this file as `eslint.security.cjs`
+> (and reference `.cjs` in the script), or convert to ESM: replace `require(...)` with
+> `import ... from '...'` and `module.exports = [...]` with `export default [...]`.
+
 ```javascript
 const baseConfig = require('./eslint.config.js');
 const security = require('eslint-plugin-security');
@@ -108,7 +112,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: '.nvmrc'   # or pin: e.g. node-version: '22'
           cache: 'yarn'

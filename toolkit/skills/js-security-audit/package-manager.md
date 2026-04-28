@@ -14,17 +14,19 @@ If multiple lockfiles exist, that's a finding — pick one and remove the others
 
 ## Command Equivalents
 
-| Action | npm | yarn | pnpm |
-|--------|-----|------|------|
-| Clean install (CI) | `npm ci` | `yarn install --frozen-lockfile` | `pnpm install --frozen-lockfile` |
-| Ignore scripts | `npm ci --ignore-scripts` | `yarn install --ignore-scripts` | `pnpm install --ignore-scripts` |
-| Selective rebuild | `npm rebuild pkg1 pkg2` | `yarn rebuild pkg1 pkg2` | `pnpm rebuild pkg1 pkg2` |
-| Audit | `npm audit` | `yarn npm audit` | `pnpm audit` |
-| Auto-fix audit | `npm audit fix` | N/A | `pnpm audit --fix` |
-| Force version override | `"overrides"` in package.json | `"resolutions"` in package.json | `"pnpm.overrides"` in package.json |
-| List scripts | `npm query ':attr(scripts, [postinstall])'` | `yarn info --all --json` | `pnpm ls --json` |
-| Explain why a dep is installed | `npm explain <pkg>` | `yarn why <pkg>` | `pnpm why <pkg>` |
-| List outdated | `npm outdated` | `yarn outdated` | `pnpm outdated` |
+Detect Yarn version with `yarn --version`. Classic = v1.x, Berry = v2+.
+
+| Action | npm | yarn (Classic v1) | yarn (Berry v2+) | pnpm |
+|--------|-----|-------------------|------------------|------|
+| Clean install (CI) | `npm ci` | `yarn install --frozen-lockfile` | `yarn install --immutable` | `pnpm install --frozen-lockfile` |
+| Ignore scripts | `npm ci --ignore-scripts` | `yarn install --ignore-scripts --frozen-lockfile` | `YARN_ENABLE_SCRIPTS=false yarn install --immutable` | `pnpm install --ignore-scripts` |
+| Selective rebuild | `npm rebuild pkg1 pkg2` | `yarn add --force pkg1 pkg2` | `yarn rebuild pkg1 pkg2` | `pnpm rebuild pkg1 pkg2` |
+| Audit | `npm audit` | `yarn audit` | `yarn npm audit` | `pnpm audit` |
+| Auto-fix audit | `npm audit fix` | N/A | N/A | `pnpm audit --fix` |
+| Force version override | `"overrides"` in package.json | `"resolutions"` | `"resolutions"` | `"pnpm.overrides"` |
+| Find install lifecycle scripts | `npm query ':attr(scripts, [postinstall])'` | `npx can-i-ignore-scripts` | `npx can-i-ignore-scripts` | `npx can-i-ignore-scripts` |
+| Explain why a dep is installed | `npm explain <pkg>` | `yarn why <pkg>` | `yarn why <pkg>` | `pnpm why <pkg>` |
+| List outdated | `npm outdated` | `yarn outdated` | `yarn upgrade-interactive` | `pnpm outdated` |
 
 ## Override / Resolution Examples
 

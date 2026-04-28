@@ -48,7 +48,7 @@ Check for:
 
 ```bash
 npm audit --audit-level=high   # or yarn npm audit / pnpm audit
-npm outdated                    # which deps are stale
+npm outdated                   # or yarn outdated / pnpm outdated; which deps are stale
 ```
 
 Check for:

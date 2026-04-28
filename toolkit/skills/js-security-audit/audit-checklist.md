@@ -102,11 +102,14 @@
   - name: Security audit
     run: npm audit --audit-level=high
   ```
-- [ ] **Lockfile integrity validation in CI**
+- [ ] **Lockfile integrity validation in CI** — match the variant to the project's lockfile:
   ```yaml
-  - name: Lint lockfile
-    run: npx lockfile-lint --path package-lock.json --type npm \
-         --allowed-hosts npm --validate-https
+  # npm
+  - run: npx lockfile-lint --path package-lock.json --type npm --allowed-hosts npm --validate-https
+  # yarn
+  - run: npx lockfile-lint --path yarn.lock --type yarn --allowed-hosts npm --validate-https
+  # pnpm
+  - run: npx lockfile-lint --path pnpm-lock.yaml --type pnpm --allowed-hosts npm --validate-https
   ```
 - [ ] **No secrets in CI config files** — use GitHub Secrets / GitLab CI Variables
 
