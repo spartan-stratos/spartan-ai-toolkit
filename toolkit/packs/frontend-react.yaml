@@ -11,12 +11,14 @@ commands:
   - figma-to-code
   - e2e
   - qa
+  - js-security
 
 rules:
   - frontend-react/FRONTEND.md
 
 skills:
   - browser-qa
+  - js-security-audit
 
 agents: []
 

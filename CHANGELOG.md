@@ -7,7 +7,13 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.23.0] - 2026-04-27
+
 ### Added
+- `/spartan:js-security` command — NPM security audit covering setup, dependency hygiene, CI/CD, Dependabot, and incident response
+- `js-security-audit` skill — sourced from c0x12c NPM Security Guidelines, with supporting files: `audit-checklist.md`, `eslint-security.md`, `incident-playbook.md`, `package-manager.md`
+- Recommended permission allowlist (`npm/yarn/pnpm audit`, `outdated`, `explain`, `lockfile-lint`, `npq`) so audits run without prompting
+- Registered in `frontend-react` pack
 - `/spartan:team` command — manage Claude Code Agent Teams (create, status, wave, review, research, build, clean)
 - `team-coordinator` agent for multi-agent parallel work coordination
 - Agent Teams integration in 6 workflows: build, phase execute, gate-review, map-codebase, startup, onboard, research
@@ -105,7 +111,8 @@ All four rule changes synced to both `toolkit/rules/` (published templates) and 
 - Setup script with global/local install modes
 - CI/CD pipeline with structure validation, content checks, and auto-release
 
-[Unreleased]: https://github.com/c0x12c/ai-toolkit/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/c0x12c/ai-toolkit/compare/v1.23.0...HEAD
+[1.23.0]: https://github.com/c0x12c/ai-toolkit/compare/v1.22.1...v1.23.0
 [1.2.0]: https://github.com/c0x12c/ai-toolkit/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/c0x12c/ai-toolkit/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/c0x12c/ai-toolkit/compare/v1.0.0...v1.0.1
