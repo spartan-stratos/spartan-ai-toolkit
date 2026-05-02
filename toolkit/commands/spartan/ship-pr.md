@@ -16,7 +16,7 @@ You are running the `/ship-pr` workflow for the user's current branch.
 - **Default (act-then-report):** for each Copilot comment, print a one-line summary so the user can follow along, then apply clearly-valid fixes immediately (factual bugs, undefined variables, broken claims, obvious logic flaws, missing null handling). Only stop and prompt — `apply | edit <instructions> | reject <reason> | skip | quit` — when a comment is genuinely ambiguous, requires architectural judgment, would change behavior the user might want differently, or is wrong / noise. See Step 5 for the full decision rule.
 - **`--yolo` in args:** apply every comment without ever prompting, including the ambiguous ones; still summarize at the end.
 - **`--no-request` in args:** skip Step 2's API attempt entirely. The user has already requested Copilot via the GitHub UI (or will). Go straight to the wait step. Only valid with `--rounds 1` (the default) — multi-round requires API access.
-- **`--rounds N` in args (default `1`, max `3`):** loop the request → wait → fix → reply cycle up to N times. Each round re-requests Copilot review, fetches *only* the new comments (filtered by the round's `REQUESTED_AT`), applies fixes, pushes, replies, resolves threads, then either starts the next round or stops. The loop short-circuits if a round produces zero applied fixes — there's nothing new for Copilot to re-review.
+- **`--rounds N` in args (default `1`, max `3`):** loop the request → wait → fix → reply cycle up to N times. Each round re-requests Copilot review, fetches *only* the new comments (filtered by both `REQUESTED_AT` **and** the round's head SHA — timestamp alone is insufficient because a delayed previous-round review can land after the next request and slip through a time-only filter), applies fixes, pushes, replies, resolves threads, then either starts the next round or stops. The loop short-circuits if a round produces zero applied fixes — there's nothing new for Copilot to re-review.
 
 If the user passes a PR number or URL as an argument, target that PR. Otherwise target the PR for the current branch (or create one).
 
@@ -60,6 +60,12 @@ Parse `--rounds N` from args. Default `1`, hard-capped at `3`.
 ROUNDS=1
 if [[ "$ARGUMENTS" =~ --rounds[[:space:]]+([0-9]+) ]]; then
   ROUNDS="${BASH_REMATCH[1]}"
+elif [[ "$ARGUMENTS" == *"--rounds"* ]]; then
+  # `--rounds` was passed but not followed by a positive integer (e.g. `--rounds foo`,
+  # `--rounds 2x`, `--rounds` with no value). Don't silently fall back to the default —
+  # the user clearly meant something, so refuse and let them re-run with a valid value.
+  echo "Error: --rounds requires a positive integer (e.g. --rounds 2). Refusing to silently fall back to --rounds 1."
+  exit 1
 fi
 
 if [ "$ROUNDS" -lt 1 ]; then
@@ -81,12 +87,19 @@ fi
 Initialize round tracking — these get reset at the start of every round in Step 2 and accumulated for the final wrap-up:
 
 ```bash
-ROUND=1                 # current round (1..ROUNDS)
-declare -a ROUND_LOG    # one summary line per completed round
+ROUND=1                          # current round (1..ROUNDS)
+declare -a ROUND_LOG             # one summary line per completed round
+declare -a REJECTION_REASONS     # `path:line — reason` strings, accumulated across rounds (used in Step 8)
 TOTAL_APPLIED=0
 TOTAL_SKIPPED=0
 TOTAL_REJECTED=0
-declare -a COMMITS      # SHAs pushed across all rounds
+declare -a COMMITS               # SHAs pushed across all rounds
+
+# HEAD_SHA pins the round to a specific commit so a delayed previous-round review can't
+# leak into this round's wait/fetch (a stale review's submitted_at can be >= REQUESTED_AT
+# if Copilot is slow, but its commit_id will still point at the old SHA). Refresh after
+# every push in Step 7.5.
+HEAD_SHA=$(git rev-parse HEAD)
 ```
 
 Tell the user up front: `"Will run up to $ROUNDS round(s) of Copilot review. The loop stops early if a round produces zero applied fixes."`
@@ -162,7 +175,7 @@ Either path lands at Step 3 with a fresh `REQUESTED_AT` and a request in flight.
 
 ## Step 3 — Wait for the review to land
 
-Run an until-loop **in the background** (via `Bash` with `run_in_background: true`) so you get a single completion notification when it lands — don't poll in the foreground. The loop exits when a non-pending review from the Copilot bot exists, submitted at or after `REQUESTED_AT`. Bake the 10-minute timeout into the script so the background task itself enforces it:
+Run an until-loop **in the background** (via `Bash` with `run_in_background: true`) so you get a single completion notification when it lands — don't poll in the foreground. The loop exits when a non-pending review from the Copilot bot exists, submitted at or after `REQUESTED_AT` **and** pointing at the current `HEAD_SHA`. Bake the 10-minute timeout into the script so the background task itself enforces it:
 
 ```bash
 ELAPSED=0
@@ -170,8 +183,11 @@ ERR_LOG=$(mktemp)
 while true; do
   # Stream items (no array wrapper) so --paginate doesn't emit one array per page.
   # The output is the .id of any matching review (one per line); empty = no match.
+  # Filter on BOTH submitted_at and commit_id — a delayed previous-round review can have
+  # submitted_at >= REQUESTED_AT but its commit_id will be the old SHA, so the SHA guard
+  # keeps it from being mistaken for this round's review.
   RESULT=$(gh api "repos/$OWNER/$REPO/pulls/$PR/reviews" --paginate \
-    --jq ".[] | select(.user.type==\"Bot\") | select(.user.login | ascii_downcase | contains(\"copilot\")) | select(.state!=\"PENDING\") | select(.submitted_at >= \"$REQUESTED_AT\") | .id" \
+    --jq ".[] | select(.user.type==\"Bot\") | select(.user.login | ascii_downcase | contains(\"copilot\")) | select(.state!=\"PENDING\") | select(.submitted_at >= \"$REQUESTED_AT\") | select(.commit_id == \"$HEAD_SHA\") | .id" \
     2>"$ERR_LOG")
   EXIT=$?
   if [ "$EXIT" -ne 0 ]; then
@@ -203,23 +219,24 @@ done
 
 ## Step 4 — Fetch Copilot's feedback
 
-Inline review comments (file/line specific). Two important constraints in the jq filter:
+Inline review comments (file/line specific). Three important constraints in the jq filter:
 
 1. **Filter by `created_at >= $REQUESTED_AT`** — the comments endpoint returns *every* inline comment ever made on the PR, including ones Copilot already filed in earlier review rounds. Without this filter, round 2+ re-processes resolved round-1 comments. The timestamp captured in Step 2 is the cut-off for "this round's feedback".
-2. **No `[...]` wrapper** — `gh api --paginate` runs the filter once per page, so an array wrapper would emit one array per page (breaking any downstream group/sort). Streaming items emits one object per line across pages; pipe to `jq -s` to consolidate into a single array:
+2. **Also filter by `commit_id == $HEAD_SHA`** — timestamp alone isn't enough. If the previous round's Copilot review is delayed and its comments land *after* the next request is sent, their `created_at` will be `>= REQUESTED_AT` and they'd slip through a timestamp-only filter — but their `commit_id` still points at the old commit, so the SHA guard catches them. (Same problem applies to the Step 3 review-wait loop, which also pairs both filters.)
+3. **No `[...]` wrapper** — `gh api --paginate` runs the filter once per page, so an array wrapper would emit one array per page (breaking any downstream group/sort). Streaming items emits one object per line across pages; pipe to `jq -s` to consolidate into a single array:
 
 ```bash
 gh api "repos/$OWNER/$REPO/pulls/$PR/comments" --paginate \
-  --jq ".[] | select(.user.type==\"Bot\") | select(.user.login | ascii_downcase | contains(\"copilot\")) | select(.created_at >= \"$REQUESTED_AT\") | {id, path, line, original_line, position, body, commit_id}" \
+  --jq ".[] | select(.user.type==\"Bot\") | select(.user.login | ascii_downcase | contains(\"copilot\")) | select(.created_at >= \"$REQUESTED_AT\") | select(.commit_id == \"$HEAD_SHA\") | {id, path, line, original_line, position, body, commit_id}" \
   | jq -s '.'
 ```
 
 Note: `line` is null when the comment is on a part of the diff that's been outdated by subsequent commits. Use `original_line` as a fallback (Step 5 handles this).
 
-Top-level review summary (overall comments / approval state) — same pagination pattern:
+Top-level review summary (overall comments / approval state) — same pagination pattern, same dual filter:
 ```bash
 gh api "repos/$OWNER/$REPO/pulls/$PR/reviews" --paginate \
-  --jq '.[] | select(.user.type=="Bot") | select(.user.login | ascii_downcase | contains("copilot")) | select(.submitted_at >= "'$REQUESTED_AT'") | {id, state, body}' \
+  --jq '.[] | select(.user.type=="Bot") | select(.user.login | ascii_downcase | contains("copilot")) | select(.submitted_at >= "'$REQUESTED_AT'") | select(.commit_id == "'$HEAD_SHA'") | {id, state, body}' \
   | jq -s '.'
 ```
 
@@ -337,18 +354,31 @@ for id in "${REPLIED_IDS[@]}"; do
 done
 ```
 
-Skip resolving for `skipped` comments — they stay open by design (the user wanted to revisit). The combination of "filter by `created_at` in Step 4" + "resolve here" is what keeps round N+1 from re-processing comments addressed in round N: round N's threads end up resolved, and round N+1's `created_at` cut-off only matches genuinely new feedback.
+Skip resolving for `skipped` comments — they stay open by design (the user wanted to revisit). The combination of "filter by `created_at` and `commit_id` in Step 4" + "resolve here" is what keeps round N+1 from re-processing comments addressed in round N: round N's threads end up resolved, the SHA guard pins each fetch to that round's commit, and the `created_at` cut-off only matches genuinely new feedback.
 
 ### Track this round's tally
 
 After replies and resolves are done, count what landed in this round and append a one-line summary to `ROUND_LOG`. These numbers feed both the loop decision (Step 7.5) and the wrap-up (Step 8):
 
 ```bash
+COMMENTS_THIS_ROUND=<total inline comments fetched in Step 4>
 APPLIED_THIS_ROUND=<count of applied + edited in Step 5>
 SKIPPED_THIS_ROUND=<count of skipped>
 REJECTED_THIS_ROUND=<count of rejected>
 
-ROUND_LOG+=("Round $ROUND: ✅ $APPLIED_THIS_ROUND applied, ⏭ $SKIPPED_THIS_ROUND skipped, ❌ $REJECTED_THIS_ROUND rejected${SHA:+ → $SHA}")
+# Aggregate rejection reasons across rounds so Step 8 can list them per-comment.
+# For each comment with status=rejected from Step 5, append a `path:line — reason` entry:
+#   REJECTION_REASONS+=("$path:$line — $reason")
+
+# Special case: when Copilot left zero comments this round, the "applied/skipped/rejected"
+# format is misleading (0/0/0 with no commits). Surface that explicitly so the wrap-up
+# in Step 8 can show "Copilot satisfied" instead of an empty count line.
+if [ "$COMMENTS_THIS_ROUND" -eq 0 ]; then
+  ROUND_LOG+=("Round $ROUND: ✅ 0 applied (no new comments — Copilot satisfied)")
+else
+  ROUND_LOG+=("Round $ROUND: ✅ $APPLIED_THIS_ROUND applied, ⏭ $SKIPPED_THIS_ROUND skipped, ❌ $REJECTED_THIS_ROUND rejected${SHA:+ → $SHA}")
+fi
+
 TOTAL_APPLIED=$((TOTAL_APPLIED + APPLIED_THIS_ROUND))
 TOTAL_SKIPPED=$((TOTAL_SKIPPED + SKIPPED_THIS_ROUND))
 TOTAL_REJECTED=$((TOTAL_REJECTED + REJECTED_THIS_ROUND))
@@ -378,17 +408,17 @@ After this round's replies + resolves are done, decide whether to start another 
 
 1. Increment `ROUND`.
 2. Tell the user: `"Round $((ROUND-1)) done — $APPLIED_THIS_ROUND fix(es) pushed in $SHA. Starting round $ROUND of $ROUNDS — re-requesting Copilot review on the new commits…"`
-3. Refresh `REQUESTED_AT` to the current UTC time. The Step 4 `created_at` filter uses this to scope the next round's comments to *only* what Copilot files this round, not anything from previous rounds.
-4. Reset per-round counters: `APPLIED_THIS_ROUND=0`, `SKIPPED_THIS_ROUND=0`, `REJECTED_THIS_ROUND=0`, `SHA=""`.
+3. Refresh **both** `REQUESTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)` and `HEAD_SHA=$(git rev-parse HEAD)` — the latter pins the upcoming wait/fetch to the post-push commit. Refreshing `REQUESTED_AT` alone is *not* sufficient: a delayed previous-round Copilot review can have `submitted_at >= REQUESTED_AT` (clock-wise it lands after the new request), but its `commit_id` will still be the old SHA, so the SHA guard from Steps 3 and 4 catches it.
+4. Reset per-round counters: `APPLIED_THIS_ROUND=0`, `SKIPPED_THIS_ROUND=0`, `REJECTED_THIS_ROUND=0`, `COMMENTS_THIS_ROUND=0`, `SHA=""`.
 5. Jump back to **Step 2** (the request step). Skip Step 1 — the PR already exists.
 
-This keeps round-N's logic identical to round-1's logic. The only thing that's "round-aware" is the `REQUESTED_AT` timestamp and the round counters.
+This keeps round-N's logic identical to round-1's logic. The only round-aware state is the `REQUESTED_AT` timestamp, the `HEAD_SHA` pin, and the round counters.
 
 ---
 
 ## Step 8 — Wrap up
 
-Print the round-by-round log first, then totals:
+Print the round-by-round log first, then totals (with each rejection's `path:line — reason` from `REJECTION_REASONS`, indented under the rejected count):
 
 ```
 Ran $ROUND of $ROUNDS round(s).
@@ -398,7 +428,8 @@ ${ROUND_LOG[@]}
 Total:
   ✅ Applied:  $TOTAL_APPLIED
   ⏭ Skipped:  $TOTAL_SKIPPED  (the user may want to revisit)
-  ❌ Rejected: $TOTAL_REJECTED  — with the one-line reason per comment
+  ❌ Rejected: $TOTAL_REJECTED
+${REJECTION_REASONS[@]/#/    - }   # one indented line per reason; omit this block if TOTAL_REJECTED == 0
   Commits:    ${COMMITS[@]}
   PR:         <url>
 ```
@@ -415,7 +446,8 @@ Round 3: ✅ 0 applied (no new comments — Copilot satisfied)
 Total:
   ✅ Applied:  10
   ⏭ Skipped:  1  (the user may want to revisit)
-  ❌ Rejected: 1  — "comment was about a generated file, not source"
+  ❌ Rejected: 1
+    - lib/foo.ts:42 — comment was about a generated file, not source
   Commits:    a89a3d1b c7e2f045
   PR:         https://github.com/owner/repo/pull/123
 ```
