@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// spartan-hook-version: 1.24.0
+// spartan-hook-version: 1.24.1
 // Claude Code Statusline - Spartan Edition
 // Shows: model | current task | directory | context usage
 

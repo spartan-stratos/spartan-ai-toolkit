@@ -1,6 +1,6 @@
 {
   "name": "ai-toolkit",
-  "version": "1.24.0",
+  "version": "1.24.1",
   "description": "Engineering discipline layer for Claude Code — 5 workflows, 69 commands, 21 rules, 29 skills, 9 agents organized in 12 packs",
   "author": {
     "name": "Khoa Tran",

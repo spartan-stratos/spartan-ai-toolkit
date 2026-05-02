@@ -7,6 +7,12 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.24.1] - 2026-05-02
+
+### Fixed
+- Installer crashed with `Error: Unknown pack: 'project-mgmt'` when re-installing on a machine that previously had the v1.23 GSD pack saved in `.spartan-packs`. Both the npx CLI (`resolver.js`) and the bash setup (`setup.sh`) now silently drop removed packs with a one-line warning instead of throwing.
+- Removed `--packs=backend-micronaut,project-mgmt` example from CLI help (project-mgmt no longer exists).
+
 ## [1.24.0] - 2026-05-02
 
 ### Removed (BREAKING)

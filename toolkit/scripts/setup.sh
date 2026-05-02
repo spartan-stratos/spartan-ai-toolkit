@@ -79,6 +79,20 @@ resolve_packs() {
   if [[ -f "$saved_file" ]]; then
     local saved
     saved=$(tr '\n' ' ' < "$saved_file" | sed 's/ *$//')
+    # Strip removed packs (silently dropped — see resolver.js REMOVED for the canonical list)
+    local cleaned=""
+    local pack
+    for pack in $saved; do
+      case "$pack" in
+        project-mgmt)
+          echo -e "  ${YELLOW}!${NC} Pack \"$pack\" was removed in v1.24.0 — skipping (epic + brownfield are now in core)"
+          ;;
+        *)
+          cleaned="$cleaned $pack"
+          ;;
+      esac
+    done
+    saved=$(echo "$cleaned" | sed 's/^ *//;s/ *$//')
     if [[ -n "$saved" ]]; then
       echo ""
       echo -e "  ${CYAN}Previously installed packs:${NC} $saved"

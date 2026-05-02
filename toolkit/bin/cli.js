@@ -133,8 +133,8 @@ ${lines.join('\n')}`).join('\n')}
     ${cyan('npx @c0x12c/ai-toolkit@latest --packs=frontend-react,product')}
       Next.js app with product thinking tools
 
-    ${cyan('npx @c0x12c/ai-toolkit@latest --packs=backend-micronaut,project-mgmt')}
-      Kotlin APIs with full project lifecycle
+    ${cyan('npx @c0x12c/ai-toolkit@latest --packs=backend-micronaut,frontend-react')}
+      Full-stack: Kotlin backend + React frontend
 
     ${cyan('npx @c0x12c/ai-toolkit@latest --all')}
       Everything installed

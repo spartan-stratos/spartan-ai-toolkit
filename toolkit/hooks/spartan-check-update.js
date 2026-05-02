@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// spartan-hook-version: 1.24.0
+// spartan-hook-version: 1.24.1
 // Check for Spartan updates in background, write result to cache.
 // Called by SessionStart hook - runs once per session.
 

@@ -95,8 +95,13 @@ export const ALIASES = {
   frontend: 'frontend-react',
 };
 
+/** Packs that were removed in past releases. Skipped with a warning. */
+export const REMOVED = {
+  'project-mgmt': '1.24.0 — GSD removed; use /spartan:epic + /spartan:brownfield (now in core)',
+};
+
 /**
- * Resolve aliases in a list of pack names.
+ * Resolve aliases in a list of pack names. Drops removed packs with a warning.
  * @param {string[]} names - Pack names (may include old names)
  * @returns {{ resolved: string[], warnings: string[] }}
  */
@@ -104,6 +109,10 @@ export function resolveAliases(names) {
   const resolved = [];
   const warnings = [];
   for (const name of names) {
+    if (REMOVED[name]) {
+      warnings.push(`Pack "${name}" was removed in v${REMOVED[name]}. Skipping.`);
+      continue;
+    }
     if (ALIASES[name]) {
       resolved.push(ALIASES[name]);
       warnings.push(`"${name}" is now "${ALIASES[name]}". Update your .spartan-packs file.`);
