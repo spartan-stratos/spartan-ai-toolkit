@@ -10,14 +10,15 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [1.25.0] - 2026-05-02
 
 ### Added
-- `/spartan:ship-pr` now supports a `--rounds N` flag (default `1`, capped at `3`) that loops the request → wait → fix → reply cycle. Each round re-requests Copilot review, fetches only the new comments via `created_at >= REQUESTED_AT`, applies fixes, pushes, replies, and resolves threads before deciding whether to start the next round. Short-circuits when a round produces zero applied fixes (nothing new for Copilot to re-review).
-- New `Step 1.5 — Parse round configuration` initializes `ROUND`, `ROUND_LOG`, and totals; rejects `--no-request --rounds N>1` (multi-round requires API access).
-- New `Step 7.5 — Continue or finish?` decides whether to loop based on remaining rounds, applied count, and user `quit`.
-- `Step 8` wrap-up now prints a per-round log followed by totals across all rounds.
+- `/spartan:ship-pr` now supports a `--rounds N` flag (default `1`, capped at `3`) that loops the request → wait → fix → reply cycle. Each round re-requests Copilot review, fetches only the new comments by pairing `created_at >= REQUESTED_AT` with a `commit_id == HEAD_SHA` SHA guard (the timestamp alone isn't sufficient — a delayed previous-round review can land after the next request and would slip past a time-only filter, so the SHA pin is what actually isolates rounds). It then applies fixes, pushes, replies, and resolves threads before deciding whether to start the next round. Short-circuits when a round produces zero applied fixes (nothing new for Copilot to re-review).
+- New `Step 1.5 — Parse round configuration` initializes `ROUND`, `ROUND_LOG`, `REJECTION_REASONS`, `HEAD_SHA`, and totals; rejects `--no-request --rounds N>1` (multi-round requires API access); and refuses malformed `--rounds` values (e.g. `--rounds foo`, `--rounds 2x`) instead of silently defaulting to `1`.
+- New `Step 7.5 — Continue or finish?` decides whether to loop based on remaining rounds, applied count, and user `quit`. Round transitions refresh both `REQUESTED_AT` and `HEAD_SHA` so the next round's wait/fetch is pinned to the post-push commit.
+- `Step 8` wrap-up now prints a per-round log followed by totals across all rounds, including a per-rejection `path:line — reason` listing under the rejected count (or "no new comments — Copilot satisfied" for a zero-comment round).
 
 ### Changed
 - `Step 2` header is now scoped to the active round (`Request Copilot review (round $ROUND of $ROUNDS)`) so the user can see progress through the loop.
-- `Step 7` adds a "Track this round's tally" subsection that updates `ROUND_LOG`, `TOTAL_*` counters, and the `COMMITS` array.
+- `Step 3` review-wait loop and `Step 4` inline-comment + review-summary fetches now all pair `submitted_at`/`created_at >= REQUESTED_AT` with `commit_id == HEAD_SHA`, so a stale previous-round review can't be mistaken for current-round feedback.
+- `Step 7` adds a "Track this round's tally" subsection that updates `ROUND_LOG`, `TOTAL_*` counters, the `COMMITS` array, and the cross-round `REJECTION_REASONS` list. The round-log line branches on `COMMENTS_THIS_ROUND` so a zero-comment round is recorded as "Copilot satisfied" rather than a misleading 0/0/0 row.
 - Frontmatter `description` and `argument-hint` updated to document the new flag and trigger conditions.
 
 ## [1.24.2] - 2026-05-02

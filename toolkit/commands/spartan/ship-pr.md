@@ -58,12 +58,15 @@ Parse `--rounds N` from args. Default `1`, hard-capped at `3`.
 
 ```bash
 ROUNDS=1
-if [[ "$ARGUMENTS" =~ --rounds[[:space:]]+([0-9]+) ]]; then
+# Anchor the digit run so it must be followed by whitespace or end-of-string. Without the
+# trailing boundary, `[0-9]+` greedily matches the `2` prefix of `--rounds 2x` and silently
+# sets ROUNDS=2, which sneaks past the `elif` rejection path below.
+if [[ "$ARGUMENTS" =~ --rounds[[:space:]]+([0-9]+)([[:space:]]|$) ]]; then
   ROUNDS="${BASH_REMATCH[1]}"
 elif [[ "$ARGUMENTS" == *"--rounds"* ]]; then
-  # `--rounds` was passed but not followed by a positive integer (e.g. `--rounds foo`,
-  # `--rounds 2x`, `--rounds` with no value). Don't silently fall back to the default —
-  # the user clearly meant something, so refuse and let them re-run with a valid value.
+  # `--rounds` was passed but not followed by a *whole* positive integer (e.g. `--rounds foo`,
+  # `--rounds 2x`, `--rounds 2.5`, `--rounds` with no value). Don't silently fall back to the
+  # default — the user clearly meant something, so refuse and let them re-run with a valid value.
   echo "Error: --rounds requires a positive integer (e.g. --rounds 2). Refusing to silently fall back to --rounds 1."
   exit 1
 fi
