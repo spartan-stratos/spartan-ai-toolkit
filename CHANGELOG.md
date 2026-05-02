@@ -7,6 +7,11 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.24.2] - 2026-05-02
+
+### Fixed
+- Removed `Co-Authored-By: Claude <noreply@anthropic.com>` template lines from `rules/core/GIT_COMMIT.md` and `commands/spartan/commit-message.md` (and the `.codex` mirrors). The repo policy forbids AI/bot attribution in commits, so the templates would have generated policy-violating commit messages. Each file now carries an explicit "do not add Co-Authored-By or AI attribution" instruction instead.
+
 ## [1.24.1] - 2026-05-02
 
 ### Fixed

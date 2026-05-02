@@ -81,8 +81,6 @@ Extract the ticket number (e.g., LBF-1647) to use as prefix. Convert to uppercas
 
 ## Related Issues
 <Reference tickets and conversations.>
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ### Subsequent commits (SHORT format):
@@ -90,9 +88,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 [TICKET-ID] <emoji> <type>: <concise_description>
 
 <Brief summary of changes in 2-3 lines>
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
+
+**Do NOT add `Co-Authored-By` lines or any AI/bot attribution (Claude, Anthropic, "Generated with", etc.) in either format. Commit metadata is for the human author only.**
 
 ## Workflow:
 

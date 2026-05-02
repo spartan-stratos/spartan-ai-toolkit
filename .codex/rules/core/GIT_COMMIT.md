@@ -46,9 +46,9 @@ Explain the thought process behind your approach.>
 
 ## Impact Area
 <List the impacted features: e.g., Admin Dashboard, Bounties, Contributor Portal, etc.>
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 ```
+
+**Do NOT add `Co-Authored-By` lines or any AI/bot attribution (Claude, Anthropic, "Generated with", etc.) to commit messages.** Commit metadata is for the human author only.
 
 ### Type Prefixes with Emoji
 
