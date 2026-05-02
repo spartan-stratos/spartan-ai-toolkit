@@ -1,7 +1,7 @@
 ---
 name: spartan:ship-pr
-description: Push branch, request Copilot review, wait for it, and address comments interactively
-argument-hint: "[pr-number-or-url] [--yolo] [--no-request]"
+description: Push branch, request Copilot review, wait for it, and address comments interactively. Optionally loop the cycle up to 3 rounds. Use when a feature is complete and the user wants to merge after Copilot review, or wants iterative review-fix-rereview rounds.
+argument-hint: "[pr-number-or-url] [--rounds N] [--yolo] [--no-request]"
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, Monitor
 ---
 
@@ -15,7 +15,8 @@ You are running the `/ship-pr` workflow for the user's current branch.
 
 - **Default (act-then-report):** for each Copilot comment, print a one-line summary so the user can follow along, then apply clearly-valid fixes immediately (factual bugs, undefined variables, broken claims, obvious logic flaws, missing null handling). Only stop and prompt — `apply | edit <instructions> | reject <reason> | skip | quit` — when a comment is genuinely ambiguous, requires architectural judgment, would change behavior the user might want differently, or is wrong / noise. See Step 5 for the full decision rule.
 - **`--yolo` in args:** apply every comment without ever prompting, including the ambiguous ones; still summarize at the end.
-- **`--no-request` in args:** skip Step 2's API attempt entirely. The user has already requested Copilot via the GitHub UI (or will). Go straight to the wait step.
+- **`--no-request` in args:** skip Step 2's API attempt entirely. The user has already requested Copilot via the GitHub UI (or will). Go straight to the wait step. Only valid with `--rounds 1` (the default) — multi-round requires API access.
+- **`--rounds N` in args (default `1`, max `3`):** loop the request → wait → fix → reply cycle up to N times. Each round re-requests Copilot review, fetches *only* the new comments (filtered by the round's `REQUESTED_AT`), applies fixes, pushes, replies, resolves threads, then either starts the next round or stops. The loop short-circuits if a round produces zero applied fixes — there's nothing new for Copilot to re-review.
 
 If the user passes a PR number or URL as an argument, target that PR. Otherwise target the PR for the current branch (or create one).
 
@@ -51,7 +52,48 @@ If the user passes a PR number or URL as an argument, target that PR. Otherwise 
 
 ---
 
-## Step 2 — Request Copilot review
+## Step 1.5 — Parse round configuration
+
+Parse `--rounds N` from args. Default `1`, hard-capped at `3`.
+
+```bash
+ROUNDS=1
+if [[ "$ARGUMENTS" =~ --rounds[[:space:]]+([0-9]+) ]]; then
+  ROUNDS="${BASH_REMATCH[1]}"
+fi
+
+if [ "$ROUNDS" -lt 1 ]; then
+  echo "Error: --rounds must be >= 1"
+  exit 1
+fi
+if [ "$ROUNDS" -gt 3 ]; then
+  echo "Capping --rounds at 3 (you passed $ROUNDS — Copilot reviews past round 3 hit diminishing returns)."
+  ROUNDS=3
+fi
+
+# --no-request only makes sense for a single round; multi-round needs API access.
+if [[ "$ARGUMENTS" == *"--no-request"* ]] && [ "$ROUNDS" -gt 1 ]; then
+  echo "Error: --no-request and --rounds N>1 are incompatible. --no-request requires manual UI trigger; multi-round needs the API to re-request between rounds."
+  exit 1
+fi
+```
+
+Initialize round tracking — these get reset at the start of every round in Step 2 and accumulated for the final wrap-up:
+
+```bash
+ROUND=1                 # current round (1..ROUNDS)
+declare -a ROUND_LOG    # one summary line per completed round
+TOTAL_APPLIED=0
+TOTAL_SKIPPED=0
+TOTAL_REJECTED=0
+declare -a COMMITS      # SHAs pushed across all rounds
+```
+
+Tell the user up front: `"Will run up to $ROUNDS round(s) of Copilot review. The loop stops early if a round produces zero applied fixes."`
+
+---
+
+## Step 2 — Request Copilot review (round $ROUND of $ROUNDS)
 
 First, surface which account is making the request (so the user can sanity-check before any UI fallback):
 
@@ -297,6 +339,22 @@ done
 
 Skip resolving for `skipped` comments — they stay open by design (the user wanted to revisit). The combination of "filter by `created_at` in Step 4" + "resolve here" is what keeps round N+1 from re-processing comments addressed in round N: round N's threads end up resolved, and round N+1's `created_at` cut-off only matches genuinely new feedback.
 
+### Track this round's tally
+
+After replies and resolves are done, count what landed in this round and append a one-line summary to `ROUND_LOG`. These numbers feed both the loop decision (Step 7.5) and the wrap-up (Step 8):
+
+```bash
+APPLIED_THIS_ROUND=<count of applied + edited in Step 5>
+SKIPPED_THIS_ROUND=<count of skipped>
+REJECTED_THIS_ROUND=<count of rejected>
+
+ROUND_LOG+=("Round $ROUND: ✅ $APPLIED_THIS_ROUND applied, ⏭ $SKIPPED_THIS_ROUND skipped, ❌ $REJECTED_THIS_ROUND rejected${SHA:+ → $SHA}")
+TOTAL_APPLIED=$((TOTAL_APPLIED + APPLIED_THIS_ROUND))
+TOTAL_SKIPPED=$((TOTAL_SKIPPED + SKIPPED_THIS_ROUND))
+TOTAL_REJECTED=$((TOTAL_REJECTED + REJECTED_THIS_ROUND))
+[ -n "$SHA" ] && COMMITS+=("$SHA")
+```
+
 ### Examples (good vs bad)
 
 | Bad (too thin)                    | Good (detailed)                                                                                                                                                                                                |
@@ -306,14 +364,61 @@ Skip resolving for `skipped` comments — they stay open by design (the user wan
 
 ---
 
+## Step 7.5 — Continue or finish?
+
+After this round's replies + resolves are done, decide whether to start another round.
+
+**Stop and go to Step 8 if any of these are true:**
+
+1. `ROUND >= ROUNDS` — you've used the configured rounds.
+2. `APPLIED_THIS_ROUND == 0` — nothing changed in this round (everything was skipped/rejected, or Copilot left no actionable comments). There's no new diff for Copilot to find issues on, so requesting another review is wasted time.
+3. The user typed `quit` during Step 5.
+
+**Otherwise — start another round:**
+
+1. Increment `ROUND`.
+2. Tell the user: `"Round $((ROUND-1)) done — $APPLIED_THIS_ROUND fix(es) pushed in $SHA. Starting round $ROUND of $ROUNDS — re-requesting Copilot review on the new commits…"`
+3. Refresh `REQUESTED_AT` to the current UTC time. The Step 4 `created_at` filter uses this to scope the next round's comments to *only* what Copilot files this round, not anything from previous rounds.
+4. Reset per-round counters: `APPLIED_THIS_ROUND=0`, `SKIPPED_THIS_ROUND=0`, `REJECTED_THIS_ROUND=0`, `SHA=""`.
+5. Jump back to **Step 2** (the request step). Skip Step 1 — the PR already exists.
+
+This keeps round-N's logic identical to round-1's logic. The only thing that's "round-aware" is the `REQUESTED_AT` timestamp and the round counters.
+
+---
+
 ## Step 8 — Wrap up
 
-Print:
-- ✅ Applied: N
-- ⏭ Skipped: N (the user may want to revisit)
-- ❌ Rejected as noise: N — with the one-line reason per comment
-- Commit pushed: `<sha>`
-- PR: `<url>`
+Print the round-by-round log first, then totals:
+
+```
+Ran $ROUND of $ROUNDS round(s).
+
+${ROUND_LOG[@]}
+
+Total:
+  ✅ Applied:  $TOTAL_APPLIED
+  ⏭ Skipped:  $TOTAL_SKIPPED  (the user may want to revisit)
+  ❌ Rejected: $TOTAL_REJECTED  — with the one-line reason per comment
+  Commits:    ${COMMITS[@]}
+  PR:         <url>
+```
+
+Example output for a 3-round run:
+
+```
+Ran 3 of 3 round(s).
+
+Round 1: ✅ 7 applied, ⏭ 1 skipped, ❌ 1 rejected → a89a3d1b
+Round 2: ✅ 3 applied, ⏭ 0 skipped, ❌ 0 rejected → c7e2f045
+Round 3: ✅ 0 applied (no new comments — Copilot satisfied)
+
+Total:
+  ✅ Applied:  10
+  ⏭ Skipped:  1  (the user may want to revisit)
+  ❌ Rejected: 1  — "comment was about a generated file, not source"
+  Commits:    a89a3d1b c7e2f045
+  PR:         https://github.com/owner/repo/pull/123
+```
 
 Then exit.
 

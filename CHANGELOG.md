@@ -7,6 +7,19 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.25.0] - 2026-05-02
+
+### Added
+- `/spartan:ship-pr` now supports a `--rounds N` flag (default `1`, capped at `3`) that loops the request → wait → fix → reply cycle. Each round re-requests Copilot review, fetches only the new comments via `created_at >= REQUESTED_AT`, applies fixes, pushes, replies, and resolves threads before deciding whether to start the next round. Short-circuits when a round produces zero applied fixes (nothing new for Copilot to re-review).
+- New `Step 1.5 — Parse round configuration` initializes `ROUND`, `ROUND_LOG`, and totals; rejects `--no-request --rounds N>1` (multi-round requires API access).
+- New `Step 7.5 — Continue or finish?` decides whether to loop based on remaining rounds, applied count, and user `quit`.
+- `Step 8` wrap-up now prints a per-round log followed by totals across all rounds.
+
+### Changed
+- `Step 2` header is now scoped to the active round (`Request Copilot review (round $ROUND of $ROUNDS)`) so the user can see progress through the loop.
+- `Step 7` adds a "Track this round's tally" subsection that updates `ROUND_LOG`, `TOTAL_*` counters, and the `COMMITS` array.
+- Frontmatter `description` and `argument-hint` updated to document the new flag and trigger conditions.
+
 ## [1.24.2] - 2026-05-02
 
 ### Fixed
