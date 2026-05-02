@@ -252,24 +252,9 @@ echo -e "  ${GREEN}✓${NC} Superpowers noted"
 echo ""
 
 # ─────────────────────────────────────────────────────────────
-# Step 4: GSD
+# Step 4: Install Spartan hooks (statusline + update-check)
 # ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[4/11]${NC} ${BOLD}Installing GSD (Get Shit Done)...${NC}"
-
-GSD_FLAGS="--global"
-[[ "$MODE" == "local" ]] && GSD_FLAGS="--local"
-
-if npx get-shit-done-cc@latest $GSD_FLAGS 2>&1 | tail -5; then
-  echo -e "  ${GREEN}✓${NC} GSD installed (${MODE})"
-else
-  echo -e "  ${YELLOW}⚠${NC} GSD install may have had warnings — check above"
-fi
-echo ""
-
-# ─────────────────────────────────────────────────────────────
-# Step 4.5: Install Spartan hooks (override GSD statusline/update-check)
-# ─────────────────────────────────────────────────────────────
-echo -e "${BLUE}[4.5/11]${NC} ${BOLD}Installing Spartan hooks...${NC}"
+echo -e "${BLUE}[4/11]${NC} ${BOLD}Installing Spartan hooks...${NC}"
 
 HOOKS_SRC="$TOOLKIT_ROOT/hooks"
 HOOKS_DEST="$TARGET_BASE/hooks"
@@ -284,7 +269,7 @@ else
   exit 1
 fi
 
-# Patch settings.json: replace GSD hooks with Spartan hooks
+# Wire settings.json to use Spartan hooks
 SETTINGS_FILE_HOOK="$TARGET_BASE/settings.json"
 if [[ -f "$SETTINGS_FILE_HOOK" ]]; then
   if node -e '
@@ -302,20 +287,10 @@ if [[ -f "$SETTINGS_FILE_HOOK" ]]; then
       process.exit(1);
     }
 
-    // Replace statusLine command (match any path ending in gsd-statusline.js)
-    if (settings.statusLine && settings.statusLine.command && settings.statusLine.command.includes("gsd-statusline")) {
-      settings.statusLine.command = settings.statusLine.command.replace(/\S*gsd-statusline\.js/g, spartanStatusline);
-    }
-
-    // Replace SessionStart hook (check-update, match any path ending in gsd-check-update.js)
-    if (settings.hooks && settings.hooks.SessionStart) {
-      for (const entry of settings.hooks.SessionStart) {
-        for (const hook of (entry.hooks || [])) {
-          if (hook.command && hook.command.includes("gsd-check-update")) {
-            hook.command = hook.command.replace(/\S*gsd-check-update\.js/g, spartanCheckUpdate);
-          }
-        }
-      }
+    if (!settings.statusLine) settings.statusLine = { type: "command", command: spartanStatusline };
+    if (!settings.hooks) settings.hooks = {};
+    if (!settings.hooks.SessionStart) {
+      settings.hooks.SessionStart = [{ hooks: [{ type: "command", command: spartanCheckUpdate }] }];
     }
 
     try {
@@ -325,9 +300,9 @@ if [[ -f "$SETTINGS_FILE_HOOK" ]]; then
       process.exit(1);
     }
   ' "$SETTINGS_FILE_HOOK" "$HOOKS_DEST"; then
-    echo -e "  ${GREEN}✓${NC} settings.json patched (statusline + update-check → Spartan)"
+    echo -e "  ${GREEN}✓${NC} settings.json wired to Spartan hooks"
   else
-    echo -e "  ${RED}✗${NC} Could not patch settings.json — hooks may still reference GSD"
+    echo -e "  ${RED}✗${NC} Could not patch settings.json"
     exit 1
   fi
 else

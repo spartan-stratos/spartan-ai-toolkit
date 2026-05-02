@@ -36,7 +36,7 @@ What do you need?
 | < 30 min, ≤ 3 files | Just ask Claude (no command needed) |
 | < 1 day | `/spartan:spec` → `/spartan:build` |
 | 1–3 days | `/spartan:spec` → `/spartan:plan` → `/spartan:build` |
-| > 3 days, multi-session | `/spartan:project new` (full lifecycle) |
+| Multi-feature work | `/spartan:epic` → then spec/plan/build each feature |
 
 
 ---
@@ -48,29 +48,20 @@ What do you need?
 
 ### 2. Spec Before Code
 - Task < 1 day → `/spartan:spec` + `/spartan:plan` + `/spartan:build`
-- Task > 1 day → `/spartan:project new` or `/spartan:project milestone-new`
+- Multi-feature work → `/spartan:epic` then spec/plan/build each feature
 - Never write production code without a written spec or plan
 
 ### 3. TDD is Non-Negotiable
 - Red → Green → Refactor, always
 - Write tests first, then the code that makes them pass
 
-### 4. Atomic Commits
-Each commit = one task, tests passing:
-```
-type(scope): what changed
-
-- why / detail
-```
-Types: `feat` · `fix` · `test` · `refactor` · `chore` · `docs`
-
-### 5. Context Hygiene (Auto-Managed)
+### 4. Context Hygiene (Auto-Managed)
 Claude proactively manages its own context window:
 - When detecting context pressure (slow responses, forgetting earlier context, long conversation) → auto-run `/compact` to summarize and free space
 - If compaction isn't enough → auto-save critical state to `.handoff/` and `.memory/`, then tell user to start a fresh session
 - User can also manually trigger `/spartan:context-save` at any time
 - Session > 60% → hard stop, no exceptions
-- State is in `.planning/` (GSD), `.memory/` (permanent), or `.handoff/` (session), never in chat history
+- State is in `.planning/` (specs/plans), `.memory/` (permanent), or `.handoff/` (session), never in chat history
 
 **Self-monitoring signals** (Claude watches for these in its own behavior):
 - Starting to lose track of earlier decisions → compact NOW
@@ -78,7 +69,7 @@ Claude proactively manages its own context window:
 - Response quality dropping → warn user + compact
 - Multi-step command taking unusually long → consider compacting between steps
 
-### 6. Auto Mode
+### 5. Auto Mode
 When user says **"auto on"** or **"auto mode"**, all Spartan commands skip confirmation prompts and execute straight through. Claude will:
 - Show the spec/plan/output but NOT pause to ask "does this match?" or "shall I proceed?"
 - Continue to the next step automatically after each step completes
@@ -89,7 +80,7 @@ Turn off with **"auto off"**. Default is **auto off** (commands ask for confirma
 
 Auto mode is ideal for experienced users who trust the workflow and want maximum velocity.
 
-### 7. Safety Guardrails
+### 6. Safety Guardrails
 
 | Command | What it does |
 |---|---|
@@ -113,7 +104,6 @@ Auto mode is ideal for experienced users who trust the workflow and want maximum
 | Single feature (backend) | `/spartan:spec` → `/spartan:plan` → `/spartan:build` |
 | Single feature (with UI) | `/spartan:spec` → `/spartan:ux prototype` → `/spartan:plan` → `/spartan:build` |
 | Batch of features (1-2 weeks) | `/spartan:epic` → then spec/plan/build each feature |
-| Multi-week project | `/spartan:project new` → milestones + phases |
 
 ### Workflows (start here)
 | Command | Purpose |
@@ -331,42 +321,15 @@ Rules in `rules/infrastructure/` load automatically when `.tf`, `.hcl`, or `.tfv
 
 ---
 
-## Project Management Commands
+## Multi-Feature Work
 
 | Command | Purpose |
 |---|---|
 | `/spartan:epic "name"` | Break big work into ordered features → each goes through spec → plan → build |
-| `/spartan:project [action]` | Manage large projects: `new`, `status`, `milestone-new`, `milestone-complete`, `milestone-summary`, `manager` |
-| `/spartan:phase [action] [N]` | Manage phases: `discuss`, `plan`, `execute`, `verify` |
-| `/spartan:workstreams [action]` | Parallel workstreams: `list`, `create`, `switch`, `status`, `progress`, `complete`, `resume` |
-| `/spartan:gsd-upgrade [mode]` | Upgrade GSD to v5 (decompose + memory + waves) |
-| `/spartan:forensics "problem"` | Post-mortem investigation — diagnose failed workflows |
-| `/spartan:brownfield [svc]` | Map existing codebase; generates CONTEXT-MAP.md |
-| `/spartan:map-codebase` | Deep codebase analysis and architecture mapping |
-| `/spartan:team [action]` | Agent Teams: `create`, `status`, `wave`, `review`, `research`, `build`, `clean` |
+| `/spartan:brownfield [svc]` | Map existing codebase; generates CONTEXT-MAP.md before touching legacy code |
 
-### Office Hours (GSD Discuss Phase)
-When running `/spartan:phase discuss N`, Claude MUST ask these 3 forcing questions BEFORE gathering requirements:
+## Agent Memory (`.memory/`) — 3-Layer Architecture
 
-1. **"What pain are we actually solving?"** (not the feature — the underlying pain)
-2. **"What's the narrowest version we can ship to learn?"** (force MVP thinking)
-3. **"What assumption are we making that could be wrong?"** (surface hidden risks)
-
-Only after user answers all 3 → proceed to normal requirement gathering.
-**Auto mode on?** → Still ask these 3 questions. They exist to prevent building the wrong thing — skipping them defeats the purpose.
-
----
-
-## GSD v5 — Decompose + Agent Memory + Wave Execution
-
-### Decompose Step
-Complex requirements are broken into **work units (WUs)** before planning:
-- Each WU: max 3 files, max half-day, one commit
-- WUs are grouped into **waves** by dependency
-- Wave 1 = no dependencies → can run in parallel Claude Code tabs
-- Wave N+1 = depends on Wave N outputs
-
-### Agent Memory (`.memory/`) — 3-Layer Architecture
 Persistent project knowledge that survives all sessions. Three layers with different context rules:
 
 ```
@@ -395,75 +358,6 @@ Persistent project knowledge that survives all sessions. Three layers with diffe
 - `/spartan:context-save` writes a transcript + updates `.memory/`
 - `/spartan:memory-consolidate` cleans up layers 1-2 (never deletes transcripts)
 - `/spartan:magic-doc` keeps documentation in sync with code changes
-
-### Wave Execution
-```
-Wave 1 (parallel): WU-1, WU-3, WU-5  ← no dependencies
-  ── verify tests ──
-Wave 2 (after 1):  WU-2, WU-4        ← depends on wave 1
-  ── verify tests ──
-Wave 3 (final):    WU-6              ← integration
-```
-Multi-tab: each Claude Code tab handles one WU from the same wave.
-
-### Workstreams & Workspaces
-
-**Workstreams** (`/spartan:workstreams`) — run multiple milestones in parallel:
-- `create <name>` — spin up an independent work track
-- `switch <name>` — change active context between workstreams
-- `progress` — see all workstreams' completion at a glance
-
-**Workspaces** — isolated repo copies for safe parallel work:
-- Each workspace gets its own `.planning/` directory
-- No interference between concurrent work tracks
-- GSD manages workspace lifecycle automatically
-
-### Project Lifecycle Commands (wraps GSD under the hood)
-```
-/spartan:project new               Create project → PROJECT.md → ROADMAP.md
-/spartan:project status             Where are we? Current milestone/phase
-/spartan:project milestone-new      Start next milestone
-/spartan:project milestone-complete Archive milestone + git tag
-/spartan:project milestone-summary  Generate onboarding doc from milestone
-/spartan:project manager            Interactive command center for power users
-
-/spartan:phase discuss N            Office Hours (3 questions) → decompose → requirements
-/spartan:phase plan N               Generate wave-parallel execution plan
-/spartan:phase execute N            Execute tasks wave by wave (TDD, safety)
-/spartan:phase verify N             UAT + acceptance criteria + capture to .memory/
-
-/spartan:workstreams [action]       Manage parallel workstreams (list/create/switch/complete)
-/spartan:forensics "problem"        Post-mortem investigation for failed workflows
-```
-
-Users never need to type `/gsd:*` commands — the wrappers handle everything.
-
-### Agent Teams (Experimental)
-
-**Requires:** `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` env var set to `1`.
-
-Agent Teams replace manual multi-tab parallelism with automated multi-agent coordination. Multiple Claude Code sessions share a task list, communicate via messages, and work in parallel.
-
-| Command | What it does |
-|---|---|
-| `/spartan:team create` | Create a team with smart defaults for a task |
-| `/spartan:team status` | Show team progress and teammate states |
-| `/spartan:team wave` | Execute a GSD wave plan using Agent Teams |
-| `/spartan:team review` | Quick-spawn: parallel review team (quality + tests + security) |
-| `/spartan:team research` | Quick-spawn: research swarm (breadth + depth + contrarian) |
-| `/spartan:team build` | Quick-spawn: parallel implementation team |
-| `/spartan:team clean` | Shut down teammates and clean up |
-
-**How it bridges waves:**
-```
-Wave plan (.planning/)  →  /spartan:team wave  →  Agent Teams
-  WU-1, WU-3, WU-5         TeamCreate              Teammate per WU
-  (was: manual tabs)        TaskCreate per WU       Worktree isolation
-                            Spawn agents            Auto-advance waves
-```
-
-Teams store state in `~/.claude/teams/` and `~/.claude/tasks/`. Clean up with `/spartan:team clean`.
-
 
 ---
 
@@ -579,14 +473,12 @@ restartPolicyType = "on-failure"
 - `feature/{ticket}-{slug}` — new features
 - `fix/{ticket}-{slug}` — bug fixes
 
-GSD manages branch creation per phase automatically.
-
 ---
 
 ## What NOT to Do
 - Don't write code without a spec
 - Don't skip tests
 - Don't continue a session past 60% context
-- Don't manually edit `.planning/` files — let GSD handle them
+- Don't manually edit `.planning/` files — let the spec/plan commands handle them
 - Don't commit secrets or hardcoded credentials
 - Don't force a command when a simple chat answer is enough

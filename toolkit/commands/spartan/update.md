@@ -126,30 +126,13 @@ Tell the user: "Generated `.spartan/config.yaml` from {profile} profile. Edit it
 
 ---
 
-## Step 4.6: Check and update GSD engine
+## Step 4.6: Refresh update cache
 
-Check if GSD has a newer version available:
-
-```bash
-GSD_LOCAL=$(cat ~/.claude/get-shit-done/VERSION 2>/dev/null || echo "0.0.0")
-GSD_LATEST=$(npm view get-shit-done-cc version 2>/dev/null || echo "unknown")
-echo "GSD Local: $GSD_LOCAL"
-echo "GSD Latest: $GSD_LATEST"
-```
-
-If `GSD_LOCAL` != `GSD_LATEST` and `GSD_LATEST` != "unknown":
-- Show: "GSD engine also has an update: $GSD_LOCAL -> $GSD_LATEST"
-- Ask the user: "Update GSD as well? [Y/n]"
-- If yes: run `npx -y get-shit-done-cc@latest --global`
-
-If versions match: "GSD engine is up to date ($GSD_LOCAL)."
-
-Always clear all update caches so the statusline refreshes on next session:
+Clear the update cache so the statusline refreshes on next session:
 
 ```bash
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 rm -f "$CLAUDE_DIR/cache/spartan-update-check.json"
-rm -f "$CLAUDE_DIR/cache/gsd-update-check.json"
 ```
 
 ---
@@ -159,4 +142,3 @@ rm -f "$CLAUDE_DIR/cache/gsd-update-check.json"
 After setup completes, tell the user:
 "Updated to Spartan v$REMOTE_VER. Restart Claude Code to pick up all changes."
 
-**Never suggest `/gsd:*` commands to the user.** Always translate to `/spartan:*`.

@@ -27,9 +27,9 @@ PARALLEL (multiple terminals — each gets its own worktree):
 | 1 Spec | NO | single session |
 | 2 Design | Only if pure data change (no UI) | single session |
 | 3 Workspace + Plan | NO | single session |
-| 4 Implement | NO | **MUST use `TeamCreate`** when `AGENT_TEAMS=on` |
-| 5 Review | **NEVER** — spawn review agent, never self-review | **MUST use parallel reviewer team** when `AGENT_TEAMS=on` |
-| 6 Ship | NO | single session + `TeamDelete` cleanup |
+| 4 Implement | NO | **MUST `TeamCreate` ONCE** as `spartan-{feature-slug}` when `AGENT_TEAMS=on` — this team is reused through Stage 5 and 6 |
+| 5 Review | **NEVER** — spawn review agent, never self-review | **REUSE the Stage 4 team** — spawn reviewer agents with the SAME `team_name`. Do NOT call `TeamCreate` again (1 session = 1 team) |
+| 6 Ship | NO | single session + ONE `TeamDelete` for the shared team |
 
 **Auto mode:** Show output at each stage but don't pause for confirmation. Still stop for destructive actions and the 3 forcing questions.
 
@@ -79,12 +79,12 @@ If `.spartan/commands.yaml` has `prompts.build`, apply those instructions alongs
 
 | `AGENT_TEAMS` value | What you MUST do |
 |---------------------|------------------|
-| `on` | Stage 4 Implement MUST use `TeamCreate` + parallel teammates. Stage 5 Review MUST use a parallel reviewer team (quality + tests + security). `TeamDelete` in Stage 6. **No sequential fallback**, even for single-task builds — spawn a 1-teammate team if needed so the workflow stays uniform. |
+| `on` | Stage 4 Implement calls `TeamCreate` ONCE with `team_name: "spartan-{feature-slug}"`. Stage 5 Review REUSES the same team (no second `TeamCreate`) — spawns 3 reviewer agents in parallel with the same `team_name`. Stage 6 calls `TeamDelete` once at the end. **One session = one team.** No sequential fallback, even for single-task builds. |
 | `off` | Sequential execution. Stage 5 still spawns a single review agent (never skip). |
 
 **If `AGENT_TEAMS=on`, announce it to the user at the top of your first response:**
 
-> Agent Teams mode is **ON** (`$AGENT_TEAMS_SOURCE`). Implement and review stages will run as coordinated teams with `TeamCreate` / `TaskCreate` / `Agent(team_name=...)`. I will NOT fall back to sequential work.
+> Agent Teams mode is **ON** (`$AGENT_TEAMS_SOURCE`). I will create ONE shared team (`spartan-{feature-slug}`) at Stage 4 and reuse it through review and ship. One session = one team. No sequential fallback.
 
 **Do NOT** ask the user whether to use teams. The flag is the decision. The only override is `.spartan/build.yaml` → `agent-teams: off`.
 
@@ -109,7 +109,6 @@ Parse input: `backend`/`be` → backend, `frontend`/`fe` → frontend, else auto
 ```bash
 ls build.gradle.kts settings.gradle.kts 2>/dev/null && echo "STACK:kotlin-micronaut"
 ls package.json 2>/dev/null && cat package.json 2>/dev/null | grep -q '"next"' && echo "STACK:nextjs-react"
-ls .planning/PROJECT.md 2>/dev/null && echo "GSD_ACTIVE"
 ```
 
 | Detected | Mode |
@@ -311,14 +310,15 @@ if [ "$MAIN_REPO" = "$CURRENT" ]; then echo "ERROR: In main repo, not a worktree
 
 This is a hard rule. You MUST:
 
-1. **Call `TeamCreate`** with a descriptive team name:
+1. **Call `TeamCreate` ONCE for the entire build session.** Use a session-scoped team name that survives through Stage 5 (review) and Stage 6 (ship):
    ```
    TeamCreate:
-     team_name: "build-{feature-slug}"
-     description: "Implementing: {feature name}"
+     team_name: "spartan-{feature-slug}"
+     description: "Build session: {feature name} (implement → review → ship)"
    ```
+   **DO NOT call `TeamCreate` again in Stage 5 or Stage 6.** Claude Code allows only 1 team per session. The build, review, and ship stages all spawn their agents inside this single team.
 2. **Create tasks via `TaskCreate`** — one per implementation unit from the plan. Set `addBlockedBy` for real dependencies (e.g., frontend task blocked by backend API task).
-3. **Spawn teammates via `Agent(team_name=..., name=...)`** — one per parallel track:
+3. **Spawn teammates via `Agent(team_name="spartan-{feature-slug}", name=...)`** — one per parallel track:
    - Full-stack → `backend-dev` + `frontend-dev`
    - Backend-only → `data-layer` + `api-layer` (split by layer when 3+ tasks; single teammate if 1-2 tasks)
    - Frontend-only → `components` + `pages` (split when 3+ tasks; single teammate if 1-2 tasks)
@@ -333,7 +333,7 @@ This is a hard rule. You MUST:
 7. **Even for 1-task builds**: still use `TeamCreate` with a single teammate. Do NOT fall back to sequential — that defeats the whole point of team mode.
 
 If `TeamCreate` fails (flag not actually wired up, tool unavailable), **stop and tell the user**:
-> Agent Teams mode was requested but `TeamCreate` failed. Is the experimental flag actually enabled in your Claude Code runtime? Run `/spartan:team` to verify.
+> Agent Teams mode was requested but `TeamCreate` failed. Is the experimental flag actually enabled in your Claude Code runtime?
 
 Do NOT silently fall back to sequential.
 
@@ -439,21 +439,17 @@ Classify changed files: `.kt/.java/.go/.py` = backend, `.tsx/.ts/.vue` = fronten
 
 **Re-read `AGENT_TEAMS` from the preamble. This decides single vs parallel review. It does NOT decide whether to review — review ALWAYS happens.**
 
-#### If `AGENT_TEAMS=on` → MANDATORY parallel reviewer team
+#### If `AGENT_TEAMS=on` → MANDATORY parallel reviewer team (REUSE Stage 4 team)
 
-You MUST create a reviewer team. This is not a suggestion.
+**DO NOT call `TeamCreate` here.** Claude Code allows only 1 team per session. You already created `spartan-{feature-slug}` in Stage 4 — reuse it.
 
-```
-TeamCreate:
-  team_name: "review-{feature-slug}"
-  description: "Parallel review for {feature name}"
-```
+If `TeamCreate` was somehow not called in Stage 4 (1-task build that skipped team), call it now ONCE with `team_name: "spartan-{feature-slug}"`. Otherwise skip straight to spawning agents.
 
-Then create 3 tasks (`TaskCreate`) and spawn 3 reviewer teammates in parallel:
+Create 3 tasks (`TaskCreate`) and spawn 3 reviewer teammates in parallel inside the existing team:
 
 ```
 Agent(
-  team_name: "review-{feature-slug}",
+  team_name: "spartan-{feature-slug}",
   name: "quality-reviewer",
   subagent_type: "phase-reviewer",
   prompt: "Review correctness, stack conventions, architecture (stages 1, 2, 4).
@@ -465,7 +461,7 @@ Agent(
 )
 
 Agent(
-  team_name: "review-{feature-slug}",
+  team_name: "spartan-{feature-slug}",
   name: "test-reviewer",
   subagent_type: "general-purpose",
   prompt: "Review test coverage (stage 3). Feature: {name}. Changed files: {list}.
@@ -474,7 +470,7 @@ Agent(
 )
 
 Agent(
-  team_name: "review-{feature-slug}",
+  team_name: "spartan-{feature-slug}",
   name: "security-reviewer",
   subagent_type: "general-purpose",
   prompt: "Review security (stage 6). Feature: {name}. Changed files: {list}.
@@ -483,9 +479,9 @@ Agent(
 )
 ```
 
-**Verdict rule:** ALL THREE must return ACCEPT. If any returns NEEDS CHANGES → enter fix loop, re-run the whole team on the new diff.
+**Verdict rule:** ALL THREE must return ACCEPT. If any returns NEEDS CHANGES → enter fix loop, re-run all 3 reviewer agents (still in the same team) on the new diff.
 
-After final PASS → `TeamDelete` the review team (before Ship stage).
+**DO NOT `TeamDelete` between Stage 5 and Stage 6.** The team is shared — it gets deleted ONCE at the very end of Stage 6.
 
 #### If `AGENT_TEAMS=off` → single reviewer (still mandatory)
 
@@ -533,7 +529,7 @@ If `.spartan/build.yaml` has `prompts.review`, inject into reviewer prompt (sing
 
 If `.spartan/build.yaml` has `prompts.ship`, apply now.
 
-**If `AGENT_TEAMS=on`:** confirm you've run `TeamDelete` for both the build team (end of Stage 4) and the review team (end of Stage 5) before creating the PR. Orphan teams clutter `~/.claude/teams/`.
+**If `AGENT_TEAMS=on`:** call `TeamDelete` ONCE for the shared `spartan-{feature-slug}` team at the very end of this stage (after PR is created). This is the SINGLE TeamDelete for the whole session — there's only one team to clean up.
 
 Run `/spartan:pr-ready` approach: rebase onto main, final checks, create PR.
 
@@ -565,7 +561,7 @@ For each feature in epic with status `spec`/`planned`/`building`:
 - Missing design (with UI) → ask user: create now or skip?
 - Missing plan → generate inline
 
-**If `AGENT_TEAMS=on`** and 2+ features need plans → MUST parallelize with `TeamCreate` + one teammate per feature (`isolation: "worktree"`). Not optional.
+**If `AGENT_TEAMS=on`** and 2+ features need plans → MUST parallelize with `TeamCreate` + one teammate per feature (`isolation: "worktree"`). Use `team_name: "spartan-{epic-slug}"` — this same team will be reused for E.3 implement and Stage 5 review. Not optional.
 
 ### E.2: Create workspace + sort
 
@@ -575,7 +571,7 @@ Sort features by dependency: no-deps first (can run in parallel), then dependent
 
 ### E.3: Implement
 
-**If `AGENT_TEAMS=on`** → MANDATORY team execution. Use `TeamCreate` with `team_name: "epic-{epic-slug}"`. Create one teammate per independent feature. Frontend teammates MUST get design doc path. Dependent features get `addBlockedBy` on the features they wait on. Wait for all tasks complete, merge worktrees, run tests. Do NOT fall back to sequential.
+**If `AGENT_TEAMS=on`** → MANDATORY team execution. Reuse the team from E.1 if it exists (`team_name: "spartan-{epic-slug}"`); otherwise call `TeamCreate` ONCE with that name. Create one teammate per independent feature. Frontend teammates MUST get design doc path. Dependent features get `addBlockedBy` on the features they wait on. Wait for all tasks complete, merge worktrees, run tests. **DO NOT** call `TeamCreate` per feature — one team for the whole epic. Do NOT fall back to sequential.
 
 **If `AGENT_TEAMS=off`** → build each feature with TDD sequentially, update epic status → `done` after each.
 

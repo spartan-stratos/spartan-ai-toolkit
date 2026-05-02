@@ -8,9 +8,9 @@
   "plugins": [
     {
       "name": "ai-toolkit",
-      "description": "51 commands, 11 rules, 19 skills, 4 agents — organized in 11 packs with dependencies",
+      "description": "Engineering discipline layer for Claude Code — workflows, rules, skills, agents organized in modular packs",
       "source": "./toolkit",
-      "version": "1.23.0"
+      "version": "1.24.0"
     }
   ]
 }

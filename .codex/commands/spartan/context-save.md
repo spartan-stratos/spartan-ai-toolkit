@@ -39,7 +39,7 @@ Use full save when: session > 60%, quality visibly degrading, end of work day, s
 Answer these by reviewing the conversation and codebase:
 
 **1. What was being worked on?**
-(Feature name, ticket, GSD phase, etc.)
+(Feature name, ticket, etc.)
 
 **2. What was completed in this session?**
 (List commits made, tasks finished)
@@ -124,12 +124,6 @@ To pick up immediately:
 ## Blockers / Risks
 - [any outstanding questions or blockers]
 
-## GSD State (if using GSD)
-- Project: [PROJECT.md location]
-- Milestone: [current milestone]
-- Phase: [current phase N of M]
-- Resume with: `/gsd:status` then `/gsd:execute-phase [N]`
-
 ## Files Modified This Session
 [list of key files changed]
 
@@ -141,13 +135,49 @@ To pick up immediately:
 
 ---
 
-## Step 4: Verify Handoff is Complete
+## Step 4: Write Transcript (Layer 3 Archive)
+
+Save a session transcript to `.memory/transcripts/[YYYY-MM-DD]-[feature-slug].md`.
+
+This is an append-only archive. **Transcripts are never loaded into context** — they exist so future sessions can grep for past decisions, failed approaches, and context.
+
+```markdown
+# Transcript: [feature/task name]
+Date: [YYYY-MM-DD]
+Branch: [current branch]
+Duration: [approximate session length]
+
+## Summary
+[2-3 sentences: what was attempted, what was achieved]
+
+## Key Decisions
+- [decision] — because [reason]
+
+## Failed Approaches
+- [approach] — failed because [reason]
+
+## Discoveries
+- [non-obvious fact learned during this session]
+
+## Search Keywords
+[comma-separated terms a future grep would use to find this transcript]
+```
+
+**Rules for transcripts:**
+- Keep under 50 lines. This is a log, not a novel.
+- The "Search Keywords" line is critical — it makes grep work. Include: feature names, file paths, error messages, library names, patterns tried.
+- Never duplicate content already in `.memory/` topic files. Transcripts capture session-specific context that doesn't rise to permanent memory level.
+
+---
+
+## Step 5: Verify Handoff is Complete
 
 Read back the handoff file you just wrote and confirm:
 - [ ] Someone could resume without asking any questions
 - [ ] The "Resume Instructions" are specific enough to act on immediately
 - [ ] Git state is clean (committed or stashed)
 - [ ] No context is locked in this conversation that isn't in the file
+- [ ] Transcript written to `.memory/transcripts/`
 
 ---
 

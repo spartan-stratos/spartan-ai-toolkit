@@ -86,7 +86,7 @@ Every feature follows the same pipeline. Skip steps that don't apply.
 | `gate-review` | Builder + reviewer agent both must accept |
 | `pr-ready` | Rebase, test, lint, create PR |
 
-**Bigger work?** Use `/spartan:epic` to break it into features first, then run the pipeline for each one. For multi-week projects, use `/spartan:project new` with milestones and phases.
+**Bigger work?** Use `/spartan:epic` to break it into ordered features, then run the pipeline for each one.
 
 **Skills load automatically** based on your stack. Kotlin files &rarr; `kotlin-best-practices`. React components &rarr; `ui-ux-pro-max`. Migrations &rarr; `database-patterns`. You don't pick them.
 
@@ -130,14 +130,6 @@ npx @c0x12c/ai-toolkit@latest --packs=infrastructure
 
 You get Terraform scaffolding (ECS + EKS), module creation, security audits, drift detection, cost optimization, and two infrastructure agents. Rules enforce naming, state management, provider placement, and security patterns.
 
-### "I'm running a multi-week project"
-
-```bash
-npx @c0x12c/ai-toolkit@latest --packs=backend-micronaut,project-mgmt
-```
-
-Adds project lifecycle, phases, workstreams, and GSD v5 wave execution on top of your backend tools.
-
 ### "I'm exploring startup ideas"
 
 ```bash
@@ -163,7 +155,6 @@ npx @c0x12c/ai-toolkit@latest --all
 | **backend-nodejs** | Backend | database, shared-backend | Coming soon |
 | **backend-python** | Backend | database, shared-backend | Coming soon |
 | **frontend-react** | Frontend | — | Design workflow, Next.js scaffold, Figma-to-code, E2E, frontend review, UI/UX + design-workflow skills, design-critic agent |
-| **project-mgmt** | Planning | — | Epics, project lifecycle, phases, workstreams, GSD upgrade, forensics, brownfield, codebase mapping |
 | **product** | Planning | — | Think-before-build, validate, teardown, interview, lean canvas, brainstorm |
 | **infrastructure** | Ops | — | Terraform + AWS: scaffold, modules, review, plan, deploy, import, drift, cost, security. 7 rules, 5 skills, 2 agents |
 | **ops** | Ship | — | Deploy + env-setup, 2 skills (ops-investigate-alert, ops-oncall-log) |
@@ -203,6 +194,8 @@ Type `/spartan` to get the smart router — it asks what you need and picks the 
 | `freeze <dir>` | Lock edits to one directory |
 | `unfreeze` | Remove directory lock |
 | `guard <dir>` | careful + freeze combined |
+| `epic "name"` | Break big work into ordered features |
+| `brownfield "svc"` | Map unfamiliar codebase before touching it |
 
 ### Backend (backend-micronaut pack)
 | Command | What it does |
@@ -221,18 +214,6 @@ Type `/spartan` to get the smart router — it asks what you need and picks the 
 | `fe-review` | PR review with Next.js conventions |
 | `figma-to-code "url"` | Figma design to production React |
 | `e2e "feature"` | Setup Playwright E2E testing |
-
-### Planning (project-mgmt pack)
-| Command | What it does |
-|---------|-------------|
-| `epic "name"` | Break big work into ordered features |
-| `project [action]` | Large project lifecycle (new, status, milestone) |
-| `phase [action]` | Phase lifecycle (discuss, plan, execute, verify) |
-| `workstreams [action]` | Parallel work tracks |
-| `gsd-upgrade` | Upgrade to GSD v5 with memory + waves |
-| `forensics "problem"` | Post-mortem for failed workflows |
-| `brownfield "svc"` | Map unfamiliar codebase before touching it |
-| `map-codebase` | Deep codebase analysis with parallel agents |
 
 ### Product (product pack)
 | Command | What it does |

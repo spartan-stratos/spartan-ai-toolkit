@@ -67,7 +67,6 @@ Before asking anything, scan the environment:
 ls CLAUDE.md .planning/ .memory/ .handoff/ 2>/dev/null
 ls build.gradle.kts package.json next.config.* 2>/dev/null
 ls .git 2>/dev/null && git branch --show-current 2>/dev/null
-ls .planning/PROJECT.md 2>/dev/null && echo "GSD_ACTIVE"
 
 # Check for Spartan updates (silent, non-blocking)
 LOCAL_VER=$(cat ~/.claude/.spartan-version 2>/dev/null || echo "")
@@ -88,7 +87,7 @@ fi
 Classify silently:
 - **No project files** → New project journey
 - **Has code but no CLAUDE.md** → Needs onboarding → suggest `/spartan:onboard`
-- **Has CLAUDE.md + .planning/** → Active GSD project, resume
+- **Has CLAUDE.md + .planning/** → Active project with saved specs/plans, resume
 - **Has CLAUDE.md, no .planning/** → Active project, task-based work
 
 ---
@@ -121,14 +120,7 @@ Route here when the user wants a specific tool, not a full workflow.
 | "design a screen", "UI design", "design doc" | `/spartan:ux prototype` |
 | "UX research", "user interviews", "design system" | `/spartan:ux` |
 | "review my code", "dual review", "gate review" | `/spartan:gate-review` |
-| "big project", "multi-day", "new milestone" | `/spartan:project new` |
-| "continue phase", "next phase" | `/spartan:phase` |
-| "workstreams", "parallel work" | `/spartan:workstreams` |
-| "agent team", "spawn team", "create team", "multi-agent" | `/spartan:team` |
-| "run wave with agents", "execute wave with team" | `/spartan:team wave` |
-| "parallel review", "team review" | `/spartan:team review` |
-| "research swarm", "parallel research" | `/spartan:team research` |
-| "parallel build", "team build" | `/spartan:team build` |
+| "map unfamiliar codebase", "context map" | `/spartan:brownfield` |
 | "standup", "what did I do" | `/spartan:daily` |
 
 **Product thinking:**
@@ -208,10 +200,7 @@ Route here when the user wants a specific tool, not a full workflow.
 |---|---|
 | "contributor mode", "self-improvement", "file reports" | `/spartan:contribute` |
 | "view reports", "skill ratings" | `/spartan:contribute reports` |
-| "what went wrong", "post-mortem" | `/spartan:forensics` |
-| "map the codebase" | `/spartan:map-codebase` |
 | "save context", "running out of context" | `/spartan:context-save` |
-| "upgrade GSD" | `/spartan:gsd-upgrade` |
 | "update spartan" | `/spartan:update` |
 
 ---
@@ -236,7 +225,7 @@ Not every command needs the same amount of context. Check the command/skill's `p
 | **1** | Minimal — just run | Toggles, simple actions | `/spartan:careful`, `/spartan:freeze`, `/spartan:sessions` |
 | **2** | Light — project context only | Quick tasks, status checks | `/spartan:daily`, `/spartan:contribute`, `/spartan:context-save` |
 | **3** | Standard — project + stack context | Most commands | `/spartan:build`, `/spartan:debug`, `/spartan:review` |
-| **4** | Full — everything, deep context | Complex workflows, multi-phase | `/spartan:project`, `/spartan:phase`, `/spartan:onboard` |
+| **4** | Full — everything, deep context | Complex workflows | `/spartan:onboard`, `/spartan:epic`, `/spartan:brownfield` |
 
 **How tiers affect behavior:**
 - **Tier 1:** Skip project detection (Step 1). Just run.
@@ -273,8 +262,6 @@ You don't have to wait for the user to type `/spartan`. When you notice these pa
 | User is confused about what to do next | "Type `/spartan` and I'll figure out the right workflow." |
 | User just finished a big feature, no tests mentioned | "Should we add tests? `/spartan:e2e` for browser tests, or unit tests first." |
 | User has been coding for a while, no review mentioned | "Want a quick review before moving on? `/spartan:review`" |
-| User has a wave plan with 3+ parallel work units | "This wave has parallel tasks — want to use `/spartan:team wave` to run them with Agent Teams?" |
-| User wants multiple things reviewed or researched at once | "I can spin up a team for parallel work — `/spartan:team`" |
 
 ### How to suggest
 

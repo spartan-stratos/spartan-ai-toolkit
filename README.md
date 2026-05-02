@@ -34,7 +34,7 @@ Works with **Claude Code**, **Codex**, **Cursor**, **Windsurf**, and **Copilot**
 | "Build this feature" &rarr; jumps straight to code, no plan, no tests, pushes broken code | `/spartan:build` &rarr; writes spec, plans tasks, TDD for each, code review, then PR |
 | "Fix this bug" &rarr; guesses a fix, no repro, no test, hopes for the best | `/spartan:debug` &rarr; reproduces first, finds root cause, writes test, then fixes |
 | 5 devs on the team &rarr; AI writes different code style for each person | Configurable rules &rarr; same standards for everyone, checked automatically |
-| 3-week feature &rarr; AI forgets all context between sessions | `/spartan:project` &rarr; agent memory carries decisions across sessions |
+| 3-week feature &rarr; AI forgets all context between sessions | Agent memory layer &rarr; carries decisions across sessions |
 | Code review catches AI slop &rarr; back-and-forth for days | Quality gates &rarr; review happens before PR, not after |
 
 ---
@@ -315,7 +315,6 @@ Packs group commands, rules, skills, and agents by use case. **Core is always in
 | Kotlin + Micronaut backend | `--packs=backend-micronaut` |
 | React + Next.js frontend | `--packs=frontend-react` |
 | Full-stack (Kotlin + Next.js) | `--packs=backend-micronaut,frontend-react` |
-| Multi-week project | `--packs=backend-micronaut,project-mgmt` |
 | Exploring startup ideas | `--packs=research` |
 | Everything | `--all` |
 
@@ -328,7 +327,6 @@ Packs group commands, rules, skills, and agents by use case. **Core is always in
 | **backend-nodejs** | Backend | database, shared-backend | Coming soon |
 | **backend-python** | Backend | database, shared-backend | Coming soon |
 | **frontend-react** | Frontend | &mdash; | React + Next.js: commands, rules, skills |
-| **project-mgmt** | Planning | &mdash; | Project lifecycle, phases, workstreams |
 | **product** | Planning | &mdash; | Product thinking before building |
 | **ops** | Ship | &mdash; | Deploy + environment management |
 | **research** | Research | product | Full startup pipeline: idea to investor |
@@ -365,10 +363,12 @@ Type `/spartan` for the smart router. Or go direct:
 | `context-save` | Save session state to resume later |
 | `magic-doc [file]` | Auto-update a doc file to match current codebase |
 | `memory-consolidate` | Clean up agent memory &mdash; deduplicate, remove stale entries |
-| `update` | Check for toolkit + GSD engine updates |
+| `update` | Check for toolkit updates |
 | `careful` | Warn before destructive ops |
 | `freeze <dir>` | Lock edits to one directory |
 | `guard <dir>` | careful + freeze combined |
+| `epic "name"` | Break big work into ordered features |
+| `brownfield [svc]` | Map existing codebase before touching legacy code |
 
 ### Backend (backend-micronaut pack)
 
@@ -390,19 +390,6 @@ Type `/spartan` for the smart router. Or go direct:
 | `figma-to-code "url"` | Figma design to production React |
 | `e2e "feature"` | Setup Playwright E2E testing |
 | `js-security` | NPM security audit — setup, deps, CI, Dependabot, incident response |
-
-### Planning (project-mgmt pack)
-
-| Command | What it does |
-|---------|-------------|
-| `epic "name"` | Break big work into ordered features |
-| `project [action]` | Large project lifecycle (new, status, milestone) |
-| `phase [action]` | Phase lifecycle (discuss, plan, execute, verify) |
-| `workstreams [action]` | Parallel work tracks |
-| `team [action]` | Agent Teams: create, wave, review, research, build |
-| `think` | Guided thinking before coding |
-| `forensics "problem"` | Post-mortem for failed workflows |
-| `map-codebase` | Deep codebase analysis with parallel agents |
 
 ### Product (product pack)
 

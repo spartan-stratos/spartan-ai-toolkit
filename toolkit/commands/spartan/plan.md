@@ -194,7 +194,6 @@ Then tell the user:
 >
 > **Next steps:**
 > - Small feature (1-4 tasks)? → `/spartan:build {{ args[0] }}`
-> - Big feature (5+ tasks)? → `/spartan:phase execute N`
 > - Want a dual-agent review first? → `/spartan:gate-review`
 
 ---

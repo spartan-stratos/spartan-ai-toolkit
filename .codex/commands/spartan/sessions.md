@@ -100,15 +100,11 @@ echo "Directory: $(basename $(pwd))"
 echo "Branch: $(git branch --show-current 2>/dev/null || echo 'not a git repo')"
 echo "Last commit: $(git log --oneline -1 2>/dev/null || echo 'none')"
 
-# Check for active GSD project
-if [ -f .planning/PROJECT.md ]; then
-  echo "GSD Project: active"
-  head -5 .planning/PROJECT.md 2>/dev/null
-fi
-
-# Check for active workstream
-if [ -d .planning/workstreams ]; then
-  echo "Workstreams: $(ls .planning/workstreams/ 2>/dev/null | wc -l | tr -d ' ')"
+# Check for in-flight specs/plans
+if [ -d .planning ]; then
+  SPECS=$(ls .planning/specs/ 2>/dev/null | wc -l | tr -d ' ')
+  PLANS=$(ls .planning/plans/ 2>/dev/null | wc -l | tr -d ' ')
+  echo "Planning artifacts: $SPECS spec(s), $PLANS plan(s)"
 fi
 ```
 
@@ -117,7 +113,7 @@ Show a clean summary:
 You are in: [directory]
 Branch: [branch]
 Last commit: [message]
-GSD: [active/none]
+Planning: [N specs, M plans] or [none]
 ```
 
 This is what gets injected into skill preambles when 3+ sessions are active.

@@ -7,6 +7,30 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.24.0] - 2026-05-02
+
+### Removed (BREAKING)
+- **GSD pack removed entirely.** The `project-mgmt` pack and all its commands are gone:
+  - Commands: `gsd-upgrade`, `project`, `phase`, `workstreams`, `forensics`, `map-codebase`, `team`
+  - Agent: `team-coordinator`
+  - Pack file: `packs/project-mgmt.yaml`
+  - Claude-md section: `30-project-mgmt.md`
+- **`get-shit-done-cc` npm install** removed from `setup.sh` (Step 4) — Spartan no longer depends on the GSD engine
+- **GSD version checking** removed from `spartan-check-update.js` and `spartan-statusline.js`
+- **"Atomic Commits" core principle** removed from `CLAUDE.md` and `01-core.md`
+
+### Changed
+- `epic` and `brownfield` commands moved into the `core` pack (always installed)
+- `/spartan:build` Agent Teams flow now uses ONE shared team `spartan-{feature-slug}` for the entire session (Stage 4 implement → Stage 5 review → Stage 6 ship). Fixes the bug where Stage 5 tried to call `TeamCreate` again and failed (Claude Code allows only 1 team per session)
+- Single `TeamDelete` at end of Stage 6 (was 2 — one per stage)
+- Setup script step count adjusted; removed redundant GSD-replacement hook patching logic
+
+### Migration notes
+If you were using GSD commands (`/spartan:project`, `/spartan:phase`, `/spartan:workstreams`, etc.), use this replacement workflow:
+- Multi-feature work → `/spartan:epic` + `/spartan:spec` + `/spartan:plan` + `/spartan:build` for each feature
+- Codebase mapping → `/spartan:brownfield` or `/spartan:onboard`
+- Run `/spartan:update` to clean up the deprecated commands and hooks
+
 ## [1.23.0] - 2026-04-27
 
 ### Added

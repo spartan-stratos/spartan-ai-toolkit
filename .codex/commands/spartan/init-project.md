@@ -146,9 +146,6 @@ Key vars: [list critical ones]
 - E2E: [if configured]
 - Run: [commands]
 
-## GSD State
-[if .planning/ exists, show current milestone/phase]
-[if not, note "Not using GSD yet — run /gsd:new-project to start"]
 ```
 
 ---

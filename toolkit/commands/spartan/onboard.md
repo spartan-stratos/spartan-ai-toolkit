@@ -77,7 +77,7 @@ git branch -a | head -20
 | Both | Full-stack monorepo |
 | `docker-compose.yml` with multiple services | Microservices |
 | Already has `CLAUDE.md` | Someone set this up before — read it |
-| Has `.planning/` | GSD project — check status |
+| Has `.planning/` | Has saved specs/plans — check `.planning/specs/` and `.planning/plans/` |
 
 ### Produce a quick summary
 
@@ -150,7 +150,6 @@ After all teammates report back, synthesize into the architecture overview below
 
 ### Architecture mapping
 
-Use the approach from `/spartan:map-codebase` internally:
 - Identify the main modules/packages
 - Trace a request from entry point to response (for backends) or from page load to render (for frontends)
 - Find the data model (entities, schemas, types)
@@ -316,7 +315,6 @@ In this case, add a warning:
 
 ## Rules
 
-- **You are the leader.** Run scanning, mapping, and setup yourself. Don't tell the user to run `/spartan:init-project` or `/spartan:map-codebase` separately.
 - **Don't change any code during onboarding.** This is read-only. Understand first.
 - **Ask about what's NOT in the code.** Business context, deployment process, team conventions — things you can't see in files.
 - **Don't assume conventions from one file apply everywhere.** Check multiple files for consistency.

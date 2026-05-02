@@ -39,7 +39,7 @@ Use full save when: session > 60%, quality visibly degrading, end of work day, s
 Answer these by reviewing the conversation and codebase:
 
 **1. What was being worked on?**
-(Feature name, ticket, GSD phase, etc.)
+(Feature name, ticket, etc.)
 
 **2. What was completed in this session?**
 (List commits made, tasks finished)
@@ -123,12 +123,6 @@ To pick up immediately:
 
 ## Blockers / Risks
 - [any outstanding questions or blockers]
-
-## GSD State (if using GSD)
-- Project: [PROJECT.md location]
-- Milestone: [current milestone]
-- Phase: [current phase N of M]
-- Resume with: `/gsd:status` then `/gsd:execute-phase [N]`
 
 ## Files Modified This Session
 [list of key files changed]

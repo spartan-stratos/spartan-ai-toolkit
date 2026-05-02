@@ -21,7 +21,6 @@ This is Gate 3.5 from the quality gates. Two agents look at the work: the **buil
 
 ## When to Use This
 
-- After finishing a phase in `/spartan:phase execute N`
 - After Stage 3 of `/spartan:build` (all tasks done, before shipping)
 - Any time you want a second opinion on a batch of code changes
 
@@ -199,8 +198,6 @@ Then tell the user:
 > "Gate 3.5 passed — both builder and reviewer accept."
 >
 > **Next steps:**
-> - More phases? → `/spartan:phase execute [N+1]`
-> - All done? → `/spartan:phase verify [N]`
 > - Ready to ship? → `/spartan:pr-ready`
 
 ---

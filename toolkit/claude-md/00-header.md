@@ -36,4 +36,4 @@ What do you need?
 | < 30 min, ≤ 3 files | Just ask Claude (no command needed) |
 | < 1 day | `/spartan:spec` → `/spartan:build` |
 | 1–3 days | `/spartan:spec` → `/spartan:plan` → `/spartan:build` |
-| > 3 days, multi-session | `/spartan:project new` (full lifecycle) |
+| Multi-feature work | `/spartan:epic` → then spec/plan/build each feature |

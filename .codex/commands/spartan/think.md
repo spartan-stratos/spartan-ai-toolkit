@@ -209,8 +209,6 @@ Ask: **"This is the final scope. Ready to build?"**
 Based on the T-shirt size from Phase 4, route to the right build command:
 
 - **S (< 1 day):** "Run `/spartan:spec` then `/spartan:build` with this scope to start building."
-- **M-L (1-7 days):** "Run `/spartan:project new` to set up the full project lifecycle."
-- **XL (> 1 week):** "Run `/spartan:project new` — this needs milestones and wave planning."
 
 Show the complete thinking output as a summary the user can copy into their planning tool:
 - JTBD statement

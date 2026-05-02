@@ -126,9 +126,19 @@ Tell the user: "Generated `.spartan/config.yaml` from {profile} profile. Edit it
 
 ---
 
+## Step 4.6: Refresh update cache
+
+Clear the update cache so the statusline refreshes on next session:
+
+```bash
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+rm -f "$CLAUDE_DIR/cache/spartan-update-check.json"
+```
+
+---
+
 ## Step 5: Confirm
 
 After setup completes, tell the user:
 "Updated to Spartan v$REMOTE_VER. Restart Claude Code to pick up all changes."
 
-**Never suggest `/gsd:*` commands to the user.** Always translate to `/spartan:*`.

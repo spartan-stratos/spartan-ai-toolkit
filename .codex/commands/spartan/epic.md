@@ -182,9 +182,8 @@ The user can check progress anytime by reading `.planning/epics/{{ args[0] }}.md
 | Situation | Use instead |
 |---|---|
 | Single feature | `/spartan:spec` → `/spartan:plan` → `/spartan:build` |
-| Multi-week project with milestones | `/spartan:project new` (GSD lifecycle) |
 
-Epics sit between a single feature (too small) and full GSD projects (too big). Use them for a batch of 3-8 related features.
+Epics are for a batch of 3-8 related features. For a single feature, skip the epic step.
 
 ---
 
