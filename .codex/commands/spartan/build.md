@@ -534,7 +534,7 @@ If `.spartan/build.yaml` has `prompts.ship`, apply now.
 
 **If `AGENT_TEAMS=on`:** confirm you've run `TeamDelete` for both the build team (end of Stage 4) and the review team (end of Stage 5) before creating the PR. Orphan teams clutter `~/.claude/teams/`.
 
-Chain into `/spartan:commit-message` to drive the full ship pipeline: stage diff → propose commit message → wait for user approval → commit → push → invoke `/spartan:ship-pr --rounds 2` to create the PR (if missing), request Copilot review, address feedback, and resolve threads. Invoke via the `Skill` tool with name `spartan:commit-message` (forward any rounds override the user specified, e.g. `--rounds 1` or `--rounds 3`).
+Chain into the `/spartan:commit-message` command to drive the full ship pipeline: stage diff → propose commit message → wait for user approval → commit → push → invoke `/spartan:ship-pr --rounds 2` to create the PR (if missing), request Copilot review, address feedback, and resolve threads. Invoke the `/spartan:commit-message` command via the `Skill` tool with `skill: "spartan:commit-message"` (forward any rounds override the user specified, e.g. `--rounds 1` or `--rounds 3`). Note: `/spartan:commit-message` and `/spartan:ship-pr` are commands (sourced from `toolkit/commands/spartan/`), not toolkit skills — the harness exposes both invocation kinds via the same `Skill` tool.
 
 Why chain instead of running `/spartan:pr-ready` directly: the ship workflow centralizes commit-message templating, PR creation, and Copilot review in one place. Running them separately drifts between stages — by the time `/spartan:ship-pr` runs, the PR title/body may not match the commit, and the commit message may not match the project's template format. `/spartan:commit-message` enforces both.
 
