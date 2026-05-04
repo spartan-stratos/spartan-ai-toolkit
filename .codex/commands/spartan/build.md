@@ -534,6 +534,17 @@ If `.spartan/build.yaml` has `prompts.ship`, apply now.
 
 **If `AGENT_TEAMS=on`:** confirm you've run `TeamDelete` for both the build team (end of Stage 4) and the review team (end of Stage 5) before creating the PR. Orphan teams clutter `~/.claude/teams/`.
 
+**Rebase onto the default branch BEFORE chaining.** `/spartan:commit-message` and `/spartan:ship-pr` do not rebase — they assume the branch is already up-to-date with the base. If the branch is behind, the PR will ship stale and merge conflicts get pushed onto the merger. Run:
+
+```bash
+git fetch origin
+DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
+[ -z "$DEFAULT_BRANCH" ] && DEFAULT_BRANCH=$(git rev-parse --verify origin/master >/dev/null 2>&1 && echo master || echo main)
+git rebase origin/$DEFAULT_BRANCH
+```
+
+If the rebase produces conflicts, stop and surface them — do not chain into commit-message until the user resolves them and the working tree is clean.
+
 Chain into the `/spartan:commit-message` command to drive the full ship pipeline: stage diff → propose commit message → wait for user approval → commit → push → invoke `/spartan:ship-pr --rounds 2` to create the PR (if missing), request Copilot review, address feedback, and resolve threads. Invoke the `/spartan:commit-message` command via the `Skill` tool with `skill: "spartan:commit-message"`. **Rounds forwarding rule:** if the user explicitly passed `--rounds N` to `/spartan:build` (e.g. `--rounds 1`, `--rounds 3`), pass that same `args: "--rounds N"` through to `/spartan:commit-message`. Otherwise omit `args` entirely so `/spartan:commit-message`'s own default of `--rounds 2` takes effect — do not hardcode `--rounds 2` here, since that would override an upstream override. Note: `/spartan:commit-message` and `/spartan:ship-pr` are commands (sourced from `toolkit/commands/spartan/`), not toolkit skills — the harness exposes both invocation kinds via the same `Skill` tool.
 
 Why chain instead of running `/spartan:pr-ready` directly: the ship workflow centralizes commit-message templating, PR creation, and Copilot review in one place. Running them separately drifts between stages — by the time `/spartan:ship-pr` runs, the PR title/body may not match the commit, and the commit message may not match the project's template format. `/spartan:commit-message` enforces both.
