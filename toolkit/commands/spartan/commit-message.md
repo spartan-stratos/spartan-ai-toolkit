@@ -1,7 +1,7 @@
 ---
 name: spartan:commit-message
-description: Create a commit message and PR description by analyzing git diffs
-allowed-tools: Bash(git status:*), Bash(git diff --staged), Bash(git diff:*), Bash(git log:*), Bash(git commit:*), Bash(git add:*), Bash(git push:*)
+description: Create a commit message and PR description by analyzing git diffs, then chain into /spartan:ship-pr (defaults to --rounds 2). Use when the user has staged changes and asks to commit, requests a commit message, or wants to push and open a PR with Copilot review in one step.
+allowed-tools: Bash(git status:*), Bash(git diff --staged), Bash(git diff:*), Bash(git log:*), Bash(git commit:*), Bash(git add:*), Bash(git push:*), Skill
 ---
 
 ## Run these commands first:
@@ -106,5 +106,8 @@ Extract the ticket number (e.g., LBF-1647) to use as prefix. Convert to uppercas
    )"
    ```
 6. Then run `git push -u origin <branch-name>`
+7. **Chain into `/spartan:ship-pr` automatically** to create the PR (if missing), request Copilot review, address feedback, and resolve threads. Invoke the skill via the `Skill` tool with name `spartan:ship-pr` and args `--rounds 2` (the default for this chain — most PRs need one round of fixes plus a clean second-pass to confirm Copilot is satisfied; one round alone often misses regressions in the fix itself). The user opted in to the chain by invoking `/spartan:commit-message` — they don't need to confirm again.
+   - If the user passed an explicit rounds count to `/spartan:commit-message` (e.g. `--rounds 1` or `--rounds 3`), forward that value to `/spartan:ship-pr` instead of the default 2.
+   - If `/spartan:ship-pr` is not installed in this project, skip step 7 and report the pushed branch URL directly so the user can create the PR via the GitHub UI.
 
-**CRITICAL: Always wait for explicit user approval before committing and pushing.**
+**CRITICAL: Always wait for explicit user approval before committing and pushing.** Step 7 (the ship-pr chain) runs only AFTER the commit and push in steps 5–6 succeed.

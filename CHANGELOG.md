@@ -7,6 +7,13 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.25.1] - 2026-05-04
+
+### Changed
+- `/spartan:commit-message` now chains into `/spartan:ship-pr` automatically after the push (new step 7). Defaults to `--rounds 2` because most PRs need one round of fixes plus a clean second-pass to confirm Copilot is satisfied — one round alone often misses regressions in the fix itself. If the user passed an explicit rounds count to `/spartan:commit-message`, that value is forwarded instead. Falls back to reporting the pushed branch URL if `/spartan:ship-pr` isn't installed. Requires `Skill` in `allowed-tools`.
+- `/spartan:build` Stage 6 (Ship) now chains through `/spartan:commit-message` (which itself chains to `/spartan:ship-pr --rounds 2`) instead of calling `/spartan:pr-ready` directly. Centralizes commit templating, PR creation, and Copilot review in one place — running them separately let the PR title/body drift away from the commit message between stages. `/spartan:pr-ready` remains the documented fallback when `/spartan:commit-message` isn't installed. Mirrored in the `.codex` build.md.
+- End-to-end pipeline becomes: `/spartan:build` → `/spartan:commit-message` → `/spartan:ship-pr --rounds 2` (one continuous flow).
+
 ## [1.25.0] - 2026-05-02
 
 ### Added

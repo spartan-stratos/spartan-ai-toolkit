@@ -531,7 +531,11 @@ If `.spartan/build.yaml` has `prompts.ship`, apply now.
 
 **If `AGENT_TEAMS=on`:** call `TeamDelete` ONCE for the shared `spartan-{feature-slug}` team at the very end of this stage (after PR is created). This is the SINGLE TeamDelete for the whole session — there's only one team to clean up.
 
-Run `/spartan:pr-ready` approach: rebase onto main, final checks, create PR.
+Chain into `/spartan:commit-message` to drive the full ship pipeline: stage diff → propose commit message → wait for user approval → commit → push → invoke `/spartan:ship-pr --rounds 2` to create the PR (if missing), request Copilot review, address feedback, and resolve threads. Invoke via the `Skill` tool with name `spartan:commit-message` (forward any rounds override the user specified, e.g. `--rounds 1` or `--rounds 3`).
+
+Why chain instead of running `/spartan:pr-ready` directly: the ship workflow centralizes commit-message templating, PR creation, and Copilot review in one place. Running them separately drifts between stages — by the time `/spartan:ship-pr` runs, the PR title/body may not match the commit, and the commit message may not match the project's template format. `/spartan:commit-message` enforces both.
+
+If `/spartan:commit-message` is not installed in this project, fall back to `/spartan:pr-ready` (rebase onto main, final checks, create PR) and report the PR URL — the user will need to request Copilot review manually.
 
 Save notable learnings to `.memory/` if any.
 
