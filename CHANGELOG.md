@@ -7,6 +7,9 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- New `/spartan:codex` command and `toolkit/codex/spartan.zsh` shell helpers (`cdx-review`, `cdx-ship`, `cdx-security`, `cdx-uncommitted`, `cdx-commit`, `cdx-yolo`) that wrap the Codex CLI's `review` subcommand with Spartan-style ergonomics. Use Codex as a second-opinion reviewer (different model, different blind spots) before requesting human review. `cdx-ship` mirrors `/spartan:ship-pr --rounds N` with escalating prompt stances per round.
+
 ## [1.25.0] - 2026-05-02
 
 ### Added
