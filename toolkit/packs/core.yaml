@@ -17,7 +17,10 @@ commands:
   - update
   - pr-ready
   - ship-pr
+  - codex
   - commit-message
+  - commit-message-with-codex
+  - ship-pr-codex
   - init-project
   - init-rules
   - scan-rules

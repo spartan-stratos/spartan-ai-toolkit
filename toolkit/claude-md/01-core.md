@@ -94,6 +94,7 @@ Auto mode is ideal for experienced users who trust the workflow and want maximum
 | Command | Purpose |
 |---|---|
 | `/spartan:pr-ready` | Pre-PR checklist + auto PR description |
+| `/spartan:codex [sub]` | Second-opinion review via Codex CLI (review/ship/security/uncommitted/setup) |
 | `/spartan:daily` | Standup summary from git log |
 | `/spartan:init-project` | Auto-generate CLAUDE.md from codebase |
 | `/spartan:context-save` | Manage context: compact first, full save if needed |

@@ -7,6 +7,15 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.26.0] - 2026-05-11
+
+### Added
+- New `/spartan:codex` command and `toolkit/codex/spartan.zsh` shell helpers (`cdx-review`, `cdx-pr`, `cdx-ship`, `cdx-security`, `cdx-uncommitted`, `cdx-commit`, `cdx-yolo`) that wrap the Codex CLI with Spartan-style ergonomics. Use Codex as a second-opinion reviewer (different model, different blind spots) before requesting human review. `cdx-pr` fetches a PR into a temporary worktree; `cdx-ship` mirrors `/spartan:ship-pr-codex --rounds N` with escalating prompt stances per round.
+- New `/spartan:commit-message-with-codex` and `/spartan:ship-pr-codex` commands for a commit → PR → Codex review/fix loop.
+
+### Fixed
+- Installer uninstall flow now removes the Codex shell helper. For `claude-code` it deletes `<base>/codex/spartan.zsh` and removes the parent `codex/` directory only when it ends up empty (so unrelated user files in `~/.claude/codex/` are preserved). For `codex` it deletes `<base>/spartan.zsh` directly.
+
 ## [1.25.0] - 2026-05-02
 
 ### Added

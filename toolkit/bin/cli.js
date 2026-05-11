@@ -27,6 +27,7 @@ const SRC = {
   rules:      join(PKG_ROOT, 'rules'),
   skills:     join(PKG_ROOT, 'skills'),
   agents:     join(PKG_ROOT, 'agents'),
+  codexHelper: join(PKG_ROOT, 'codex', 'spartan.zsh'),
   profiles:   join(PKG_ROOT, 'profiles'),
   claudeMd:   join(PKG_ROOT, 'claude-md'),
   version:    join(PKG_ROOT, 'VERSION'),
@@ -206,6 +207,19 @@ async function uninstall() {
     { path: join(base, '.spartan-repo'),           label: '.spartan-repo' },
   ];
 
+  // Codex helper paths differ per agent. Target the helper file specifically —
+  // do not recursively delete the whole <base>/codex/ directory, since users
+  // may have unrelated files there.
+  //   - claude-code installs to <base>/codex/spartan.zsh
+  //   - codex installs to <base>/spartan.zsh
+  let codexHelperDir = null;
+  if (agent === 'claude-code') {
+    targets.push({ path: join(base, 'codex', 'spartan.zsh'), label: 'codex/spartan.zsh' });
+    codexHelperDir = join(base, 'codex');
+  } else if (agent === 'codex') {
+    targets.push({ path: join(base, 'spartan.zsh'), label: 'spartan.zsh' });
+  }
+
   console.log(`\n  Removing Spartan from ${bold(mode)} (${base})...\n`);
 
   let removed = 0;
@@ -214,6 +228,21 @@ async function uninstall() {
       rmSync(path, { recursive: true, force: true });
       console.log(`  ${green('-')} ${label}`);
       removed++;
+    }
+  }
+
+  // Clean up an empty codex/ directory left behind after removing the helper
+  // (claude-code only). Skip silently if the dir has other user files.
+  if (codexHelperDir && existsSync(codexHelperDir)) {
+    try {
+      const remaining = readdirSync(codexHelperDir);
+      if (remaining.length === 0) {
+        rmSync(codexHelperDir, { recursive: false, force: true });
+        console.log(`  ${green('-')} codex/`);
+        removed++;
+      }
+    } catch {
+      // Best-effort cleanup; ignore failures.
     }
   }
 
@@ -289,6 +318,7 @@ function getTargets() {
       skills:    join(base, 'skills'),
       agents:    join(base, 'agents'),
       claudeMd:  join(base, 'CLAUDE.md'),
+      codexHelper: join(base, 'codex', 'spartan.zsh'),
       packsFile: join(base, '.spartan-packs'),
       versionFile: join(base, '.spartan-version'),
     };
@@ -304,6 +334,7 @@ function getTargets() {
       skills:    join(base, 'skills'),
       agents:    join(base, 'agents'),
       claudeMd:  join(base, 'CLAUDE.md'),
+      codexHelper: join(base, 'spartan.zsh'),
       packsFile: join(base, '.spartan-packs'),
       versionFile: join(base, '.spartan-version'),
     };
@@ -577,6 +608,12 @@ async function installFull() {
     }
   }
   console.log(`  ${bold(cmdCount + ' commands')} installed\n`);
+
+  if (existsSync(SRC.codexHelper) && targets.codexHelper) {
+    copyFile(SRC.codexHelper, targets.codexHelper);
+    const label = agent === 'codex' ? 'Codex shell helpers installed to' : 'Codex helper source copied to';
+    console.log(`  ${green('+')} ${label} ${dim(targets.codexHelper)}\n`);
+  }
 
   // 3) Rules (now with subdirectory structure)
   const rulesWithSource = gatherItemsWithSource(selectedPacks, 'rules');
