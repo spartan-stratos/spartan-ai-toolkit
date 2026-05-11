@@ -435,6 +435,20 @@ echo ""
 echo -e "  Installed ${BOLD}${COUNT} commands${NC}"
 echo ""
 
+CODEX_HELPER_SRC="$TOOLKIT_ROOT/codex/spartan.zsh"
+if [[ -f "$CODEX_HELPER_SRC" ]]; then
+  if [[ "$MODE" == "global" ]]; then
+    CODEX_HELPER_DEST="$HOME/.claude/codex/spartan.zsh"
+  else
+    CODEX_HELPER_DEST="$(pwd)/.claude/codex/spartan.zsh"
+  fi
+  mkdir -p "$(dirname "$CODEX_HELPER_DEST")"
+  cp "$CODEX_HELPER_SRC" "$CODEX_HELPER_DEST"
+  echo -e "  ${GREEN}✓${NC} Codex helper source copied to ${DIM}${CODEX_HELPER_DEST}${NC}"
+  echo -e "    Run ${CYAN}/spartan:codex setup${NC} to install ${DIM}~/.codex/spartan.zsh${NC} for terminal use."
+  echo ""
+fi
+
 # ─────────────────────────────────────────────────────────────
 # Step 7: Company Rules (pack-filtered)
 # ─────────────────────────────────────────────────────────────

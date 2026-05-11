@@ -356,6 +356,9 @@ Type `/spartan` for the smart router. Or go direct:
 | `gate-review` | Dual-agent review (builder + reviewer both accept) |
 | `daily` | Standup summary from git history |
 | `pr-ready` | Full checklist before creating any PR |
+| `codex` | Run Codex as a second-opinion reviewer |
+| `commit-message-with-codex` | Commit, open PR, then chain into Codex PR review |
+| `ship-pr-codex` | Run Codex PR review rounds and apply clear fixes |
 | `init-project` | Auto-generate CLAUDE.md from codebase scan |
 | `init-rules` | Set up configurable rules for your stack |
 | `scan-rules` | Auto-generate rules from code patterns |

@@ -27,6 +27,7 @@ const SRC = {
   rules:      join(PKG_ROOT, 'rules'),
   skills:     join(PKG_ROOT, 'skills'),
   agents:     join(PKG_ROOT, 'agents'),
+  codexHelper: join(PKG_ROOT, 'codex', 'spartan.zsh'),
   profiles:   join(PKG_ROOT, 'profiles'),
   claudeMd:   join(PKG_ROOT, 'claude-md'),
   version:    join(PKG_ROOT, 'VERSION'),
@@ -289,6 +290,7 @@ function getTargets() {
       skills:    join(base, 'skills'),
       agents:    join(base, 'agents'),
       claudeMd:  join(base, 'CLAUDE.md'),
+      codexHelper: join(base, 'codex', 'spartan.zsh'),
       packsFile: join(base, '.spartan-packs'),
       versionFile: join(base, '.spartan-version'),
     };
@@ -304,6 +306,7 @@ function getTargets() {
       skills:    join(base, 'skills'),
       agents:    join(base, 'agents'),
       claudeMd:  join(base, 'CLAUDE.md'),
+      codexHelper: join(base, 'spartan.zsh'),
       packsFile: join(base, '.spartan-packs'),
       versionFile: join(base, '.spartan-version'),
     };
@@ -577,6 +580,12 @@ async function installFull() {
     }
   }
   console.log(`  ${bold(cmdCount + ' commands')} installed\n`);
+
+  if (existsSync(SRC.codexHelper) && targets.codexHelper) {
+    copyFile(SRC.codexHelper, targets.codexHelper);
+    const label = agent === 'codex' ? 'Codex shell helpers installed to' : 'Codex helper source copied to';
+    console.log(`  ${green('+')} ${label} ${dim(targets.codexHelper)}\n`);
+  }
 
   // 3) Rules (now with subdirectory structure)
   const rulesWithSource = gatherItemsWithSource(selectedPacks, 'rules');

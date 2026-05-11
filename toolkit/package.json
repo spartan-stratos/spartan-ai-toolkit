@@ -10,6 +10,7 @@
     "bin/",
     "lib/",
     "commands/",
+    "codex/",
     "skills/",
     "rules/",
     "agents/",

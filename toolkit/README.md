@@ -187,6 +187,9 @@ Type `/spartan` to get the smart router — it asks what you need and picks the 
 | `gate-review [phase]` | Dual-agent review (Gate 3.5) — builder + reviewer both accept |
 | `daily` | Standup summary from git history |
 | `pr-ready` | Full checklist before creating any PR |
+| `codex` | Run Codex as a second-opinion reviewer |
+| `commit-message-with-codex` | Commit, open PR, then chain into Codex PR review |
+| `ship-pr-codex` | Run Codex PR review rounds and apply clear fixes |
 | `init-project` | Auto-generate CLAUDE.md from codebase scan |
 | `context-save` | Save session state to resume later |
 | `update` | Check for toolkit updates |
@@ -449,4 +452,3 @@ Rules and skills are tuned for this stack, but the command framework works with 
 | CI/CD | GitHub Actions |
 
 > **Different stack?** Fork the repo, edit the rules and skills, run the installer. Commands work with any language or framework.
-
