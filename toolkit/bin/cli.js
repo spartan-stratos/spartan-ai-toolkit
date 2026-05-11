@@ -207,6 +207,15 @@ async function uninstall() {
     { path: join(base, '.spartan-repo'),           label: '.spartan-repo' },
   ];
 
+  // Codex helper paths differ per agent:
+  //   - claude-code installs to <base>/codex/spartan.zsh (whole codex/ dir)
+  //   - codex installs to <base>/spartan.zsh (file directly)
+  if (agent === 'claude-code') {
+    targets.push({ path: join(base, 'codex'), label: 'codex/' });
+  } else if (agent === 'codex') {
+    targets.push({ path: join(base, 'spartan.zsh'), label: 'spartan.zsh' });
+  }
+
   console.log(`\n  Removing Spartan from ${bold(mode)} (${base})...\n`);
 
   let removed = 0;
