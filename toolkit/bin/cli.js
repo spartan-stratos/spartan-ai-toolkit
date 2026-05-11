@@ -207,11 +207,15 @@ async function uninstall() {
     { path: join(base, '.spartan-repo'),           label: '.spartan-repo' },
   ];
 
-  // Codex helper paths differ per agent:
-  //   - claude-code installs to <base>/codex/spartan.zsh (whole codex/ dir)
-  //   - codex installs to <base>/spartan.zsh (file directly)
+  // Codex helper paths differ per agent. Target the helper file specifically —
+  // do not recursively delete the whole <base>/codex/ directory, since users
+  // may have unrelated files there.
+  //   - claude-code installs to <base>/codex/spartan.zsh
+  //   - codex installs to <base>/spartan.zsh
+  let codexHelperDir = null;
   if (agent === 'claude-code') {
-    targets.push({ path: join(base, 'codex'), label: 'codex/' });
+    targets.push({ path: join(base, 'codex', 'spartan.zsh'), label: 'codex/spartan.zsh' });
+    codexHelperDir = join(base, 'codex');
   } else if (agent === 'codex') {
     targets.push({ path: join(base, 'spartan.zsh'), label: 'spartan.zsh' });
   }
@@ -224,6 +228,21 @@ async function uninstall() {
       rmSync(path, { recursive: true, force: true });
       console.log(`  ${green('-')} ${label}`);
       removed++;
+    }
+  }
+
+  // Clean up an empty codex/ directory left behind after removing the helper
+  // (claude-code only). Skip silently if the dir has other user files.
+  if (codexHelperDir && existsSync(codexHelperDir)) {
+    try {
+      const remaining = readdirSync(codexHelperDir);
+      if (remaining.length === 0) {
+        rmSync(codexHelperDir, { recursive: false, force: true });
+        console.log(`  ${green('-')} codex/`);
+        removed++;
+      }
+    } catch {
+      // Best-effort cleanup; ignore failures.
     }
   }
 
